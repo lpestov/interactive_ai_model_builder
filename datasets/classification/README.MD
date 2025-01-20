@@ -1,10 +1,10 @@
-## Dataset Download Instructions
+## Инструкции по загрузке датасета
 
-To use the dataset for classification, please download it from the following link:
+Для использования датасета для классификации, пожалуйста, скачайте его по следующей ссылке:
 
-[Download Dataset](https://drive.google.com/file/d/1dWzozDWPf_MF2sc7LQm7buy-QYGzzFZh/view?usp=sharing)
+[Скачать датасет](https://drive.google.com/file/d/1dWzozDWPf_MF2sc7LQm7buy-QYGzzFZh/view?usp=sharing)
 
-Alternatively, you can use `gdown` to download the dataset directly from the command line:
+Кроме того, вы можете использовать `gdown` для загрузки датасета напрямую из командной строки:
 
 ```bash
 !gdown 1dWzozDWPf_MF2sc7LQm7buy-QYGzzFZh
