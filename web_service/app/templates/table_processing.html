@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Данные из CSV</title>
+    <style>
+        .data {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        .data th, .data td {
+            border: 1px solid black;
+            padding: 8px;
+            text-align: left;
+        }
+    </style>
+</head>
+<body>
+    <h1>Содержимое вашего CSV файла</h1>
+    {% for table in tables %}
+        {{ table|safe }}
+    {% endfor %}
+    <br>
+    <a href="/upload_table_page">Загрузить другой файл</a>
+</body>
+</html>
+

@@ -1,0 +1,49 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Выбор модели</title>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script>
+        $(document).ready(function() {
+            $('#modelSelect').change(function() {
+                var model = $(this).val();
+                if (model) {
+                    $.get('/params/' + model, function(data) {
+                        $('#params').empty();
+                        for (var param in data) {
+                            $('#params').append(
+                                '<div style="margin-bottom: 10px;"><label>' + param + ' (' + data[param].type + '):</label>' +
+                                '<input type="text" name="' + param + '" value="' + data[param].default + '" required style="margin-left: 10px;">' +
+                                '<span style="margin-left: 10px;">- ' + data[param].description + '</span></div>'
+                            );
+                        }
+                        $('#submitBtn').prop('disabled', false); // Включаем кнопку
+                    });
+                } else {
+                    $('#params').empty();
+                    $('#submitBtn').prop('disabled', true); // Отключаем кнопку
+                }
+            });
+        });
+    </script>
+</head>
+<body>
+    <h1>Выбор модели и гиперпараметров</h1>
+    <form action="/train" method="POST">
+        <select id="modelSelect" name="model">
+            <option value="">Выберите модель</option>
+            {% for model in models %}
+                <option value="{{ model }}">{{ model }}</option>
+            {% endfor %}
+        </select>
+
+        <div id="params"></div>
+
+        <button id="submitBtn" type="submit" disabled>Обучить модель</button>
+    </form>
+</body>
+</html>
+
