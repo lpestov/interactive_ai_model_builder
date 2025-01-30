@@ -142,17 +142,18 @@ if __name__ == "__main__":
 
     # Замена финального классификатора
     num_features = model.classifier[1].in_features
+    num_classes = len(class_to_idx)  # Количество классов из JSON
     model.classifier = nn.Sequential(
         nn.Linear(num_features, 128),
         nn.ReLU(),
-        nn.Linear(128, 1),  # Бинарная классификация
-        nn.Sigmoid(),  # Для вероятностей
+        nn.Linear(128, num_classes),  # Многоклассовая классификация
+        # На выходе оставляем сырые логиты, так как nn.CrossEntropyLoss() их ожидает на вход
     )
 
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     model.to(device)
 
-    criterion = nn.BCELoss()  # Для бинарной классификации
+    criterion = nn.CrossEntropyLoss()  # Для многоклассовой классификации
     optimizer = torch.optim.Adam(
         model.parameters(),
         lr=hyperparams["learning_rate"],
@@ -166,10 +167,10 @@ if __name__ == "__main__":
         train_loss = 0.0
 
         for images, labels in train_loader:
-            images, labels = images.to(device), labels.to(device).float()
+            images, labels = images.to(device), labels.to(device)
 
             optimizer.zero_grad()
-            outputs = model(images).squeeze()
+            outputs = model(images)
             loss = criterion(outputs, labels)
             loss.backward()
             optimizer.step()
@@ -183,12 +184,12 @@ if __name__ == "__main__":
 
         with torch.no_grad():
             for images, labels in train_loader:
-                images, labels = images.to(device), labels.to(device).float()
+                images, labels = images.to(device), labels.to(device)
 
-                outputs = model(images).squeeze()
+                outputs = model(images)
                 loss = criterion(outputs, labels)
 
-                predicted = (outputs > 0.5).float()
+                _, predicted = torch.max(outputs.data, 1)  # Получаем индекс максимального значения
                 correct += (predicted == labels).sum().item()
                 total += labels.size(0)
 
