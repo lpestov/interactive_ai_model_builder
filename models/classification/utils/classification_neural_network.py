@@ -60,6 +60,7 @@ if __name__ == "__main__":
     ├── train/
     │   ├── class_name1/
     │   └── class_name2/
+    │   ...
     ```
     """
     local_zip = "classification_dataset.zip"
