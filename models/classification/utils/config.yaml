@@ -9,6 +9,7 @@ cmd: >
 inputs:
   - classification_dataset.zip
   - hyperparams.json
+  - class_to_idx.json
 
 # Файлы с результатами
 outputs:

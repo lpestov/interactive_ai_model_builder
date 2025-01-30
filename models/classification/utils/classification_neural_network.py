@@ -39,9 +39,18 @@ from torchvision.models import EfficientNet_B0_Weights, efficientnet_b0
 
 
 if __name__ == "__main__":
+    print("Starting")
+
     # Загрузка гиперпараметров из JSON (создайте папку classification, если её еще нет в корне диска Google Drive)
     with open("hyperparams.json", "r") as f:
         hyperparams = json.load(f)
+
+    # Загрузка названий классов из JSON
+    with open("class_to_idx.json", "r")  as f:
+        class_to_idx = json.load(f)
+
+    # Создание обратного словаря idx_to_class
+    idx_to_class = {v: k for k, v in class_to_idx.items()}
 
     """
     **Структура** classification_dataset.zip*: (внутри папка с таким же названием)
@@ -49,8 +58,8 @@ if __name__ == "__main__":
     ```
     classification_dataset/
     ├── train/
-    │   ├── 0/
-    │   └── 1/
+    │   ├── class_name1/
+    │   └── class_name2/
     ```
     """
     local_zip = "classification_dataset.zip"
@@ -63,22 +72,18 @@ if __name__ == "__main__":
         def __init__(self, original_folder, target_size=50, transform=None):
             self.transform = transform
             self.samples = []
-            self.class_to_idx = {}
+            self.class_to_idx = class_to_idx
 
-            class_names = sorted(
-                os.listdir(original_folder)
-            )  # Получаем отсортированный список имен классов
-            for idx, class_name in enumerate(
-                class_names
-            ):  # Итерируемся и присваиваем индексы
-                self.class_to_idx[class_name] = idx
+            # Проверяем, что все классы из JSON есть в папке
+            class_names = os.listdir(original_folder)
+            missing_classes = [cls for cls in class_to_idx.keys() if cls not in class_names]
+            if missing_classes:
+                raise ValueError(f"Классы {missing_classes} из class_to_idx.json отсутствуют в папке {original_folder}")
 
             # Собираем пути к изображениям для каждого класса
-            for class_name in class_names:  # Используем отсортированные имена классов
+            for class_name in class_names: # Используем отсортированные имена классов
                 class_path = os.path.join(original_folder, class_name)
-                images = [
-                    os.path.join(class_path, img) for img in os.listdir(class_path)
-                ]
+                images = [os.path.join(class_path, img) for img in os.listdir(class_path)]
                 # Повторяем изображения до достижения целевого размера
                 for i in range(target_size):
                     self.samples.append((images[i % len(images)], class_name))
@@ -90,41 +95,39 @@ if __name__ == "__main__":
         # Возвращает одно изображение и его метку по индексу
         def __getitem__(self, idx):
             img_path, class_name = self.samples[idx]
-            image = Image.open(img_path).convert("RGB")
+            image = Image.open(img_path).convert('RGB')
 
             # Применяем аугментации
             if self.transform:
                 image = self.transform(image)
 
             # Преобразуем метку класса в числовой формат
-            label_str = class_name  # Метка класса все еще строка
-            label = self.class_to_idx[
-                label_str
-            ]  # Используем class_to_idx для получения числового индекса
-            return image, torch.tensor(label, dtype=torch.float32)
+            label = self.class_to_idx[class_name]  # Преобразуем имя класса в индекс
+            return image, label  # Оставляем числовую метку для обучения
 
     # Трансформы с аугментациями для тренировочных данных
-    train_transform = transforms.Compose(
-        [
-            transforms.Resize((224, 224)),
-            transforms.RandomHorizontalFlip(),
-            transforms.RandomRotation(15),
-            transforms.ColorJitter(brightness=0.2, contrast=0.2, saturation=0.2),
-            transforms.ToTensor(),
-            transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]),
-        ]
-    )
+    train_transform = transforms.Compose([
+        transforms.Resize((224, 224)),
+        transforms.RandomHorizontalFlip(),
+        transforms.RandomRotation(15),
+        transforms.ColorJitter(brightness=0.2, contrast=0.2, saturation=0.2),
+        transforms.ToTensor(),
+        transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])
+    ])
 
     # Создание аугментированных датасетов
     train_dataset = AugmentedDataset(
-        original_folder="classification_dataset/train",
+        original_folder='classification_dataset/train',
         target_size=50,
-        transform=train_transform,
+        transform=train_transform
     )
 
-    # DataLoader'ы
+
+    # DataLoader
     train_loader = DataLoader(
-        train_dataset, batch_size=hyperparams["batch_size"], shuffle=True
+        train_dataset,
+        batch_size=hyperparams['batch_size'],
+        shuffle=True
     )
 
     # Проверим классы
@@ -157,6 +160,7 @@ if __name__ == "__main__":
     )
 
     # Обучение модели
+    print("Validation on the Train Dataset!")
     for epoch in range(hyperparams["num_epochs"]):
         model.train()
         train_loss = 0.0
