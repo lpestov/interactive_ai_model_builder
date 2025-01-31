@@ -46,7 +46,7 @@ if __name__ == "__main__":
         hyperparams = json.load(f)
 
     # Загрузка названий классов из JSON
-    with open("class_to_idx.json", "r")  as f:
+    with open("class_to_idx.json", "r") as f:
         class_to_idx = json.load(f)
 
     # Создание обратного словаря idx_to_class
@@ -77,14 +77,20 @@ if __name__ == "__main__":
 
             # Проверяем, что все классы из JSON есть в папке
             class_names = os.listdir(original_folder)
-            missing_classes = [cls for cls in class_to_idx.keys() if cls not in class_names]
+            missing_classes = [
+                cls for cls in class_to_idx.keys() if cls not in class_names
+            ]
             if missing_classes:
-                raise ValueError(f"Классы {missing_classes} из class_to_idx.json отсутствуют в папке {original_folder}")
+                raise ValueError(
+                    f"Классы {missing_classes} из class_to_idx.json отсутствуют в папке {original_folder}"
+                )
 
             # Собираем пути к изображениям для каждого класса
-            for class_name in class_names: # Используем отсортированные имена классов
+            for class_name in class_names:  # Используем отсортированные имена классов
                 class_path = os.path.join(original_folder, class_name)
-                images = [os.path.join(class_path, img) for img in os.listdir(class_path)]
+                images = [
+                    os.path.join(class_path, img) for img in os.listdir(class_path)
+                ]
                 # Повторяем изображения до достижения целевого размера
                 for i in range(target_size):
                     self.samples.append((images[i % len(images)], class_name))
@@ -96,7 +102,7 @@ if __name__ == "__main__":
         # Возвращает одно изображение и его метку по индексу
         def __getitem__(self, idx):
             img_path, class_name = self.samples[idx]
-            image = Image.open(img_path).convert('RGB')
+            image = Image.open(img_path).convert("RGB")
 
             # Применяем аугментации
             if self.transform:
@@ -107,28 +113,27 @@ if __name__ == "__main__":
             return image, label  # Оставляем числовую метку для обучения
 
     # Трансформы с аугментациями для тренировочных данных
-    train_transform = transforms.Compose([
-        transforms.Resize((224, 224)),
-        transforms.RandomHorizontalFlip(),
-        transforms.RandomRotation(15),
-        transforms.ColorJitter(brightness=0.2, contrast=0.2, saturation=0.2),
-        transforms.ToTensor(),
-        transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])
-    ])
+    train_transform = transforms.Compose(
+        [
+            transforms.Resize((224, 224)),
+            transforms.RandomHorizontalFlip(),
+            transforms.RandomRotation(15),
+            transforms.ColorJitter(brightness=0.2, contrast=0.2, saturation=0.2),
+            transforms.ToTensor(),
+            transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]),
+        ]
+    )
 
     # Создание аугментированных датасетов
     train_dataset = AugmentedDataset(
-        original_folder='classification_dataset/train',
+        original_folder="classification_dataset/train",
         target_size=50,
-        transform=train_transform
+        transform=train_transform,
     )
-
 
     # DataLoader
     train_loader = DataLoader(
-        train_dataset,
-        batch_size=hyperparams['batch_size'],
-        shuffle=True
+        train_dataset, batch_size=hyperparams["batch_size"], shuffle=True
     )
 
     # Проверим классы
@@ -190,7 +195,9 @@ if __name__ == "__main__":
                 outputs = model(images)
                 loss = criterion(outputs, labels)
 
-                _, predicted = torch.max(outputs.data, 1)  # Получаем индекс максимального значения
+                _, predicted = torch.max(
+                    outputs.data, 1
+                )  # Получаем индекс максимального значения
                 correct += (predicted == labels).sum().item()
                 total += labels.size(0)
 
