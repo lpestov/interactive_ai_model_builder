@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Загрузка изображений</title>
+    <style>
+        .class-container {
+            margin-bottom: 20px;
+        }
+
+        #uploadButton {
+            display: none;
+            margin-top: 20px;
+        }
+    </style>
+</head>
+<body>
+    <h1>Введите количество классов</h1>
+    <input type="number" id="classCount" min="2" placeholder="Введите число">
+    <button onclick="generateForms()">Создать формы</button>
+
+    <form id="uploadForm">
+        <div id="classForms"></div>
+        <button type="submit" id="uploadButton">Загрузить все</button>
+    </form>
+
+    <script>
+        function generateForms() {
+            const count = document.getElementById("classCount").value;
+            const container = document.getElementById("classForms");
+            const uploadButton = document.getElementById("uploadButton");
+
+            container.innerHTML = "";
+
+            if (isNaN(count) || count < 2 || count > 100) {
+                uploadButton.style.display = "none";
+                return;
+            }
+
+            for (let i = 1; i <= count; ++i) {
+                const div = document.createElement("div");
+                div.classList.add("class-container");
+                div.innerHTML = `
+                    <label>Класс ${i}:</label>
+                    <input type="file" name="file${i}" accept="image/*" multiple>
+                `;
+                container.appendChild(div);
+            }
+            uploadButton.style.display = "block";
+        }
+
+        document.getElementById("uploadForm").addEventListener("submit", async function(event) {
+            event.preventDefault();
+            const formData = new FormData();
+
+            const inputs = document.querySelectorAll("input[type='file']");
+            inputs.forEach((input, index) => {
+                Array.from(input.files).forEach(file => {
+                    formData.append(`file${index + 1}[]`, file);
+                });
+            });
+
+            const response = await fetch("/upload_images", {
+                method: "POST",
+                body: formData
+            });
+
+            const result = await response.json();
+        });
+    </script>
+</body>
+</html>
