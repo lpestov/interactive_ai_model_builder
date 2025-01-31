@@ -1,7 +1,7 @@
 import time
 from flask import Blueprint, jsonify, render_template, request, redirect
 
-from app.models import models
+from app.ml_models import models
 
 
 ml_bp = Blueprint('ml', __name__)
