@@ -1,0 +1,36 @@
+name: classification-neural-network
+desc: "Training a classification model in DataSphere"
+
+# Параметры точки входа для запуска вычислений
+cmd: >
+  python3 classification_neural_network.py
+
+# Файлы с входными данными (Исполняемый скрипт должен отсутствовать!)
+inputs:
+  - classification_dataset.zip
+  - hyperparams.json
+  - class_to_idx.json
+
+# Файлы с результатами
+outputs:
+  - trained_model_classification.pt
+
+# Параметры окружения
+env:
+  python:
+    type: manual
+    version: 3.11.11
+    pip:
+      index-url: https://pypi.org/simple
+      requirements-file: requirements.txt
+
+# Флаг, дающий доступ к хранилищу проекта для чтения/записи дополнительных данных
+flags:
+  - attach-project-disk
+
+# Выбор типов инстансов для вычислений (Расположены по приоритетности)
+cloud-instance-types:
+  - g1.1
+  - gt4.1
+  - g2.1
+

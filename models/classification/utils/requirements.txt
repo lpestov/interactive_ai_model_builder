@@ -1,0 +1,4 @@
+torch @ https://download.pytorch.org/whl/cu121/torch-2.5.1%2Bcu121-cp311-cp311-linux_x86_64.whl
+torchvision @ https://download.pytorch.org/whl/cu121/torchvision-0.20.1%2Bcu121-cp311-cp311-linux_x86_64.whl
+Pillow==11.1.0
+numpy==1.26.4
