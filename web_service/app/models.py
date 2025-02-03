@@ -1,4 +1,4 @@
-from app import db
+from .extentions import db
 
 class ModelTraining(db.Model):
     __tablename__ = 'models'
@@ -28,3 +28,18 @@ class ModelTraining(db.Model):
     def get_all_models(cls):
         """Получить все записи о моделях"""
         return cls.query.all()
+
+
+class Dataset(db.Model):
+    __tablename__ = 'datasets'
+
+    id = db.Column(db.Integer, primary_key=True)
+    file_name = db.Column(db.String, nullable=False)
+    file_path = db.Column(db.String, nullable=False)
+
+    def __init__(self, file_name, file_path):
+        self.file_name = file_name
+        self.file_path = file_path
+
+    def __repr__(self):  # Исправлено на __repr__
+        return f"<Dataset {self.file_name}, {self.file_path}>"

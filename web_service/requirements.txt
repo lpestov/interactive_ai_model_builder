@@ -10,5 +10,7 @@ pandas==2.2.3
 python-dateutil==2.9.0.post0
 pytz==2024.2
 six==1.17.0
+SQLAlchemy==2.0.37
+typing_extensions==4.12.2
 tzdata==2025.1
 Werkzeug==3.1.3

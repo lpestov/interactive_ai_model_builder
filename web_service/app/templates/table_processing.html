@@ -25,7 +25,7 @@ Table Processing
 {{ table|safe }}
 {% endfor %}
 <br>
-<a href="/upload_table_page">Загрузить другой файл</a>
+<a href="{{ url_for('dataset_manager.index') }}">Back to Datasest</a>
 {% endblock %}
 
 

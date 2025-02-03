@@ -1,29 +1,32 @@
 from flask import Flask
-from flask_sqlalchemy import SQLAlchemy
-import os
+from .extentions import db
 
-# Инициализация приложения
-app = Flask(__name__, template_folder='templates')
+from .routes.main import main_bp
+from .routes.image import image_bp
+from .routes.ml import ml_bp
+from .routes.dataset_manager import dataset_manager_bp
+from .routes.table_processor import table_processor_bp
+from .routes.tracking import tracking_bp
 
-# Инициализация базы данных
-app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///blog.db'
-db = SQLAlchemy(app)
-with app.app_context():
-    if not os.path.exists('sqlite:///blog.db'):
+
+def create_app():
+    # Инициализация приложения
+    app = Flask(__name__, template_folder='templates')
+
+    app.secret_key = 'kak i zaebalsya'
+
+    # Инициализация базы данных
+    app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///blog.db'
+    db.init_app(app)
+    with app.app_context():
         db.create_all()
 
-from app.routes.main import main_bp
-from app.routes.image import image_bp
-from app.routes.ml import ml_bp
-from app.routes.upload_table import upload_table_bp
-from app.routes.table_processing import table_processing_bp
-from app.routes.tracking import tracking_bp
 
-app.register_blueprint(main_bp)
-app.register_blueprint(image_bp)
-app.register_blueprint(ml_bp)
-app.register_blueprint(upload_table_bp)
-app.register_blueprint(table_processing_bp)
-app.register_blueprint(tracking_bp)
+    app.register_blueprint(main_bp)
+    app.register_blueprint(image_bp)
+    app.register_blueprint(ml_bp)
+    app.register_blueprint(dataset_manager_bp)
+    app.register_blueprint(table_processor_bp)
+    app.register_blueprint(tracking_bp)
 
-from app import routes, models
+    return app
