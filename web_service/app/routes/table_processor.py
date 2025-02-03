@@ -17,3 +17,4 @@ def process_dataset(dataset_id):
         return render_template('table_processing.html', tables=[df.to_html(classes='data', header="true", index=False)])
 
     return "Датасет не найден", 404
+

@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>ML Model Training</title>
+    <script>
+        function loadModelParams() {
+            var modelName = document.getElementById("model_select").value;
+            fetch('/get_model_params?model=' + modelName)
+                .then(response => response.json())
+                .then(params => {
+                    var paramsDiv = document.getElementById("model_params");
+                    paramsDiv.innerHTML = '';
+                    
+                    for (var param in params) {
+                        var paramInfo = params[param];
+                        
+                        var label = document.createElement("label");
+                        label.textContent = param + " (" + paramInfo.description + "):";
+                        
+                        var input = document.createElement("input");
+                        input.type = paramInfo.type === 'int' ? 'number' : 'text';
+                        input.name = "param_" + param;
+                        input.value = paramInfo.default;
+                        
+                        if(paramInfo.type === 'float') {
+                            input.step = "0.1";
+                        }
+                        
+                        paramsDiv.appendChild(label);
+                        paramsDiv.appendChild(input);
+                        paramsDiv.appendChild(document.createElement("br"));
+                    }
+                });
+        }
+    </script>
+</head>
+<body>
+    <h1>ML Model Training</h1>
+    <form action="{{ (url_for('ml_manager.train_model')) }}" method="post">
+        <div>
+            <label for="model_select">Select Model:</label>
+            <select id="model_select" name="model" onchange="loadModelParams()">
+                {% for model in models %}
+                    <option value="{{ model }}">{{ model }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        
+        <div>
+            <label for="dataset_select">Select Dataset:</label>
+            <select id="dataset_select" name="dataset">
+                {% for dataset in datasets %}
+                    <option value="{{ dataset }}">{{ dataset }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        
+        <div id="model_params">
+            <!-- Parameters will be loaded here dynamically -->
+        </div>
+        
+        <button type="submit">Train Model</button>
+    </form>
+    
+    <script>
+        // Load initial parameters
+        loadModelParams();
+    </script>
+</body>
+</html>

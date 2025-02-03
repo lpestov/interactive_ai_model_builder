@@ -1,33 +1,27 @@
+from datetime import datetime
+
 from .extentions import db
 
-class ModelTraining(db.Model):
-    __tablename__ = 'models'
+class TrainHistory(db.Model):
+    __tablename__ = 'train_history'
 
     id = db.Column(db.Integer, primary_key=True)
-    model_name = db.Column(db.String(100), nullable=False)
-    training_date = db.Column(db.DateTime, nullable=False)
-    epoch = db.Column(db.Integer, nullable=False)
-    accuracy = db.Column(db.Float, nullable=False)
-    loss = db.Column(db.Float, nullable=False)
-    model_file_path = db.Column(db.String(200), nullable=False)
+    model_name = db.Column(db.String(50), nullable=False)
+    dataset = db.Column(db.String(50), nullable=False)
+    parameters = db.Column(db.JSON)
+    train_accuracy = db.Column(db.Float)
+    test_accuracy = db.Column(db.Float)
+    model_path = db.Column(db.String(100))
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
 
-    def __init__(self, model_name, training_date, epoch, accuracy, loss, model_file_path):
+    def __init__(self, model_name, dataset, parameters=None, train_accuracy=None, test_accuracy=None, model_path=None):
         self.model_name = model_name
-        self.training_date = training_date
-        self.epoch = epoch
-        self.accuracy = accuracy
-        self.loss = loss
-        self.model_file_path = model_file_path
+        self.dataset = dataset
+        self.parameters = parameters
+        self.train_accuracy = train_accuracy
+        self.test_accuracy = test_accuracy
+        self.model_path = model_path
 
-    def save_model(self, model, model_dir='models'):
-        """Сохранить модель в файл формата .pt"""
-        model_file_path = ''
-        self.model_file_path = model_file_path
-
-    @classmethod
-    def get_all_models(cls):
-        """Получить все записи о моделях"""
-        return cls.query.all()
 
 
 class Dataset(db.Model):

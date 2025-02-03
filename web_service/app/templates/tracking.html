@@ -1,103 +1,100 @@
-{% extends 'base.html' %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Training History</title>
+    <style>
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px 0;
+            font-family: Arial, sans-serif;
+        }
 
-{% block title %}
-Tracking
-{% endblock %}
+        th, td {
+            padding: 12px;
+            text-align: left;
+            border-bottom: 1px solid #ddd;
+        }
 
-{% block head %}
-<style>
-    body {
-        font-family: Arial, sans-serif;
-        margin: 20px;
-        background-color: #f4f4f4;
-    }
-    h1 {
-        color: #333;
-    }
-    h2 {
-        color: #555;
-        margin-top: 30px;
-    }
-    ul {
-        list-style-type: none;
-        padding: 0;
-    }
-    li {
-        background: #fff;
-        margin: 10px 0;
-        padding: 15px;
-        border-radius: 5px;
-        box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
-    }
-    .download-btn {
-        display: inline-block;
-        margin-top: 10px;
-        padding: 10px 15px;
-        background-color: #007bff;
-        color: #fff;
-        text-decoration: none;
-        border-radius: 5px;
-    }
-    .download-btn:hover {
-        background-color: #0056b3;
-    }
-</style>
-{% endblock %}
+        th {
+            background-color: #f2f2f2;
+        }
 
+        tr:hover {
+            background-color: #f5f5f5;
+        }
 
-{% block body %}
-<h1>Прогресс обучения модели</h1>
+        .json-params {
+            max-width: 300px;
+            white-space: pre-wrap;
+            word-break: break-all;
+        }
 
-<h2>Запуски в процессе</h2>
-<div id="ongoing-results">
-    <ul>
-        <!-- Результаты текущих запусков будут подгружены здесь -->
-    </ul>
-</div>
+        .accuracy-cell {
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+    <h1>Training History</h1>
+    <a href="/">Back to Training</a>
 
-<h2>Завершенные запуски</h2>
-<div id="completed-results">
-    <ul>
-        <!-- Результаты завершенных запусков будут подгружены здесь -->
-    </ul>
-</div>
-
-<script>
-    function fetchResults() {
-        fetch('/get_results')  // Эндпоинт для получения результатов
-            .then(response => response.json())
-            .then(data => {
-                const ongoingResultsDiv = document.getElementById('ongoing-results').querySelector('ul');
-                const completedResultsDiv = document.getElementById('completed-results').querySelector('ul');
-                ongoingResultsDiv.innerHTML = '';
-                completedResultsDiv.innerHTML = '';
-
-                data.ongoing.forEach(result => {
-                    ongoingResultsDiv.innerHTML += `
-                        <li>
-                            <strong>Модель:</strong> ${result.model_name}<br>
-                            <strong>Время обучения:</strong> ${result.training_time}<br>
-                            <strong>Параметры:</strong> ${JSON.stringify(result.parameters)}<br>
-                            <a class="download-btn" href="${result.model_path}">Скачать модель</a>
-                        </li>
-                    `;
-                });
-               data.completed.forEach(result => {
-                    completedResultsDiv.innerHTML += `
-                        <li>
-                            <strong>Модель:</strong> ${result.model_name}<br>
-                            <strong>Время обучения:</strong> ${result.training_time}<br>
-                            <strong>Параметры:</strong> ${JSON.stringify(result.parameters)}<br>
-                            <a class="download-btn" href="${result.model_path}">Скачать модель</a>
-                        </li>
-                    `;
-                });
-            })
-            .catch(error => console.error('Ошибка:', error));
-    }
-
-    // Вызываем fetchResults только один раз при загрузке страницы
-    document.addEventListener('DOMContentLoaded', fetchResults);
-</script>
-{% endblock %}
-
+    <table>
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>Model</th>
+                <th>Dataset</th>
+                <th>Parameters</th>
+                <th>Train Accuracy</th>
+                <th>Test Accuracy</th>
+                <th>Created At</th>
+                <th>Download</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for record in history %}
+            <tr>
+                <td>{{ record.id }}</td>
+                <td>{{ record.model_name }}</td>
+                <td>{{ record.dataset }}</td>
+                <td class="json-params">
+                    {% if record.parameters %}
+                        {{ record.parameters | tojson }}
+                    {% else %}
+                        N/A
+                    {% endif %}
+                </td>
+                <td class="accuracy-cell">
+                    {% if record.train_accuracy is not none %}
+                        {{ "%.2f"|format(record.train_accuracy) }}
+                    {% else %}
+                        N/A
+                    {% endif %}
+                </td>
+                <td class="accuracy-cell">
+                    {% if record.test_accuracy is not none %}
+                        {{ "%.2f"|format(record.test_accuracy) }}
+                    {% else %}
+                        N/A
+                    {% endif %}
+                </td>
+                <td>{{ record.created_at.strftime('%Y-%m-%d %H:%M') }}</td>
+                <td>
+                    {% if record.model_path %}
+                        <a href="/download/{{ record.id }}" download>Download</a>
+                    {% else %}
+                        N/A
+                    {% endif %}
+                </td>
+            </tr>
+            {% else %}
+            <tr>
+                <td colspan="8" style="text-align: center;">No training records found</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</body>
+</html>
