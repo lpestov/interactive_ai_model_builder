@@ -35,6 +35,9 @@ def upload_file():
         file_extension = os.path.splitext(file.filename)[1]
         new_file_name = f"{unique_id}{file_extension}"
 
+        if not os.path.exists('datasets'):
+            os.makedirs('datasets')
+
         file_path = os.path.join('datasets', new_file_name)
         file_name = file.filename
 

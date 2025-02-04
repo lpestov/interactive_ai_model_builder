@@ -37,7 +37,7 @@
         </table>
     {% endif %}
 
-    <h2>Upload dataset</h2>
+    <h2>Upload dataset (.csv only)</h2>
     <form action="{{ url_for('dataset_manager.upload_file') }}" method="post" enctype="multipart/form-data">
         <input type="file" name="file" accept=".csv" required>
         <button type="submit">Upload</button>
