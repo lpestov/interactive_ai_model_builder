@@ -3,7 +3,7 @@ import os
 import shutil
 import json
 
-from app.folderNotFoundError import FolderNotFoundError
+from web_service.app.exceptions.folderNotFoundError import FolderNotFoundError
 
 
 ALLOWED_EXTENSIONS = {'jpg', 'jpeg', 'png'}
