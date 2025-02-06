@@ -4,7 +4,6 @@
 Image upload
 {% endblock %}
 
-
 {% block head %}
 <style>
     .class-container {
@@ -17,7 +16,6 @@ Image upload
     }
 </style>
 {% endblock %}
-
 
 {% block body %}
 <body>
@@ -100,8 +98,14 @@ Image upload
                 method: "POST",
                 body: formData
             });
-    });
-</script>
+
+            // Проверка успешности и редирект на другую страницу
+            if (response.ok) {
+                window.location.href = "/image_prediction";  // Перенаправление на страницу с изображением
+            } else {
+                alert("Ошибка загрузки файлов.");
+            }
+        });
+    </script>
+</body>
 {% endblock %}
-
-

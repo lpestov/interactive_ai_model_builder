@@ -7,6 +7,7 @@ from .routes.ml_manager import ml_manger_bp
 from .routes.dataset_manager import dataset_manager_bp
 from .routes.table_processor import table_processor_bp
 from .routes.tracking import tracking_bp
+from .routes.image_predictor import image_predictor_bp
 
 
 def create_app():
@@ -28,5 +29,6 @@ def create_app():
     app.register_blueprint(dataset_manager_bp)
     app.register_blueprint(table_processor_bp)
     app.register_blueprint(tracking_bp)
+    app.register_blueprint(image_predictor_bp)
 
     return app

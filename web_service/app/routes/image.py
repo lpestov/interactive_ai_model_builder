@@ -1,9 +1,9 @@
-from flask import Blueprint, jsonify, render_template, request
+from flask import Blueprint, jsonify, redirect, render_template, request, url_for
 import os
 import shutil
 import json
 
-from web_service.app.exceptions.folderNotFoundError import FolderNotFoundError
+from app.exceptions.folderNotFoundError import FolderNotFoundError
 
 
 ALLOWED_EXTENSIONS = {'jpg', 'jpeg', 'png'}
@@ -27,7 +27,7 @@ image_bp = Blueprint('image', __name__)
 
 
 @image_bp.route('/image_page', methods = ['GET'])
-def image():
+def index():
     return render_template('upload_image.html')
 
 @image_bp.route('/upload_images', methods = ['POST'])
@@ -68,10 +68,7 @@ def upload_images():
     json_data = json.dumps(class_mapping, ensure_ascii=False, indent=2)
     json_filename = os.path.join(UTILS_PATH, 'class_to_idx.json')
     with open(json_filename, "w", encoding='utf-8') as json_file:
-        json_file.write(json_data)
+        json_file.write(json_data)  
             
-    return jsonify({
-        'message': 'Изображения успешно загружены',
-        'class_mapping': class_mapping
-    })
+    return redirect(url_for('image_predictor.index'))
     

@@ -164,4 +164,6 @@ cython_debug/
 
 # utils
 /models/classification/utils/trained_model_classification.pt
+/models/classification/utils/class_to_idx.json
+/models/classification/utils/classification_dataset.zip
 /web_service/datasets
