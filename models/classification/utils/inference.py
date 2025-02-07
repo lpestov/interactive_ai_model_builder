@@ -25,7 +25,7 @@ def load_model_and_classes(model_path, class_mapping_path):
             - Device (cuda/cpu)
     """
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-    model = torch.load(model_path, map_location=device)
+    model = torch.load(model_path, map_location=device, weights_only=False)
     model.eval()
 
     with open(class_mapping_path, "r") as f:

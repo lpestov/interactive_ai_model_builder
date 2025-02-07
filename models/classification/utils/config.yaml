@@ -19,10 +19,16 @@ outputs:
 env:
   python:
     type: manual
-    version: 3.11.11
+    version: 3.11
     pip:
       index-url: https://pypi.org/simple
-      requirements-file: requirements.txt
+      trusted-hosts:
+        - download.pytorch.org
+      extra-index-urls:
+        - https://download.pytorch.org/whl/cu121
+    requirements-file: requirements.txt
+    local-paths:
+      - classification_neural_network.py
 
 # Флаг, дающий доступ к хранилищу проекта для чтения/записи дополнительных данных
 flags:
@@ -31,6 +37,7 @@ flags:
 # Выбор типов инстансов для вычислений (Расположены по приоритетности)
 cloud-instance-types:
   - g1.1
-  - gt4.1
-  - g2.1
+# (Если имеется доступ)
+#  - gt4.1
+#  - g2.1
 
