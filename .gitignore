@@ -163,8 +163,10 @@ cython_debug/
 .idea/
 
 # utils
-/models/classification/utils/trained_model_classification.pt
-/models/classification/utils/class_to_idx.json
-/models/classification/utils/classification_dataset.zip
-/models/classification/utils/predictions
+/web_service/images
 /web_service/datasets
+/web_service/app/static
+/web_service/predictions
+/web_service/utils/trained_model_classification.pt
+/web_service/utils/class_to_idx.json
+/web_service/utils/classification_dataset.zip

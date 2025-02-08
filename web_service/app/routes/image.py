@@ -1,4 +1,4 @@
-from flask import Blueprint, jsonify, redirect, render_template, request, url_for
+from flask import Blueprint, jsonify, redirect, render_template, request, url_for, flash
 import os
 import shutil
 import json
@@ -8,7 +8,7 @@ from app.exceptions.folderNotFoundError import FolderNotFoundError
 
 ALLOWED_EXTENSIONS = {'jpg', 'jpeg', 'png'}
 UPLOAD_FOLDER_PATH = 'images/classification_dataset/train'
-UTILS_PATH = '../models/classification/utils'
+UTILS_PATH = 'utils'
 
 
 # функция проверки расширения загруженного файла
@@ -30,12 +30,13 @@ image_bp = Blueprint('image', __name__)
 def index():
     return render_template('upload_image.html')
 
-@image_bp.route('/upload_images', methods = ['POST'])
+@image_bp.route('/upload_images', methods = ['POST', 'GET'])
 def upload_images():
     os.makedirs(UPLOAD_FOLDER_PATH, exist_ok=True)
     
     if not request.files:
-        return jsonify({"message": "Нет загруженных файлов"}), 400
+        flash('Нет загруженных файлов')
+        return redirect(url_for('image.index'))
     
     # отображение имени класса в его порядковый номер (для создания json-а)
     class_mapping = {}
@@ -62,13 +63,13 @@ def upload_images():
                 file.save(filepath)
     
     create_zip('images', 'classification_dataset')
-    shutil.rmtree('images')
+    shutil.rmtree('images/classification_dataset')
     
     # создание данных для json-а и создание самого файла .json
     json_data = json.dumps(class_mapping, ensure_ascii=False, indent=2)
     json_filename = os.path.join(UTILS_PATH, 'class_to_idx.json')
     with open(json_filename, "w", encoding='utf-8') as json_file:
-        json_file.write(json_data)  
+        json_file.write(json_data)
             
     return redirect(url_for('image_predictor.index'))
     

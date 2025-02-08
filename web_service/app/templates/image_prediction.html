@@ -26,16 +26,8 @@
     <h2>Загрузите изображение</h2>
     <form method="POST" enctype="multipart/form-data" action="{{ url_for('image_predictor.predict') }}">
         <input type="file" id="fileInput" name="image" accept="image/*">
-        <br>
-        <img id="preview" alt="Предпросмотр изображения">
-        <br>
         <button type="submit">Загрузить</button>
     </form>
-
-    {% if image_url %}
-    <h3>Загруженное изображение:</h3>
-    <img src="{{ image_url }}" alt="Загруженное изображение" style="display:block; margin-top:20px;">
-    {% endif %}
 
     <br>
     <a href="{{ url_for('image.index') }}">Назад</a>

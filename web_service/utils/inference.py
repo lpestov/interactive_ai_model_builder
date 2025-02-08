@@ -212,13 +212,13 @@ def main():
         print("Используйте: python inference.py <path_to_image>")
         sys.exit(1)
     # Константы
-    MODEL_PATH = "trained_model_classification.pt"
-    CLASS_MAPPING_PATH = "class_to_idx.json"
+    MODEL_PATH = "utils/trained_model_classification.pt"
+    CLASS_MAPPING_PATH = "utils/class_to_idx.json"
     IMAGE_PATH = sys.argv[1]
     OUTPUT_DIR = "predictions"
 
 
-    # Проверка существования файлов
+    # Проверка существования файлов 
     if not os.path.exists(MODEL_PATH):
         print(f"Ошибка: Файл модели не найден: {MODEL_PATH}")
         sys.exit(1)

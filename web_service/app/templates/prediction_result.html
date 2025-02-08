@@ -1,0 +1,29 @@
+{% extends 'base.html' %}
+
+{% block title %}
+Результат предсказания
+{% endblock %}
+
+{% block head %}
+<style>
+    img {
+        max-width: 1500px;
+        max-height: 2000px;
+    }
+</style>
+{% endblock %}
+
+{% block body %}
+<h2>Результат предсказания</h2>
+
+<div class="chart-image">
+    {% if image_url %}
+        <img src={{ url_for('static', filename=image_url) }} alt="Диаграмма предсказаний"> </img>
+    {% else %}
+        <p>Ошибка: изображение не найдено.</p>
+    {% endif %}
+
+    <br>
+    <a href="{{ url_for('image_predictor.index') }}">Назад</a>
+</div>
+{% endblock %}
