@@ -2,6 +2,7 @@ from flask import Blueprint, jsonify, redirect, render_template, request, url_fo
 import os
 import shutil
 import json
+import subprocess
 
 from app.exceptions.folderNotFoundError import FolderNotFoundError
 
@@ -9,13 +10,15 @@ from app.exceptions.folderNotFoundError import FolderNotFoundError
 ALLOWED_EXTENSIONS = {'jpg', 'jpeg', 'png'}
 UPLOAD_FOLDER_PATH = 'images/classification_dataset/train'
 UTILS_PATH = 'utils'
+PROJECT_ID = 'bt10u0jg5lp47ke8met6'
+CONFIG_YAML_FILE = 'config.yaml'
 
 
-# функция проверки расширения загруженного файла
+# Функция проверки расширения загруженного файла
 def file_extension_validation(filename):
     return "." in filename and filename.split(".", 1)[1].lower() in ALLOWED_EXTENSIONS
 
-# функция для создания zip-архива из имеющейся папки
+# Функция для создания zip-архива из имеющейся папки
 def create_zip(source_folder, zip_name):
     if not os.path.exists(source_folder):
         raise FolderNotFoundError(f"Папка {source_folder} не существует")
@@ -38,12 +41,12 @@ def upload_images():
         flash('Нет загруженных файлов')
         return redirect(url_for('image.index'))
     
-    # отображение имени класса в его порядковый номер (для создания json-а)
+    # Отображение имени класса в его порядковый номер (для создания json-а)
     class_mapping = {}
     class_index = 0
     
     for class_id in request.files:
-        # получаем имя класса, введенное пользователем в
+        # Получаем имя класса, введенное пользователем в
         # "чистом" виде в нижнем регистре
         class_name = class_id.replace("[]", "").lower()
         
@@ -65,11 +68,17 @@ def upload_images():
     create_zip('images', 'classification_dataset')
     shutil.rmtree('images/classification_dataset')
     
-    # создание данных для json-а и создание самого файла .json
+    # Cоздание данных для json-а и создание самого файла .json
     json_data = json.dumps(class_mapping, ensure_ascii=False, indent=2)
     json_filename = os.path.join(UTILS_PATH, 'class_to_idx.json')
     with open(json_filename, "w", encoding='utf-8') as json_file:
         json_file.write(json_data)
+        
+    subprocess.run(['datasphere', 'project', 'job', 'execute',
+                '-p', PROJECT_ID, '-c', CONFIG_YAML_FILE], 
+               cwd='utils',
+               capture_output=False,
+               text=True)
             
     return redirect(url_for('image_predictor.index'))
     

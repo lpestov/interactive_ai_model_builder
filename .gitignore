@@ -170,3 +170,4 @@ cython_debug/
 /web_service/utils/trained_model_classification.pt
 /web_service/utils/class_to_idx.json
 /web_service/utils/classification_dataset.zip
+/web_service/utils/hyperparams.json
