@@ -162,3 +162,11 @@ cython_debug/
 #  option (not recommended) you can uncomment the following to ignore the entire idea folder.
 .idea/
 
+#dataset for classification
+datasets/classification/dogvscat_small
+
+#trained model
+models/classification/utils/trained_model_classification.pt
+
+#predictions
+models/classification/utils/predictions
