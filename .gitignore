@@ -162,6 +162,7 @@ cython_debug/
 #  option (not recommended) you can uncomment the following to ignore the entire idea folder.
 .idea/
 
+
 # utils
 /web_service/images
 /web_service/datasets
@@ -171,3 +172,12 @@ cython_debug/
 /web_service/utils/class_to_idx.json
 /web_service/utils/classification_dataset.zip
 /web_service/utils/hyperparams.json
+
+#dataset for classification
+datasets/classification/dogvscat_small
+
+#trained model
+models/classification/utils/trained_model_classification.pt
+
+#predictions
+models/classification/utils/predictions
