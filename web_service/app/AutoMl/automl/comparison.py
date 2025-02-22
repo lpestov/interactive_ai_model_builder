@@ -1,27 +1,29 @@
 import time
-import numpy as np
-from sklearn.model_selection import cross_val_score
 from warnings import catch_warnings, simplefilter
 
+import numpy as np
+from sklearn.model_selection import cross_val_score
+
+
 def compare_hpo_methods(config, X, y):
-    task_type = config['task_type']
-    model_config = config['model']
-    scoring = config['scoring']
-    hpo_methods_config = config['hpo_methods']
+    task_type = config["task_type"]
+    model_config = config["model"]
+    scoring = config["scoring"]
+    hpo_methods_config = config["hpo_methods"]
 
     # Определение целевой функции
     def objective_function(**params):
-        model_class = model_config['class']
-        model_params = model_config['fixed_params'].copy()
+        model_class = model_config["class"]
+        model_params = model_config["fixed_params"].copy()
 
-        for param in model_config['param_space']:
-            name = param['name']
+        for param in model_config["param_space"]:
+            name = param["name"]
             value = params[name]
-            if param['type'] == 'integer':
+            if param["type"] == "integer":
                 model_params[name] = int(round(value))
-            elif param['type'] == 'float':
+            elif param["type"] == "float":
                 model_params[name] = value
-            elif param['type'] == 'categorical':
+            elif param["type"] == "categorical":
                 model_params[name] = value
 
         model = model_class(**model_params)
@@ -34,14 +36,12 @@ def compare_hpo_methods(config, X, y):
     results = {}
     for method_name, method_config in hpo_methods_config.items():
         print(f"=== {method_name} ({task_type}) ===")
-        HPOClass = method_config['hpo_class']
-        hpo_params = method_config.get('hpo_params', {})
+        HPOClass = method_config["hpo_class"]
+        hpo_params = method_config.get("hpo_params", {})
 
         # Инициализация оптимизатора
         hpo = HPOClass(
-            f=objective_function,
-            param_space=model_config['param_space'],
-            **hpo_params
+            f=objective_function, param_space=model_config["param_space"], **hpo_params
         )
 
         # Запуск оптимизации
@@ -52,15 +52,15 @@ def compare_hpo_methods(config, X, y):
         time_taken = time.time() - start_time
 
         results[method_name] = {
-            'best_score': best_score,
-            'time': time_taken,
-            'history': history,
-            'best_params': best_params
+            "best_score": best_score,
+            "time": time_taken,
+            "history": history,
+            "best_params": best_params,
         }
 
         # Вывод результатов метода
         print(f"Best Score: {best_score:.4f}, Time: {time_taken:.2f}s")
-        print("=" * 30 + '\n')
+        print("=" * 30 + "\n")
 
     # Сводка результатов
     print(f"\n=== Final Results ===")
@@ -69,11 +69,6 @@ def compare_hpo_methods(config, X, y):
         print(f"  Best Score: {res['best_score']:.4f}")
         print(f"  Time: {res['time']:.2f}s")
         print("  Best Parameters:")
-        for param, value in res['best_params'].items():
+        for param, value in res["best_params"].items():
             print(f"    {param}: {value}")
     print("\n" + "=" * 50)
-
-
-
-
-
