@@ -1,55 +1,57 @@
-from flask import Blueprint, flash, render_template, request, redirect, url_for
-import subprocess
 import os
 import re
 import shutil
+import subprocess
 
 from app.routes.image import file_extension_validation
+from flask import Blueprint, flash, redirect, render_template, request, url_for
 
-INFERENCE_SCRIPT_PATH = 'utils/inference.py'
-UPLOAD_FOLDER_PATH = 'images'
-STATIC_FOLDER = 'app/static'  # папка для статических файлов
 
-image_predictor_bp = Blueprint('image_predictor', __name__)
+INFERENCE_SCRIPT_PATH = "utils/inference.py"
+UPLOAD_FOLDER_PATH = "images"
+STATIC_FOLDER = "app/static"  # папка для статических файлов
 
-@image_predictor_bp.route('/image_prediction', methods=['GET'])
+image_predictor_bp = Blueprint("image_predictor", __name__)
+
+
+@image_predictor_bp.route("/image_prediction", methods=["GET"])
 def index():
-    return render_template('image_prediction.html')
+    return render_template("image_prediction.html")
 
-@image_predictor_bp.route('/predict_image_class', methods=['POST'])
+
+@image_predictor_bp.route("/predict_image_class", methods=["POST"])
 def predict():
     if not os.path.exists(UPLOAD_FOLDER_PATH):
         os.makedirs(UPLOAD_FOLDER_PATH)
 
-    if 'image' not in request.files:
-        flash('Файл не выбран')
-        return redirect(url_for('image_predictor.index'))
+    if "image" not in request.files:
+        flash("Файл не выбран")
+        return redirect(url_for("image_predictor.index"))
 
-    file = request.files['image']
+    file = request.files["image"]
 
     if not file_extension_validation(file.filename):
-        flash('Неверное расширение у файла')
-        return redirect(url_for('image_predictor.index'))
+        flash("Неверное расширение у файла")
+        return redirect(url_for("image_predictor.index"))
 
     file_path = os.path.join(UPLOAD_FOLDER_PATH, file.filename)
     file.save(file_path)
 
     try:
         result = subprocess.run(
-            ['python', INFERENCE_SCRIPT_PATH, file_path],
-            capture_output=True, text=True
+            ["python", INFERENCE_SCRIPT_PATH, file_path], capture_output=True, text=True
         )
 
         if result.returncode != 0:
             flash(f"Ошибка при исполнении скрипта для предсказания: {result.stderr}")
-            return redirect(url_for('image_predictor.index'))
+            return redirect(url_for("image_predictor.index"))
 
         # Получаем данные из inference-скрипта
         output = result.stdout
-        match = re.search(r'Plot saved to: (.*\.png)', output)
+        match = re.search(r"Plot saved to: (.*\.png)", output)
         if not match:
-            flash('Не удалось найти путь к изображению с диаграммой классов')
-            return redirect(url_for('image_predictor.index'))
+            flash("Не удалось найти путь к изображению с диаграммой классов")
+            return redirect(url_for("image_predictor.index"))
 
         # Получаем путь к .png файлу
         image_path = match.group(1)
@@ -74,8 +76,8 @@ def predict():
         print(f"Путь к изображению: {static_image_path}")
         print(f"URL изображения: {image_url}")
 
-        return render_template('prediction_result.html', image_url=image_url)
+        return render_template("prediction_result.html", image_url=image_url)
 
     except Exception as e:
         flash(f"Ошибка при попытке предсказания: {str(e)}")
-        return redirect(url_for('image_predictor.index'))
+        return redirect(url_for("image_predictor.index"))

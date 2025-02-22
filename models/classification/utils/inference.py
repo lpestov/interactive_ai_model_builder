@@ -88,9 +88,7 @@ def predict_image(model, image_tensor, device):
     return probs
 
 
-def visualize_predictions(
-    image, probs, idx_to_class, image_path, output_dir
-):
+def visualize_predictions(image, probs, idx_to_class, image_path, output_dir):
     """
     Визуализация изображения и предсказаний модели с сохранением результата.
 
@@ -155,9 +153,7 @@ def visualize_predictions(
     return plot_path
 
 
-def save_predictions_to_json(
-    image_path, probabilities, idx_to_class, output_dir
-):
+def save_predictions_to_json(image_path, probabilities, idx_to_class, output_dir):
     """
     Сохранение результатов предсказаний в JSON файл.
 
@@ -217,7 +213,6 @@ def main():
     IMAGE_PATH = sys.argv[1]
     OUTPUT_DIR = "predictions"
 
-
     # Проверка существования файлов
     if not os.path.exists(MODEL_PATH):
         print(f"Ошибка: Файл модели не найден: {MODEL_PATH}")
@@ -249,12 +244,18 @@ def main():
 
         # Визуализация и сохранение графика
         plot_path = visualize_predictions(
-            original_image, probabilities, idx_to_class, IMAGE_PATH, output_dir=OUTPUT_DIR
+            original_image,
+            probabilities,
+            idx_to_class,
+            IMAGE_PATH,
+            output_dir=OUTPUT_DIR,
         )
         print(f"Plot saved to: {plot_path}")
 
         # Сохранение результатов в JSON
-        json_path = save_predictions_to_json(IMAGE_PATH, probabilities, idx_to_class, output_dir=OUTPUT_DIR)
+        json_path = save_predictions_to_json(
+            IMAGE_PATH, probabilities, idx_to_class, output_dir=OUTPUT_DIR
+        )
         print(f"\nPredictions saved to: {json_path}")
 
     except KeyboardInterrupt:

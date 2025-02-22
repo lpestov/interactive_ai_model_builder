@@ -1,10 +1,22 @@
-import numpy as np
 from warnings import catch_warnings, simplefilter
 
+import numpy as np
+
+
 class EvolutionaryStrategyHPO:
-    def __init__(self, f, param_space, population_size=20,
-                 mutation_variance=0.1, verbose=1, random_state=None,
-                 generations=10, mutation_rate=0.25, mutation_ratio=0.75, elite_ratio=0.2):
+    def __init__(
+        self,
+        f,
+        param_space,
+        population_size=20,
+        mutation_variance=0.1,
+        verbose=1,
+        random_state=None,
+        generations=10,
+        mutation_rate=0.25,
+        mutation_ratio=0.75,
+        elite_ratio=0.2,
+    ):
         """
         f: Objective function to minimize/maximize. Must accept parameters from param_space as kwargs
         param_space: List of dictionaries defining search space parameters (name, type, low/high/categories)
@@ -35,39 +47,41 @@ class EvolutionaryStrategyHPO:
 
         # Валидация параметров
         for param in self.param_space:
-            if param['type'] in ['integer', 'float']:
-                if param['low'] >= param['high']:
+            if param["type"] in ["integer", "float"]:
+                if param["low"] >= param["high"]:
                     raise ValueError(f"Invalid range for {param['name']}")
-            elif param['type'] == 'categorical' and not param.get('categories'):
+            elif param["type"] == "categorical" and not param.get("categories"):
                 raise ValueError(f"Invalid categories for {param['name']}")
 
     def _initialize_individual(self):
         individual = {}
         for param in self.param_space:
-            name = param['name']
-            if param['type'] == 'float':
-                individual[name] = self.rng.uniform(param['low'], param['high'])
-            elif param['type'] == 'integer':
-                individual[name] = self.rng.randint(param['low'], param['high'] + 1)
-            elif param['type'] == 'categorical':
-                individual[name] = self.rng.choice(param['categories'])
+            name = param["name"]
+            if param["type"] == "float":
+                individual[name] = self.rng.uniform(param["low"], param["high"])
+            elif param["type"] == "integer":
+                individual[name] = self.rng.randint(param["low"], param["high"] + 1)
+            elif param["type"] == "categorical":
+                individual[name] = self.rng.choice(param["categories"])
         return individual
 
     def _mutate(self, individual):
         mutated = individual.copy()
         for param in self.param_space:
-            name = param['name']
+            name = param["name"]
             if self.rng.rand() < self.mutation_rate:
-                if param['type'] == 'float':
-                    delta = self.mutation_variance * (param['high'] - param['low'])
+                if param["type"] == "float":
+                    delta = self.mutation_variance * (param["high"] - param["low"])
                     new_val = mutated[name] + self.rng.uniform(-delta, delta)
-                    mutated[name] = np.clip(new_val, param['low'], param['high'])
-                elif param['type'] == 'integer':
-                    delta = max(1, int(self.mutation_variance * (param['high'] - param['low'])))
+                    mutated[name] = np.clip(new_val, param["low"], param["high"])
+                elif param["type"] == "integer":
+                    delta = max(
+                        1, int(self.mutation_variance * (param["high"] - param["low"]))
+                    )
                     new_val = mutated[name] + self.rng.randint(-delta, delta + 1)
-                    mutated[name] = int(np.clip(new_val, param['low'], param['high']))
-                elif param['type'] == 'categorical':
-                    mutated[name] = self.rng.choice(param['categories'])
+                    mutated[name] = int(np.clip(new_val, param["low"], param["high"]))
+                elif param["type"] == "categorical":
+                    mutated[name] = self.rng.choice(param["categories"])
         return mutated
 
     def _crossover(self, parent1, parent2):
@@ -75,16 +89,16 @@ class EvolutionaryStrategyHPO:
         crossover_params = self.rng.choice(
             self.param_space,
             size=self.rng.randint(1, len(self.param_space) + 1),
-            replace=False
+            replace=False,
         )
         for param in crossover_params:
-            child[param['name']] = parent2[param['name']]
+            child[param["name"]] = parent2[param["name"]]
         return child
 
     def _evaluate(self, individual):
         params = {}
         for param in self.param_space:
-            name = param['name']
+            name = param["name"]
             val = individual[name]
             params[name] = val
 
@@ -97,12 +111,14 @@ class EvolutionaryStrategyHPO:
             score = self.f(**params)
 
         self.fitness_cache[key] = score
-        if self.verbose > 1 :
+        if self.verbose > 1:
             print(f"Probe: {params} → Score: {score:.4f}")
         return score
 
     def optimize(self):
-        population = [self._initialize_individual() for _ in range(self.population_size)]
+        population = [
+            self._initialize_individual() for _ in range(self.population_size)
+        ]
         elite_size = max(2, int(self.population_size * self.elite_ratio))
 
         for gen in range(self.generations):
@@ -122,8 +138,9 @@ class EvolutionaryStrategyHPO:
             best_fitness = np.max(fitness)
             self.history.append(best_fitness)
             if self.verbose:
-                print(f"Generation {gen + 1}/{self.generations} | Best: {best_fitness:.4f}")
-
+                print(
+                    f"Generation {gen + 1}/{self.generations} | Best: {best_fitness:.4f}"
+                )
 
         best_idx = np.argmax([self._evaluate(ind) for ind in population])
         best_params = population[best_idx]

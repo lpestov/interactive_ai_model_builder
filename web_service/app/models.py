@@ -2,8 +2,9 @@ from datetime import datetime
 
 from .extentions import db
 
+
 class TrainHistory(db.Model):
-    __tablename__ = 'train_history'
+    __tablename__ = "train_history"
 
     id = db.Column(db.Integer, primary_key=True)
     model_name = db.Column(db.String(50), nullable=False)
@@ -14,7 +15,15 @@ class TrainHistory(db.Model):
     model_path = db.Column(db.String(100))
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
 
-    def __init__(self, model_name, dataset, parameters=None, train_accuracy=None, test_accuracy=None, model_path=None):
+    def __init__(
+        self,
+        model_name,
+        dataset,
+        parameters=None,
+        train_accuracy=None,
+        test_accuracy=None,
+        model_path=None,
+    ):
         self.model_name = model_name
         self.dataset = dataset
         self.parameters = parameters
@@ -23,9 +32,8 @@ class TrainHistory(db.Model):
         self.model_path = model_path
 
 
-
 class Dataset(db.Model):
-    __tablename__ = 'datasets'
+    __tablename__ = "datasets"
 
     id = db.Column(db.Integer, primary_key=True)
     file_name = db.Column(db.String, nullable=False)

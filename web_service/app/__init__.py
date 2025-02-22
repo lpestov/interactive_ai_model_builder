@@ -1,23 +1,23 @@
 from flask import Flask
-from .extentions import db
 
-from .routes.main import main_bp
-from .routes.image import image_bp
-from .routes.ml_manager import ml_manger_bp
+from .extentions import db
 from .routes.dataset_manager import dataset_manager_bp
+from .routes.image import image_bp
+from .routes.image_predictor import image_predictor_bp
+from .routes.main import main_bp
+from .routes.ml_manager import ml_manger_bp
 from .routes.table_processor import table_processor_bp
 from .routes.tracking import tracking_bp
-from .routes.image_predictor import image_predictor_bp
 
 
 def create_app():
     # Инициализация приложения
-    app = Flask(__name__, template_folder='templates', static_folder='static')
+    app = Flask(__name__, template_folder="templates", static_folder="static")
 
-    app.secret_key = 'kak i zaebalsya'
+    app.secret_key = "kak i zaebalsya"
 
     # Инициализация базы данных
-    app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///blog.db'
+    app.config["SQLALCHEMY_DATABASE_URI"] = "sqlite:///blog.db"
     db.init_app(app)
     with app.app_context():
         db.create_all()

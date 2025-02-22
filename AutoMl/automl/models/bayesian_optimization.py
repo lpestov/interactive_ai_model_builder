@@ -1,14 +1,26 @@
+import warnings
+from warnings import catch_warnings, simplefilter
+
 import numpy as np
 from scipy.stats import norm
 from sklearn.gaussian_process import GaussianProcessRegressor
 from sklearn.gaussian_process.kernels import Matern
-from warnings import catch_warnings, simplefilter
-import warnings
+
 
 class BayesianOptimizationHPO:
-    def __init__(self, f, param_space, verbose=1, random_state=None,
-                 init_points=10, n_iter=50, acq='ucb', kappa=2.576, xi=0.0,
-                 n_candidates=500):
+    def __init__(
+        self,
+        f,
+        param_space,
+        verbose=1,
+        random_state=None,
+        init_points=10,
+        n_iter=50,
+        acq="ucb",
+        kappa=2.576,
+        xi=0.0,
+        n_candidates=500,
+    ):
         """
         f: Objective function to minimize/maximize. Must accept parameters from param_space as kwargs
         param_space: List of dictionaries defining search space parameters (name, type, low/high/categories)
@@ -39,27 +51,33 @@ class BayesianOptimizationHPO:
         self.categorical_mapping = {}
 
         for param in param_space:
-            name = param['name']
-            param_type = param['type']
-            if param_type == 'categorical':
-                if 'categories' not in param:
-                    raise ValueError(f"Parameter {name} of type 'categorical' must have 'categories' list.")
-                categories = param['categories']
+            name = param["name"]
+            param_type = param["type"]
+            if param_type == "categorical":
+                if "categories" not in param:
+                    raise ValueError(
+                        f"Parameter {name} of type 'categorical' must have 'categories' list."
+                    )
+                categories = param["categories"]
                 if not isinstance(categories, list) or len(categories) == 0:
-                    raise ValueError(f"Parameter {name} 'categories' must be a non-empty list.")
+                    raise ValueError(
+                        f"Parameter {name} 'categories' must be a non-empty list."
+                    )
                 self.categorical_mapping[name] = categories.copy()
                 low = 0
                 high = len(categories) - 1
                 self.pbounds[name] = (low, high)
             else:
-                if 'low' not in param or 'high' not in param:
+                if "low" not in param or "high" not in param:
                     raise ValueError(f"Parameter {name} missing 'low' or 'high'")
-                low = param['low']
-                high = param['high']
+                low = param["low"]
+                high = param["high"]
                 if low >= high:
                     raise ValueError(f"Invalid range for {name} (low >= high)")
-                if param_type not in ['integer', 'float']:
-                    raise ValueError(f"Unsupported parameter type {param_type} for {name}")
+                if param_type not in ["integer", "float"]:
+                    raise ValueError(
+                        f"Unsupported parameter type {param_type} for {name}"
+                    )
                 self.pbounds[name] = (low, high)
 
         # Issue warning if categorical parameters are present
@@ -67,13 +85,12 @@ class BayesianOptimizationHPO:
             warnings.warn(
                 "Warning: The use of categorical parameters is strongly discouraged in Bayesian Optimization. "
                 "Categorical variables are converted to integers, which may not be suitable for the underlying Gaussian Process model. "
-                "Consider using continuous or integer variables instead.", UserWarning
+                "Consider using continuous or integer variables instead.",
+                UserWarning,
             )
 
         self.gp = GaussianProcessRegressor(
-            kernel=Matern(nu=2.5),
-            n_restarts_optimizer=25,
-            random_state=random_state
+            kernel=Matern(nu=2.5), n_restarts_optimizer=25, random_state=random_state
         )
         self._prime_subscriptions()
 
@@ -86,16 +103,18 @@ class BayesianOptimizationHPO:
                 self.probe(self._next())
 
             if self.verbose >= 1:
-                print(f"Iteration {i + 1}/{self.n_iter} | Best: {self.max['target']:.4f}")
+                print(
+                    f"Iteration {i + 1}/{self.n_iter} | Best: {self.max['target']:.4f}"
+                )
 
         best_params = {}
         for param in self.param_space:
-            name = param['name']
-            value = self.max['params'][name]
-            if param['type'] == 'integer':
+            name = param["name"]
+            value = self.max["params"][name]
+            if param["type"] == "integer":
                 best_params[name] = int(round(value))
-            elif param['type'] == 'categorical':
-                categories = param['categories']
+            elif param["type"] == "categorical":
+                categories = param["categories"]
                 index = int(np.round(value))
                 index = np.clip(index, 0, len(categories) - 1)
                 best_params[name] = categories[index]
@@ -120,16 +139,22 @@ class BayesianOptimizationHPO:
         best_x = None
 
         for _ in range(self.n_candidates):
-            candidate = np.array([self.rng.uniform(low, high) for (low, high) in self._bounds])
+            candidate = np.array(
+                [self.rng.uniform(low, high) for (low, high) in self._bounds]
+            )
 
             mu, sigma = self.gp.predict([candidate], return_std=True)
 
-            if self.acq == 'ucb':
+            if self.acq == "ucb":
                 acq_value = mu + self.kappa * sigma
-            elif self.acq == 'ei':
-                improvement = mu - self.max['target'] - self.xi
+            elif self.acq == "ei":
+                improvement = mu - self.max["target"] - self.xi
                 z = improvement / sigma if sigma > 1e-12 else 0.0
-                acq_value = (improvement * norm.cdf(z) + sigma * norm.pdf(z)) if sigma > 1e-12 else 0.0
+                acq_value = (
+                    (improvement * norm.cdf(z) + sigma * norm.pdf(z))
+                    if sigma > 1e-12
+                    else 0.0
+                )
 
             if acq_value > best_acq:
                 best_acq = acq_value
@@ -168,7 +193,4 @@ class BayesianOptimizationHPO:
     def max(self):
         idx = np.argmax(self._values)
         params_dict = dict(zip(self.pbounds.keys(), self._space[idx]))
-        return {
-            'params': params_dict,
-            'target': self._values[idx]
-        }
+        return {"params": params_dict, "target": self._values[idx]}
