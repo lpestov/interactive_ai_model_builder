@@ -1,58 +1,75 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Dataset List</title>
-</head>
-<body>
-    <h1>Dataset List</h1>
+{% extends 'base.html' %}
+
+{% block title %}Dataset Management{% endblock %}
+
+{% block body %}
+<div class="container mt-4">
+    <h1 class="mb-4">Dataset List</h1>
+    
     {% if not datasets %}
-        <p>No datasets have been uploaded yet. Please upload your dataset below.</p>
+        <div class="alert alert-info">
+            No datasets have been uploaded yet. Please upload your dataset below.
+        </div>
     {% else %}
-        <table>
-            <thead>
-                <tr>
-                    <th>ID</th>
-                    <th>Name</th>
-                    <th>Actions</th>
-                </tr>
-            </thead>
-            <tbody>
-                {% for dataset in datasets %}
-                <tr>
-                    <td>{{ dataset.id }}</td>
-                    <td>{{ dataset.file_name }}</td>
-                    <td>
-                        <form action="{{ url_for('table_processor.process_dataset', dataset_id=dataset.id) }}" method="get">
-                            <button type="submit">Process Dataset</button>
-                        </form>
-                        <form action="{{ url_for('dataset_manager.delete_dataset', dataset_id=dataset.id) }}" method="post" style="display:inline;">
-                            <button type="submit">Delete</button>
-                        </form>
-                    </td>
-                </tr>
-                {% endfor %}
-            </tbody>
-        </table>
+        <div class="card shadow-sm mb-4">
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>Name</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for dataset in datasets %}
+                            <tr>
+                                <td>{{ dataset.id }}</td>
+                                <td>{{ dataset.file_name }}</td>
+                                <td>
+                                    <div class="btn-group">
+                                        <a href="{{ url_for('table_processor.process_dataset', dataset_id=dataset.id) }}" 
+                                           class="btn btn-sm btn-outline-primary">
+                                            Process
+                                        </a>
+                                        <form action="{{ url_for('dataset_manager.delete_dataset', dataset_id=dataset.id) }}" 
+                                              method="post">
+                                            <button type="submit" class="btn btn-sm btn-outline-danger ms-2">
+                                                Delete
+                                            </button>
+                                        </form>
+                                    </div>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
     {% endif %}
 
-    <h2>Upload dataset (.csv only)</h2>
-    <form action="{{ url_for('dataset_manager.upload_file') }}" method="post" enctype="multipart/form-data">
-        <input type="file" name="file" accept=".csv" required>
-        <button type="submit">Upload</button>
-    </form>
+    <div class="card shadow-sm">
+        <div class="card-body">
+            <h2 class="mb-3">Upload Dataset (.csv only)</h2>
+            <form action="{{ url_for('dataset_manager.upload_file') }}" method="post" enctype="multipart/form-data">
+                <div class="mb-3">
+                    <input type="file" name="file" class="form-control" accept=".csv" required>
+                </div>
+                <button type="submit" class="btn btn-primary">Upload</button>
+            </form>
+        </div>
+    </div>
 
     {% with messages = get_flashed_messages() %}
         {% if messages %}
-            <ul>
-            {% for message in messages %}
-                <li>{{ message }}</li>
-            {% endfor %}
-            </ul>
+            <div class="mt-4">
+                {% for message in messages %}
+                    <div class="alert alert-info">{{ message }}</div>
+                {% endfor %}
+            </div>
         {% endif %}
     {% endwith %}
-</body>
-</html>
-
-
+</div>
+{% endblock %}

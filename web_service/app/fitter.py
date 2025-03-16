@@ -1,13 +1,12 @@
 import os
-import joblib
+import time
 
+import mlflow
+import mlflow.sklearn
 import pandas as pd
 from sklearn.ensemble import RandomForestClassifier
 from sklearn import svm
 from sklearn.model_selection import train_test_split
-
-from .models import TrainHistory
-from .extentions import db
 
 class Fitter:
     def __init__(self, model_name, params, dataset):
@@ -34,17 +33,21 @@ class Fitter:
             model = svm.SVC()
 
 
+        start_time = time.time()
+
         model.fit(X_train, y_train)
+
+        training_time = time.time() - start_time
+
         accuracy = model.score(X_test, y_test)
 
-        # Сохранение модели в указанную директорию
-        model_file_path = os.path.join('user_models', f'{file_name}.joblib')
-        joblib.dump(model, model_file_path)
-
-        history = TrainHistory(self.model_name, file_name, self.params, test_accuracy=accuracy,
-                               model_path=model_file_path)
-        db.session.add(history)
-        db.session.commit()
+        with mlflow.start_run() as run:
+            mlflow.log_params(self.params)
+            mlflow.sklearn.log_model(model, "model")
+            mlflow.set_tag("user_id", "123")
+            mlflow.log_metric("accuracy", accuracy)
+            mlflow.log_metric("training_time", training_time)
+            mlflow.log_param("model_name", self.model_name)
 
 
 models = {
@@ -56,3 +59,10 @@ models = {
             'C': {'type': 'float', 'default': 1.0, 'description': 'Регуляризационный параметр'},
         }
 }
+
+
+
+
+
+
+

@@ -11,7 +11,7 @@ ml_manger_bp = Blueprint('ml_manager', __name__)
 @ml_manger_bp.route('/ml_manager', methods = ['GET'])
 def index():
     datasets = Dataset.query.all()
-    return render_template('ml_manager.html', models=models, datasets=datasets)
+    return render_template('ml_manager.html', models=models, datasets=datasets, active_page='classic_ml')
 
 
 @ml_manger_bp.route('/get_model_params')
@@ -23,7 +23,6 @@ def get_model_params():
 @ml_manger_bp.route('/train', methods=['POST'])
 def train_model():
     try:
-        # Получаем данные из формы
         model_name = request.form['model']
         dataset = request.form['dataset']
 
@@ -47,11 +46,13 @@ def train_model():
         fitter = Fitter(model_name, params, dataset)
         fitter.fit()
 
-        return redirect(url_for('tracking.index'))
+        return redirect('/')
 
     except Exception as e:
         return jsonify({
             'status': 'error',
             'message': str(e)
         }), 400
+
+
 

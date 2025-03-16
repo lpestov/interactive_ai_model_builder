@@ -30,4 +30,9 @@ def create_app():
     app.register_blueprint(tracking_bp)
     app.register_blueprint(image_predictor_bp)
 
+    import pandas as pd
+    @app.template_filter('datetime')
+    def datetime_filter(value):
+        return pd.to_datetime(value).strftime('%Y-%m-%d %H:%M:%S')
+
     return app

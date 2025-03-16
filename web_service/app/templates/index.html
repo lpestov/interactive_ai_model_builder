@@ -5,53 +5,140 @@ InteractiveAI
 {% endblock %}
 
 {% block head %}
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
 <style>
-        body {
-            font-family: Arial, sans-serif;
-            margin: 0;
-            padding: 0;
-            background-color: #f4f4f4;
-        }
-        .container {
-            width: 80%;
-            margin: auto;
-            overflow: hidden;
-        }
-        header {
-            background: #35424a;
-            color: #ffffff;
-            padding: 20px 0;
-            text-align: center;
-        }
-        nav {
-            margin: 20px 0;
-        }
-        nav a {
-            color: #35424a;
-            padding: 10px 15px;
-            text-decoration: none;
-            background: #e2e2e2;
-            margin: 0 5px;
-            border-radius: 5px;
-        }
-        nav a:hover {
-            background: #c1c1c1;
-        }
-    </style>
-{% endblock %}
+    :root {
+        --primary-color: #2563eb;
+        --hover-color: #1d4ed8;
+        --background: #f8fafc;
+        --text-dark: #1e293b;
+        --text-light: #64748b;
+    }
 
+    body {
+        font-family: 'Poppins', sans-serif;
+        background-color: var(--background);
+        color: var(--text-dark);
+        line-height: 1.6;
+    }
+
+    .container {
+        max-width: 1200px;
+        margin: 0 auto;
+        padding: 0 20px;
+    }
+
+    header {
+        background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
+        color: white;
+        padding: 80px 0;
+        text-align: center;
+        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+        margin-bottom: 40px;
+    }
+
+    header h1 {
+        font-size: 2.5rem;
+        font-weight: 600;
+        margin-bottom: 1rem;
+    }
+
+    .nav-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+        gap: 25px;
+        padding: 20px;
+    }
+
+    .nav-card {
+        background: white;
+        border-radius: 12px;
+        padding: 30px;
+        text-align: center;
+        transition: transform 0.3s ease, box-shadow 0.3s ease;
+        text-decoration: none;
+        color: var(--text-dark);
+        border: 1px solid #e2e8f0;
+    }
+
+    .nav-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+    }
+
+    .nav-card i {
+        font-size: 2.5rem;
+        color: var(--primary-color);
+        margin-bottom: 15px;
+        transition: color 0.3s ease;
+    }
+
+    .nav-card:hover i {
+        color: var(--hover-color);
+    }
+
+    .nav-card h3 {
+        font-size: 1.3rem;
+        font-weight: 500;
+        margin-bottom: 10px;
+    }
+
+    .nav-card p {
+        color: var(--text-light);
+        font-size: 0.9rem;
+    }
+
+    @media (max-width: 768px) {
+        header {
+            padding: 50px 0;
+        }
+
+        header h1 {
+            font-size: 2rem;
+        }
+
+        .nav-grid {
+            grid-template-columns: 1fr;
+            padding: 10px;
+        }
+    }
+</style>
+{% endblock %}
 
 {% block body %}
 <header>
-    <h1>Welcome!</h1>
+    <div class="container">
+        <h1>InteractiveAI Platform</h1>
+        <p>No-code Machine Learning Solutions</p>
+    </div>
 </header>
 
 <div class="container">
-    <nav>
-        <a href="/image_page">Images processing</a>
-        <a href="/ml_manager">Machine Learning</a>
-        <a href="/dataset_manager">Table processing</a>
-        <a href="/tracking">Tracking</a>
-    </nav>
+    <div class="nav-grid">
+        <a href="/image_page" class="nav-card">
+            <i class="fas fa-image"></i>
+            <h3>Image Processing</h3>
+            <p> Make your own model for image classification </p>
+        </a>
+
+        <a href="/ml_manager" class="nav-card">
+            <i class="fas fa-brain"></i>
+            <h3>Machine Learning</h3>
+            <p>Build and deploy ML models without coding</p>
+        </a>
+
+        <a href="/dataset_manager" class="nav-card">
+            <i class="fas fa-table"></i>
+            <h3>Table Processing</h3>
+            <p>Manage and process tabular data efficiently</p>
+        </a>
+
+        <a href="/tracking" class="nav-card">
+            <i class="fas fa-chart-line"></i>
+            <h3>Tracking</h3>
+            <p>Monitor and analyze your ML experiments</p>
+        </a>
+    </div>
 </div>
 {% endblock %}

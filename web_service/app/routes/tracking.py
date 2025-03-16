@@ -1,24 +1,35 @@
+import mlflow
 from flask import Blueprint, render_template, send_file, abort
-
-from ..models import TrainHistory
-from ..extentions import db
+from mlflow.tracking import MlflowClient
 
 tracking_bp = Blueprint('tracking', __name__)
+client = MlflowClient()
 
 
-@tracking_bp.route('/tracking', methods = ['GET'])
+@tracking_bp.route('/tracking', methods=['GET'])
 def index():
-    history = TrainHistory.query.order_by(TrainHistory.created_at.desc()).all()
-    return render_template('tracking.html', history = history)
+    runs = mlflow.search_runs()
 
-@tracking_bp.route('/download/<int:record_id>')
-def download_model(record_id):
-    # Получаем запись из базы данных
-    record = db.session.query(TrainHistory).get(record_id)
-    if record and record.model_path:
-        try:
-            return send_file('../'+record.model_path, as_attachment=True, download_name=record.model_name + '/' + record.model_path)
-        except FileNotFoundError:
-            abort(404)  # Если файл не найден, возвращаем 404
-    else:
-        return abort(404)  # Если запись не найдена или путь пуст, возвращаем 404
+    experiments = []
+    for _, run in runs.iterrows():
+        print(run)
+        experiments.append({
+            'run_id': run.run_id,
+            'model_name': run.get('params.model_name', 'Unknown Model'),
+            'accuracy': run.get('metrics.accuracy', 0),
+            'training_time': run.get('metrics.training_time', 0),
+            'params': {k.replace('params.', ''): v
+                       for k, v in run.items()
+                       if k.startswith('params.') and k != 'params.model_name'},
+            'model_uri': f"runs:/{run.run_id}/model"
+        })
+
+    return render_template("tracking.html", experiments=experiments, active_page='tracking')
+
+@tracking_bp.route('/download/<run_id>')
+def download_model(run_id):
+    try:
+        path = client.download_artifacts(run_id, "model")
+        return send_file(path, as_attachment=True)
+    except Exception as e:
+        return str(e), 404

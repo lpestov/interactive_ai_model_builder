@@ -15,7 +15,7 @@ def index():
     if request.method == 'POST':
         pass
     dataset_list = Dataset.query.all()
-    return render_template('dataset_manager.html', datasets=dataset_list)
+    return render_template('dataset_manager.html', datasets=dataset_list, active_page='table_datasets')
 
 
 @dataset_manager_bp.route('/upload', methods=['POST'])

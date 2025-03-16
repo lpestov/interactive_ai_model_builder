@@ -31,7 +31,7 @@ image_bp = Blueprint('image', __name__)
 
 @image_bp.route('/image_page', methods = ['GET'])
 def index():
-    return render_template('upload_image.html')
+    return render_template('upload_image.html', active_page='image')
 
 @image_bp.route('/upload_images', methods = ['POST', 'GET'])
 def upload_images():

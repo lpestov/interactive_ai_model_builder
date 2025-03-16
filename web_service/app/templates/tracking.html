@@ -1,100 +1,94 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <title>Training History</title>
-    <style>
-        table {
-            width: 100%;
-            border-collapse: collapse;
-            margin: 20px 0;
-            font-family: Arial, sans-serif;
-        }
+{% extends 'base.html' %}
 
-        th, td {
-            padding: 12px;
-            text-align: left;
-            border-bottom: 1px solid #ddd;
-        }
+{% block title %}Experiment Tracking{% endblock %}
 
-        th {
-            background-color: #f2f2f2;
-        }
+{% block head %}
+{{ super() }}
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+<style>
+    .table-hover tbody tr:hover {
+        background-color: rgba(13, 110, 253, 0.05);
+        transition: background-color 0.3s ease;
+    }
+    .param-badge {
+        font-size: 0.85em;
+        margin: 2px;
+        white-space: nowrap;
+    }
+    .status-dot {
+        height: 10px;
+        width: 10px;
+        border-radius: 50%;
+        display: inline-block;
+    }
+</style>
+{% endblock %}
 
-        tr:hover {
-            background-color: #f5f5f5;
-        }
+{% block body %}
+<div class="container-fluid py-4" style="max-width: 95%;">
+    <h2 class="mb-4 text-primary">
+        <i class="fas fa-history me-2"></i>Training History
+    </h2>
 
-        .json-params {
-            max-width: 300px;
-            white-space: pre-wrap;
-            word-break: break-all;
-        }
-
-        .accuracy-cell {
-            text-align: center;
-        }
-    </style>
-</head>
-<body>
-    <h1>Training History</h1>
-    <a href="{{ url_for('ml_manager.index') }}">Back to Training</a>
-
-    <table>
-        <thead>
-            <tr>
-                <th>ID</th>
-                <th>Model</th>
-                <th>Dataset</th>
-                <th>Parameters</th>
-                <th>Train Accuracy</th>
-                <th>Test Accuracy</th>
-                <th>Created At</th>
-                <th>Download</th>
-            </tr>
-        </thead>
-        <tbody>
-            {% for record in history %}
-            <tr>
-                <td>{{ record.id }}</td>
-                <td>{{ record.model_name }}</td>
-                <td>{{ record.dataset }}</td>
-                <td class="json-params">
-                    {% if record.parameters %}
-                        {{ record.parameters | tojson }}
-                    {% else %}
-                        N/A
-                    {% endif %}
-                </td>
-                <td class="accuracy-cell">
-                    {% if record.train_accuracy is not none %}
-                        {{ "%.2f"|format(record.train_accuracy) }}
-                    {% else %}
-                        N/A
-                    {% endif %}
-                </td>
-                <td class="accuracy-cell">
-                    {% if record.test_accuracy is not none %}
-                        {{ "%.2f"|format(record.test_accuracy) }}
-                    {% else %}
-                        N/A
-                    {% endif %}
-                </td>
-                <td>{{ record.created_at.strftime('%Y-%m-%d %H:%M') }}</td>
-                <td>
-                    {% if record.model_path %}
-                        <a href="/download/{{ record.id }}" download>Download</a>
-                    {% else %}
-                        N/A
-                    {% endif %}
-                </td>
-            </tr>
+    <div class="card shadow-sm">
+        <div class="card-body p-0">
+            {% if experiments %}
+                <div class="table-responsive">
+                    <table class="table table-hover mb-0">
+                        <thead class="table-light">
+                            <tr>
+                                <th class="align-middle">Run ID</th>
+                                <th class="align-middle">Model</th>
+                                <th class="align-middle text-center">Accuracy</th>
+                                <th class="align-middle text-center">Training Time</th>
+                                <th class="align-middle">Parameters</th>
+                                <th class="align-middle text-center">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for exp in experiments %}
+                            <tr>
+                                <td class="text-muted">{{ exp.run_id[:8] }}</td>
+                                <td>
+                                    <span class="badge bg-primary">
+                                        {{ exp.model_name }}
+                                    </span>
+                                </td>
+                                <td class="text-center text-success fw-bold">
+                                    {{ "%.2f"|format(exp.accuracy * 100) }}%
+                                </td>
+                                <td class="text-center">
+                                    <i class="fas fa-stopwatch me-2 text-secondary"></i>
+                                    {{ "%.2f"|format(exp.training_time) }}s
+                                </td>
+                                <td>
+                                    {% for name, value in exp.params.items() %}
+                                    <span class="param-badge badge bg-light text-dark border">
+                                        {{ name }}: {{ value }}
+                                    </span>
+                                    {% endfor %}
+                                </td>
+                                <td class="text-center">
+                                    <a href="{{ url_for('main.download_model', run_id=exp.run_id) }}"
+                                       class="btn btn-sm btn-outline-primary"
+                                       title="Download model">
+                                        <i class="fas fa-download"></i>
+                                    </a>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
             {% else %}
-            <tr>
-                <td colspan="8" style="text-align: center;">No training records found</td>
-            </tr>
-            {% endfor %}
-        </tbody>
-    </table>
-</body>
-</html>
+                <div class="text-center p-5">
+                    <div class="alert alert-info d-inline-block mb-0">
+                        <i class="fas fa-info-circle me-2"></i>
+                        No experiments recorded yet. Start by creating a dataset or training a model.
+                    </div>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

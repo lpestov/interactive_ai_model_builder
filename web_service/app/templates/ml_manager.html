@@ -1,74 +1,74 @@
-<!DOCTYPE html>
-<html>
-<head>
-    <title>ML Model Training</title>
-    <script>
-        function loadModelParams() {
-            var modelName = document.getElementById("model_select").value;
-            fetch('/get_model_params?model=' + modelName)
-                .then(response => response.json())
-                .then(params => {
-                    var paramsDiv = document.getElementById("model_params");
-                    paramsDiv.innerHTML = '';
+{% extends 'base.html' %}
+
+{% block title %}ML Model Training{% endblock %}
+
+{% block head %}
+{{ super() }}
+<script>
+    function loadModelParams() {
+        var modelName = document.getElementById("model_select").value;
+        fetch("{{ url_for('ml_manager.get_model_params') }}?model=" + modelName)
+            .then(response => response.json())
+            .then(params => {
+                var paramsDiv = document.getElementById("model_params");
+                paramsDiv.innerHTML = '';
+                
+                for (var param in params) {
+                    var paramInfo = params[param];
                     
-                    for (var param in params) {
-                        var paramInfo = params[param];
-                        
-                        var label = document.createElement("label");
-                        label.textContent = param + " (" + paramInfo.description + "):";
-                        
-                        var input = document.createElement("input");
-                        input.type = paramInfo.type === 'int' ? 'number' : 'text';
-                        input.name = "param_" + param;
-                        input.value = paramInfo.default;
-                        
-                        if(paramInfo.type === 'float') {
-                            input.step = "0.1";
-                        }
-                        
-                        paramsDiv.appendChild(label);
-                        paramsDiv.appendChild(input);
-                        paramsDiv.appendChild(document.createElement("br"));
+                    var divGroup = document.createElement("div");
+                    divGroup.className = "mb-3";
+                    
+                    var label = document.createElement("label");
+                    label.className = "form-label";
+                    label.textContent = param + " (" + paramInfo.description + "):";
+                    
+                    var input = document.createElement("input");
+                    input.className = "form-control";
+                    input.type = paramInfo.type === 'int' ? 'number' : 'text';
+                    input.name = "param_" + param;
+                    input.value = paramInfo.default;
+                    
+                    if(paramInfo.type === 'float') {
+                        input.step = "0.1";
                     }
-                });
-        }
-    </script>
-</head>
-<body>
-    <h1>ML Model Training</h1>
-    <form action="{{ (url_for('ml_manager.train_model')) }}" method="post">
-        <div>
-            <label for="model_select">Select Model:</label>
-            <select id="model_select" name="model" onchange="loadModelParams()">
+                    
+                    divGroup.appendChild(label);
+                    divGroup.appendChild(input);
+                    paramsDiv.appendChild(divGroup);
+                }
+            });
+    }
+</script>
+{% endblock %}
+
+{% block body %}
+<div class="container mt-4">
+    <h1 class="mb-4">ML Model Training</h1>
+    <form action="{{ url_for('ml_manager.train_model') }}" method="post" class="border p-4 rounded shadow-sm">
+        <div class="mb-3">
+            <label for="model_select" class="form-label">Select Model:</label>
+            <select id="model_select" name="model" class="form-select" onchange="loadModelParams()">
                 {% for model in models %}
                     <option value="{{ model }}">{{ model }}</option>
                 {% endfor %}
             </select>
         </div>
         
-        <div>
-            <label for="dataset_select">Select Dataset:</label>
-            <select id="dataset_select" name="dataset">
+        <div class="mb-3">
+            <label for="dataset_select" class="form-label">Select Dataset:</label>
+            <select id="dataset_select" name="dataset" class="form-select">
                 {% for dataset in datasets %}
                     <option value="{{ dataset }}">{{ dataset }}</option>
                 {% endfor %}
             </select>
         </div>
         
-        <div id="model_params">
+        <div id="model_params" class="mb-4">
             <!-- Parameters will be loaded here dynamically -->
         </div>
         
-        <button type="submit">Train Model</button>
+        <button type="submit" class="btn btn-primary">Train Model</button>
     </form>
-
-    <div>
-        <a href="/" style="text-decoration: none; color: blue;">Back to Index</a>
-    </div>
-
-    <script>
-        // Load initial parameters
-        loadModelParams();
-    </script>
-</body>
-</html>
+</div>
+{% endblock %}
