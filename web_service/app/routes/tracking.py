@@ -12,7 +12,6 @@ def index():
 
     experiments = []
     for _, run in runs.iterrows():
-        print(run)
         experiments.append({
             'run_id': run.run_id,
             'model_name': run.get('params.model_name', 'Unknown Model'),
@@ -29,7 +28,7 @@ def index():
 @tracking_bp.route('/download/<run_id>')
 def download_model(run_id):
     try:
-        path = client.download_artifacts(run_id, "model")
+        path = client.download_artifacts(run_id, "model/model.pkl")
         return send_file(path, as_attachment=True)
     except Exception as e:
         return str(e), 404

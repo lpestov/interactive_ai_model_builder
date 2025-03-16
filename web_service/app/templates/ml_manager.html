@@ -39,6 +39,11 @@
                 }
             });
     }
+
+    // Инициализация при загрузке страницы
+    document.addEventListener('DOMContentLoaded', function() {
+        loadModelParams();
+    });
 </script>
 {% endblock %}
 
@@ -54,12 +59,12 @@
                 {% endfor %}
             </select>
         </div>
-        
+
         <div class="mb-3">
             <label for="dataset_select" class="form-label">Select Dataset:</label>
             <select id="dataset_select" name="dataset" class="form-select">
                 {% for dataset in datasets %}
-                    <option value="{{ dataset }}">{{ dataset }}</option>
+                    <option value="{{ dataset.id }}">{{ dataset.file_name }} (id:{{ dataset.id }})</option>
                 {% endfor %}
             </select>
         </div>

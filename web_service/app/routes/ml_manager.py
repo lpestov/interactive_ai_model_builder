@@ -22,37 +22,31 @@ def get_model_params():
 
 @ml_manger_bp.route('/train', methods=['POST'])
 def train_model():
-    try:
-        model_name = request.form['model']
-        dataset = request.form['dataset']
+    model_name = request.form['model']
+    dataset_id = request.form['dataset']
 
-        # Собираем параметры модели
-        params = {}
-        for key in request.form:
-            if key.startswith('param_'):
-                param_name = key.replace('param_', '')
-                raw_value = request.form[key]
-
-                # Преобразуем тип данных согласно спецификации модели
-                param_type = models[model_name][param_name]['type']
-                if param_type == 'int' and raw_value:
-                    params[param_name] = int(raw_value)
-                elif param_type == 'float' and raw_value:
-                    params[param_name] = float(raw_value)
-                else:
-                    params[param_name] = raw_value if raw_value else None
-
-        #Запускаем оубчение модели
-        fitter = Fitter(model_name, params, dataset)
-        fitter.fit()
-
-        return redirect('/')
-
-    except Exception as e:
+    dataset = Dataset.query.get(dataset_id)
+    if not dataset:
         return jsonify({
             'status': 'error',
-            'message': str(e)
+            'message': 'Dataset not found'
         }), 400
 
+    params = {}
+    for key in request.form:
+        if key.startswith('param_'):
+            param_name = key.replace('param_', '')
+            raw_value = request.form[key]
 
+            param_type = models[model_name][param_name]['type']
+            if param_type == 'int' and raw_value:
+                params[param_name] = int(raw_value)
+            elif param_type == 'float' and raw_value:
+                params[param_name] = float(raw_value)
+            else:
+                params[param_name] = raw_value if raw_value else None
 
+    fitter = Fitter(model_name, params, dataset)
+    fitter.fit()
+
+    return redirect('/tracking')

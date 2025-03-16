@@ -29,11 +29,11 @@
                                 <td>{{ dataset.file_name }}</td>
                                 <td>
                                     <div class="btn-group">
-                                        <a href="{{ url_for('table_processor.process_dataset', dataset_id=dataset.id) }}" 
+                                        <a href="{{ url_for('table_processor.process_dataset', dataset_id=dataset.id) }}"
                                            class="btn btn-sm btn-outline-primary">
                                             Process
                                         </a>
-                                        <form action="{{ url_for('dataset_manager.delete_dataset', dataset_id=dataset.id) }}" 
+                                        <form action="{{ url_for('dataset_manager.delete_dataset', dataset_id=dataset.id) }}"
                                               method="post">
                                             <button type="submit" class="btn btn-sm btn-outline-danger ms-2">
                                                 Delete
