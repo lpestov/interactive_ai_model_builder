@@ -39,6 +39,7 @@
                             <tr>
                                 <th class="align-middle">Run ID</th>
                                 <th class="align-middle">Model</th>
+                                <th class="align-middle">Dataset</th>
                                 <th class="align-middle text-center">Accuracy</th>
                                 <th class="align-middle text-center">Training Time</th>
                                 <th class="align-middle">Parameters</th>
@@ -52,6 +53,11 @@
                                 <td>
                                     <span class="badge bg-primary">
                                         {{ exp.model_name }}
+                                    </span>
+                                </td>
+                                <td>
+                                    <span class="badge bg-secondary">
+                                        {{ exp.dataset }}
                                     </span>
                                 </td>
                                 <td class="text-center text-success fw-bold">

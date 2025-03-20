@@ -1,10 +1,10 @@
 import mlflow
 from flask import Blueprint, render_template, send_file, abort
 from mlflow.tracking import MlflowClient
+from ..fitter import models as model_configs  # Импортируем конфигурацию моделей
 
 tracking_bp = Blueprint('tracking', __name__)
 client = MlflowClient()
-
 
 @tracking_bp.route('/tracking', methods=['GET'])
 def index():
@@ -12,14 +12,24 @@ def index():
 
     experiments = []
     for _, run in runs.iterrows():
+        model_name = run.get('params.model_name', 'Unknown Model')
+        # Получаем допустимые параметры для модели
+        allowed_params = model_configs.get(model_name, {})
+        # Фильтруем параметры, оставляя только те, которые есть в конфигурации выбранной модели
+        params = {}
+        for k, v in run.items():
+            if k.startswith('params.') and k not in ['params.model_name', 'params.dataset']:
+                param_key = k.replace('params.', '')
+                if param_key in allowed_params:
+                    params[param_key] = v
+
         experiments.append({
             'run_id': run.run_id,
-            'model_name': run.get('params.model_name', 'Unknown Model'),
+            'model_name': model_name,
             'accuracy': run.get('metrics.accuracy', 0),
             'training_time': run.get('metrics.training_time', 0),
-            'params': {k.replace('params.', ''): v
-                       for k, v in run.items()
-                       if k.startswith('params.') and k != 'params.model_name'},
+            'dataset': run.get('params.dataset', 'N/A'),
+            'params': params,
             'model_uri': f"runs:/{run.run_id}/model"
         })
 

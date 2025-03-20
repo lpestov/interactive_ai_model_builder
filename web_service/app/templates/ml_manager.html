@@ -12,29 +12,51 @@
             .then(params => {
                 var paramsDiv = document.getElementById("model_params");
                 paramsDiv.innerHTML = '';
-                
+
                 for (var param in params) {
                     var paramInfo = params[param];
-                    
+
                     var divGroup = document.createElement("div");
                     divGroup.className = "mb-3";
-                    
+
                     var label = document.createElement("label");
                     label.className = "form-label";
                     label.textContent = param + " (" + paramInfo.description + "):";
-                    
-                    var input = document.createElement("input");
-                    input.className = "form-control";
-                    input.type = paramInfo.type === 'int' ? 'number' : 'text';
-                    input.name = "param_" + param;
-                    input.value = paramInfo.default;
-                    
-                    if(paramInfo.type === 'float') {
-                        input.step = "0.1";
+
+                    // Если есть список опций для выбора, создаем select
+                    if(paramInfo.options) {
+                        var select = document.createElement("select");
+                        select.className = "form-select";
+                        select.name = "param_" + param;
+
+                        paramInfo.options.forEach(function(option) {
+                            var optionElem = document.createElement("option");
+                            optionElem.value = option;
+                            optionElem.textContent = option;
+                            if(option === paramInfo.default) {
+                                optionElem.selected = true;
+                            }
+                            select.appendChild(optionElem);
+                        });
+
+                        divGroup.appendChild(label);
+                        divGroup.appendChild(select);
+                    } else {
+                        // Иначе создаем стандартное текстовое или числовое поле
+                        var input = document.createElement("input");
+                        input.className = "form-control";
+                        input.type = paramInfo.type === 'int' ? 'number' : 'text';
+                        input.name = "param_" + param;
+                        input.value = paramInfo.default;
+
+                        if(paramInfo.type === 'float') {
+                            input.step = "0.1";
+                        }
+
+                        divGroup.appendChild(label);
+                        divGroup.appendChild(input);
                     }
-                    
-                    divGroup.appendChild(label);
-                    divGroup.appendChild(input);
+
                     paramsDiv.appendChild(divGroup);
                 }
             });
@@ -68,11 +90,11 @@
                 {% endfor %}
             </select>
         </div>
-        
+
         <div id="model_params" class="mb-4">
-            <!-- Parameters will be loaded here dynamically -->
+            <!-- Параметры будут загружены динамически -->
         </div>
-        
+
         <button type="submit" class="btn btn-primary">Train Model</button>
     </form>
 </div>
