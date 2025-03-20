@@ -39,11 +39,11 @@ def predict():
             ['python', INFERENCE_SCRIPT_PATH, file_path],
             capture_output=True, text=True
         )
-
+                
         if result.returncode != 0:
             flash(f"Ошибка при исполнении скрипта для предсказания: {result.stderr}")
             return redirect(url_for('image_predictor.index'))
-
+        
         # Получаем данные из inference-скрипта
         output = result.stdout
         match = re.search(r'Plot saved to: (.*\.png)', output)
@@ -57,7 +57,7 @@ def predict():
 
         if not os.path.exists(STATIC_FOLDER):
             os.makedirs(STATIC_FOLDER)
-
+    
         # Перемещаем изображение в папку static
         static_image_path = os.path.join(STATIC_FOLDER, image_filename)
         print(f"Перемещение {image_path} в {static_image_path}")

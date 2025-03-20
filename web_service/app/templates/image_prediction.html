@@ -1,50 +1,38 @@
 {% extends 'base.html' %}
 
-{% block title %}
-Загрузка изображения
-{% endblock %}
+{% block title %}Использование модели{% endblock %}
 
 {% block head %}
 <style>
-    .upload-container {
-        margin-top: 20px;
+    .section {
+        margin-bottom: 20px;
+        padding: 15px;
+        border: 1px solid #ddd;
+        border-radius: 5px;
     }
-    input {
-        margin: 10px;
-    }
-    img {
-        max-width: 100%;
-        height: auto;
-        display: none;
-        margin-top: 20px;
+    .section h2 {
+        margin-bottom: 15px;
+        font-size: 1.5rem;
     }
 </style>
 {% endblock %}
 
 {% block body %}
-<div class="upload-container">
-    <h2>Загрузите изображение</h2>
-    <form method="POST" enctype="multipart/form-data" action="{{ url_for('image_predictor.predict') }}">
-        <input type="file" id="fileInput" name="image" accept="image/*">
-        <button type="submit">Загрузить</button>
-    </form>
+<div class="container mt-4">
+    <h1 class="mb-4">Использование модели</h1>
 
-    <br>
-    <a href="{{ url_for('image.index') }}">Назад</a>
+    <div class="section">
+        <h2>Загрузите изображение:</h2>
+        <form method="POST" enctype="multipart/form-data" action="{{ url_for('image_predictor.predict') }}">
+            <div class="mb-3">
+                <input type="file" id="fileInput" name="image" class="form-control" accept="image/*">
+            </div>
+            <button type="submit" class="btn btn-primary">Запустить модель для предсказания</button>
+        </form>
+    </div>
+
+    <div class="section">
+        <a href="{{ url_for('image.index') }}" class="btn btn-secondary">Назад</a>
+    </div>
 </div>
-
-<script>
-    document.getElementById("fileInput").addEventListener("change", function(event) {
-        const file = event.target.files[0];
-        if (file) {
-            const reader = new FileReader();
-            reader.onload = function(e) {
-                const img = document.getElementById("preview");
-                img.src = e.target.result;
-                img.style.display = "block";
-            };
-            reader.readAsDataURL(file);
-        }
-    });
-</script>
 {% endblock %}

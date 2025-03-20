@@ -1,8 +1,6 @@
 {% extends 'base.html' %}
 
-{% block title %}
-Image upload
-{% endblock %}
+{% block title %}Image Upload{% endblock %}
 
 {% block head %}
 <style>
@@ -18,94 +16,99 @@ Image upload
 {% endblock %}
 
 {% block body %}
-<body>
-    <h1>Введите количество классов</h1>
-    <input type="number" id="classCount" min="1" placeholder="Введите число">
-    <button onclick="generateClassInputs()">Продолжить</button>
+<div class="container mt-4">
+    <h1 class="mb-4">Классификация изображений</h1>
+    <form id="uploadForm" action="{{ url_for('image.upload_images') }}" method="post" class="border p-4 rounded shadow-sm" enctype="multipart/form-data">
+        <div class="mb-3">
+            <label for="classCount" class="form-label">Введите количество классов:</label>
+            <input type="number" id="classCount" min="1" class="form-control" placeholder="Введите число">
+            <button type="button" class="btn btn-primary mt-2" onclick="generateClassInputs()">Продолжить</button>
+        </div>
 
-    <div id="classNames"></div>
+        <div id="classNames" class="mb-3"></div>
 
-    <form id="uploadForm" style="display: none;">
-        <div id="classForms"></div>
-        <button type="submit" id="uploadButton">Загрузить все</button>
+        <div id="classForms" class="mb-3"></div>
+
+        <button type="submit" id="uploadButton" class="btn btn-primary">Загрузить все</button>
     </form>
+</div>
 
-    <script>
-        function generateClassInputs() {
-            const count = document.getElementById("classCount").value;
-            const container = document.getElementById("classNames");
-            container.innerHTML = "";
+<script>
+    function generateClassInputs() {
+        const count = document.getElementById("classCount").value;
+        const container = document.getElementById("classNames");
+        container.innerHTML = "";
 
-            if (count < 2 || count > 100) return;
+        if (count < 2 || count > 100) return;
 
-            for (let i = 1; i <= count; i++) {
-                const div = document.createElement("div");
-                div.innerHTML = `<label>Название класса ${i}: </label>
-                                 <input type="text" id="className${i}" placeholder="Введите название">`;
-                container.appendChild(div);
-            }
-
-            const button = document.createElement("button");
-            button.innerText = "Создать формы";
-            button.onclick = generateForms;
-            container.appendChild(button);
+        for (let i = 1; i <= count; i++) {
+            const div = document.createElement("div");
+            div.innerHTML = `<label>Название класса ${i}: </label>
+                             <input type="text" id="className${i}" class="form-control" placeholder="Введите название">`;
+            container.appendChild(div);
         }
 
-        function generateForms() {
-            const container = document.getElementById("classForms");
-            container.innerHTML = "";
-            const form = document.getElementById("uploadForm");
-            form.style.display = "block";
+        const button = document.createElement("button");
+        button.innerText = "Создать формы";
+        button.className = "btn btn-secondary mt-2";
+        button.type = "button";
+        button.onclick = generateForms;
+        container.appendChild(button);
+    }
 
-            const uploadButton = document.getElementById("uploadButton");
-            uploadButton.style.display = "block";
+    function generateForms() {
+        const container = document.getElementById("classForms");
+        container.innerHTML = "";
+        const form = document.getElementById("uploadForm");
+        form.style.display = "block";
 
-            let classNames = [];
-            const count = document.getElementById("classCount").value;
-            for (let i = 1; i <= count; i++) {
-                const className = document.getElementById(`className${i}`).value.trim();
-                if (className) {
-                    classNames.push(className);
-                } else {
-                    classNames.push(`Класс ${i}`);
-                }
-            }
+        const uploadButton = document.getElementById("uploadButton");
+        uploadButton.style.display = "block";
 
-            classNames.forEach((name, index) => {
-                const div = document.createElement("div");
-                div.classList.add("class-container");
-                div.innerHTML = `
-                    <label>${name}:</label>
-                    <input type="file" name="${name}" accept="image/*" multiple>
-                `;
-                container.appendChild(div);
-            });
-        }
-
-        document.getElementById("uploadForm").addEventListener("submit", async function(event) {
-            event.preventDefault();
-            const formData = new FormData();
-
-            const inputs = document.querySelectorAll("input[type='file']");
-            inputs.forEach(input => {
-                const className = input.name;
-                Array.from(input.files).forEach(file => {
-                    formData.append(`${className}[]`, file);
-                });
-            });
-
-            const response = await fetch("/upload_images", {
-                method: "POST",
-                body: formData
-            });
-
-            // Проверка успешности и редирект на другую страницу
-            if (response.ok) {
-                window.location.href = "/image_prediction";  // Перенаправление на страницу с изображением
+        let classNames = [];
+        const count = document.getElementById("classCount").value;
+        for (let i = 1; i <= count; i++) {
+            const className = document.getElementById(`className${i}`).value.trim();
+            if (className) {
+                classNames.push(className);
             } else {
-                alert("Ошибка загрузки файлов.");
+                classNames.push(`Класс ${i}`);
             }
+        }
+
+        classNames.forEach((name, index) => {
+            const div = document.createElement("div");
+            div.classList.add("class-container");
+            div.innerHTML = `
+                <label>${name}:</label>
+                <input type="file" name="${name}" class="form-control" accept="image/*" multiple>
+            `;
+            container.appendChild(div);
         });
-    </script>
-</body>
+    }
+
+    document.getElementById("uploadForm").addEventListener("submit", async function(event) {
+        event.preventDefault();
+        const formData = new FormData();
+
+        const inputs = document.querySelectorAll("input[type='file']");
+        inputs.forEach(input => {
+            const className = input.name;
+            Array.from(input.files).forEach(file => {
+                formData.append(`${className}[]`, file);
+            });
+        });
+
+        const response = await fetch("/upload_images", {
+            method: "POST",
+            body: formData
+        });
+
+        if (response.ok) {
+            window.location.href = "/image_prediction";
+        } else {
+            alert("Ошибка загрузки файлов.");
+        }
+    });
+</script>
 {% endblock %}
