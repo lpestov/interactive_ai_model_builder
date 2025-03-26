@@ -1,13 +1,9 @@
-from flask import Blueprint, request, render_template
+from flask import Blueprint, render_template
 import pandas as pd
-import os
-
-from ..extentions import db
 
 from ..models import Dataset
 
 table_processor_bp = Blueprint('table_processor', __name__)
-
 
 @table_processor_bp.route('/process_dataset/<int:dataset_id>', methods=['GET'])
 def process_dataset(dataset_id):

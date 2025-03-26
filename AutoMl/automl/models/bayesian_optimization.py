@@ -6,7 +6,7 @@ from warnings import catch_warnings, simplefilter
 import warnings
 
 class BayesianOptimizationHPO:
-    def __init__(self, f, param_space, verbose=1, random_state=None,
+    def __init__(self, f, param_space, verbose=0, random_state=None,
                  init_points=10, n_iter=50, acq='ucb', kappa=2.576, xi=0.0,
                  n_candidates=500):
         """
@@ -61,6 +61,7 @@ class BayesianOptimizationHPO:
                 if param_type not in ['integer', 'float']:
                     raise ValueError(f"Unsupported parameter type {param_type} for {name}")
                 self.pbounds[name] = (low, high)
+
 
         # Issue warning if categorical parameters are present
         if self.categorical_mapping:
@@ -155,6 +156,7 @@ class BayesianOptimizationHPO:
             index = int(np.round(continuous_val))
             index = np.clip(index, 0, len(categories) - 1)
             params[name] = categories[index]
+
 
         target = self.f(**params)
 

@@ -9,11 +9,12 @@ InteractiveAI
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
 <style>
     :root {
-        --primary-color: #2563eb;
-        --hover-color: #1d4ed8;
-        --background: #f8fafc;
-        --text-dark: #1e293b;
-        --text-light: #64748b;
+        --primary-color: #3B82F6;
+        --hover-color: #2563EB;
+        --background: #F8FAFC;
+        --text-dark: #1E293B;
+        --text-light: #64748B;
+        --card-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
     }
 
     body {
@@ -21,86 +22,260 @@ InteractiveAI
         background-color: var(--background);
         color: var(--text-dark);
         line-height: 1.6;
+        min-height: 100vh;
+        display: flex;
+        flex-direction: column;
     }
 
     .container {
         max-width: 1200px;
         margin: 0 auto;
-        padding: 0 20px;
+        padding: 0 20px 40px;
+        flex: 1;
     }
 
     header {
-        background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
+        background: linear-gradient(135deg, #3B82F6 0%, #2563EB 100%);
         color: white;
-        padding: 80px 0;
+        padding: 90px 0 70px;
         text-align: center;
+        margin-bottom: 30px;
+        position: relative;
         box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
-        margin-bottom: 40px;
+    }
+
+    @keyframes slideIn {
+        from {
+            opacity: 0;
+            transform: translateX(-40px);
+        }
+        to {
+            opacity: 1;
+            transform: translateX(0);
+        }
+    }
+
+    @keyframes fadeIn {
+        from {
+            opacity: 0;
+        }
+        to {
+            opacity: 0.9;
+        }
     }
 
     header h1 {
-        font-size: 2.5rem;
-        font-weight: 600;
-        margin-bottom: 1rem;
+        font-size: 2.8rem;
+        font-weight: 700;
+        margin-bottom: 1.2rem;
+        letter-spacing: -0.5px;
+        text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        opacity: 0;
+        animation: slideIn 0.8s cubic-bezier(0.23, 1, 0.32, 1) forwards;
+        animation-delay: 0.3s;
+    }
+
+    header p {
+        font-size: 1.1rem;
+        opacity: 0;
+        max-width: 600px;
+        margin: 0 auto;
+        animation: fadeIn 0.8s ease forwards;
+        animation-delay: 0.6s;
+        transform: translateX(-20px);
     }
 
     .nav-grid {
         display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+        grid-template-columns: repeat(3, 1fr);
         gap: 25px;
-        padding: 20px;
+        padding: 25px 0;
+        grid-auto-rows: minmax(260px, auto);
     }
 
     .nav-card {
         background: white;
-        border-radius: 12px;
-        padding: 30px;
+        border-radius: 18px;
+        padding: 35px 25px;
         text-align: center;
-        transition: transform 0.3s ease, box-shadow 0.3s ease;
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
         text-decoration: none;
         color: var(--text-dark);
-        border: 1px solid #e2e8f0;
+        border: 1px solid #E2E8F0;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        min-height: 260px;
+        box-sizing: border-box;
+        position: relative;
+        overflow: hidden;
+        opacity: 0;
+        transform: translateY(20px);
+        animation: cardEntry 0.6s ease forwards;
     }
 
+    @keyframes cardEntry {
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    .nav-card:nth-child(1) { animation-delay: 0.1s; }
+    .nav-card:nth-child(2) { animation-delay: 0.2s; }
+    .nav-card:nth-child(3) { animation-delay: 0.3s; }
+    .nav-card:nth-child(4) { animation-delay: 0.4s; }
+    .nav-card:nth-child(5) { animation-delay: 0.5s; }
+    .nav-card:nth-child(6) { animation-delay: 0.6s; }
+
     .nav-card:hover {
-        transform: translateY(-5px);
-        box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+        transform: translateY(-6px) scale(1.02);
+        box-shadow: 0 15px 30px -8px rgba(0, 0, 0, 0.12);
+    }
+
+    .icon-wrapper {
+        width: 85px;
+        height: 85px;
+        border-radius: 20px;
+        background: rgba(59, 130, 246, 0.1);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin-bottom: 25px;
+        transition: all 0.3s ease;
+        position: relative;
+    }
+
+    .icon-wrapper::after {
+        content: "";
+        position: absolute;
+        width: 120%;
+        height: 120%;
+        border: 2px solid rgba(59, 130, 246, 0.1);
+        border-radius: 25px;
+        opacity: 0;
+        transition: all 0.3s ease;
+    }
+
+    .nav-card:hover .icon-wrapper::after {
+        opacity: 1;
+        transform: scale(0.9);
     }
 
     .nav-card i {
-        font-size: 2.5rem;
+        font-size: 2.1rem;
         color: var(--primary-color);
+        transition: transform 0.3s ease;
+    }
+
+    .nav-card:hover i {
+        transform: scale(1.08);
+    }
+
+    .nav-card h3 {
+        font-size: 1.4rem;
+        font-weight: 600;
         margin-bottom: 15px;
         transition: color 0.3s ease;
     }
 
-    .nav-card:hover i {
+    .nav-card:hover h3 {
         color: var(--hover-color);
-    }
-
-    .nav-card h3 {
-        font-size: 1.3rem;
-        font-weight: 500;
-        margin-bottom: 10px;
     }
 
     .nav-card p {
         color: var(--text-light);
-        font-size: 0.9rem;
+        font-size: 0.95rem;
+        line-height: 1.5;
+        max-width: 260px;
+        margin: 0 auto;
+        transition: color 0.3s ease;
+    }
+
+    @media (max-width: 1200px) {
+        .nav-grid {
+            grid-template-columns: repeat(2, 1fr);
+            max-width: 800px;
+            margin: 0 auto;
+        }
+
+        .nav-card {
+            min-height: 240px;
+        }
+    }
+
+    @media (max-width: 992px) {
+        header {
+            padding: 70px 0 50px;
+        }
+
+        header h1 {
+            font-size: 2.4rem;
+        }
+
+        .nav-grid {
+            gap: 20px;
+            grid-auto-rows: minmax(220px, auto);
+        }
+
+        .nav-card {
+            min-height: 220px;
+            padding: 30px 20px;
+        }
+
+        .icon-wrapper {
+            width: 80px;
+            height: 80px;
+            margin-bottom: 20px;
+        }
     }
 
     @media (max-width: 768px) {
-        header {
-            padding: 50px 0;
+        .nav-grid {
+            grid-template-columns: 1fr;
+            max-width: 600px;
+            padding: 20px 0;
         }
 
+        .nav-card {
+            min-height: 200px;
+            padding: 25px 20px;
+        }
+
+        .icon-wrapper {
+            width: 75px;
+            height: 75px;
+            margin-bottom: 18px;
+        }
+
+        .nav-card h3 {
+            font-size: 1.3rem;
+        }
+    }
+
+    @media (max-width: 576px) {
         header h1 {
             font-size: 2rem;
         }
 
-        .nav-grid {
-            grid-template-columns: 1fr;
-            padding: 10px;
+        .nav-card {
+            min-height: 180px;
+            padding: 20px 15px;
+        }
+
+        .icon-wrapper {
+            width: 70px;
+            height: 70px;
+            margin-bottom: 15px;
+        }
+
+        .nav-card h3 {
+            font-size: 1.2rem;
+            margin-bottom: 12px;
+        }
+
+        .nav-card p {
+            font-size: 0.9rem;
         }
     }
 </style>
@@ -116,28 +291,54 @@ InteractiveAI
 
 <div class="container">
     <div class="nav-grid">
+        <!-- Первый ряд -->
         <a href="/image_page" class="nav-card">
-            <i class="fas fa-image"></i>
+            <div class="icon-wrapper">
+                <i class="fas fa-image"></i>
+            </div>
             <h3>Image Processing</h3>
-            <p> Make your own model for image classification </p>
+            <p>Create custom image classification models with intuitive tools</p>
         </a>
 
         <a href="/ml_manager" class="nav-card">
-            <i class="fas fa-brain"></i>
+            <div class="icon-wrapper">
+                <i class="fas fa-brain"></i>
+            </div>
             <h3>Machine Learning</h3>
-            <p>Build and deploy ML models without coding</p>
+            <p>Build and deploy ML models without writing code</p>
         </a>
 
         <a href="/dataset_manager" class="nav-card">
-            <i class="fas fa-table"></i>
+            <div class="icon-wrapper">
+                <i class="fas fa-table"></i>
+            </div>
             <h3>Table Processing</h3>
-            <p>Manage and process tabular data efficiently</p>
+            <p>Advanced data preprocessing for tabular datasets</p>
         </a>
 
+        <!-- Второй ряд -->
         <a href="/tracking" class="nav-card">
-            <i class="fas fa-chart-line"></i>
+            <div class="icon-wrapper">
+                <i class="fas fa-chart-line"></i>
+            </div>
             <h3>Tracking</h3>
-            <p>Monitor and analyze your ML experiments</p>
+            <p>Monitor experiments and analyze model performance</p>
+        </a>
+
+        <a href="/sound_classification" class="nav-card">
+            <div class="icon-wrapper">
+                <i class="fas fa-microphone"></i>
+            </div>
+            <h3>Sound Analysis</h3>
+            <p>Create your own models for sound classification</p>
+        </a>
+
+        <a href="/auto_ml" class="nav-card">
+            <div class="icon-wrapper">
+                <i class="fas fa-robot"></i>
+            </div>
+            <h3>AutoML</h3>
+            <p>Automatic machine learning algorithms for effortless and efficient hyperparameter selection</p>
         </a>
     </div>
 </div>

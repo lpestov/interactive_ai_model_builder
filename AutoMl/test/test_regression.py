@@ -1,5 +1,5 @@
-from automl.models import BayesianOptimizationHPO, EvolutionaryStrategyHPO
-from automl.comparison import compare_hpo_methods
+from ..automl.models import BayesianOptimizationHPO, EvolutionaryStrategyHPO
+from ..automl.comparison import compare_hpo_methods
 
 
 from sklearn.ensemble import GradientBoostingRegressor

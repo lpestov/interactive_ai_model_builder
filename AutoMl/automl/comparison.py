@@ -11,6 +11,7 @@ def compare_hpo_methods(config, X, y):
 
     # Определение целевой функции
     def objective_function(**params):
+        print("Params", params)
         model_class = model_config['class']
         model_params = model_config['fixed_params'].copy()
 

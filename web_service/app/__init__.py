@@ -3,12 +3,13 @@ from .extentions import db
 
 from .routes.main import main_bp
 from .routes.image import image_bp
-from .routes.ml_manager import ml_manger_bp
+from .routes.ml_manager import ml_manager_bp
 from .routes.dataset_manager import dataset_manager_bp
 from .routes.table_processor import table_processor_bp
 from .routes.tracking import tracking_bp
 from .routes.image_predictor import image_predictor_bp
-
+from .routes.auto_ml import auto_ml_bp
+from .routes.sound_classification import sound_classification_bp
 
 def create_app():
     # Инициализация приложения
@@ -24,11 +25,13 @@ def create_app():
 
     app.register_blueprint(main_bp)
     app.register_blueprint(image_bp)
-    app.register_blueprint(ml_manger_bp)
+    app.register_blueprint(ml_manager_bp)
     app.register_blueprint(dataset_manager_bp)
     app.register_blueprint(table_processor_bp)
     app.register_blueprint(tracking_bp)
     app.register_blueprint(image_predictor_bp)
+    app.register_blueprint(auto_ml_bp)
+    app.register_blueprint(sound_classification_bp)
 
     import pandas as pd
     @app.template_filter('datetime')

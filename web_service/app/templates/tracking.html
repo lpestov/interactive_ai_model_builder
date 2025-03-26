@@ -1,85 +1,143 @@
 {% extends 'base.html' %}
 
-{% block title %}Experiment Tracking{% endblock %}
+{% block title %}Tracking{% endblock %}
 
 {% block head %}
 {{ super() }}
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
 <style>
-    .table-hover tbody tr:hover {
-        background-color: rgba(13, 110, 253, 0.05);
-        transition: background-color 0.3s ease;
+    .experiment-row {
+        transition: all 0.2s ease;
+        background: white !important;
     }
-    .param-badge {
+
+    .experiment-row:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 3px 12px rgba(13, 110, 253, 0.1);
+    }
+
+    .param-pill {
+        background: rgba(13, 110, 253, 0.1) !important;
+        color: #0d6efd !important;
+        border: none;
+        padding: 4px 8px;
         font-size: 0.85em;
-        margin: 2px;
-        white-space: nowrap;
+        border-radius: 4px;
     }
-    .status-dot {
-        height: 10px;
-        width: 10px;
-        border-radius: 50%;
-        display: inline-block;
+
+    .metric-badge {
+        font-size: 0.9em;
+        padding: 4px 8px;
+        border-radius: 6px;
     }
 </style>
 {% endblock %}
 
 {% block body %}
-<div class="container-fluid py-4" style="max-width: 95%;">
-    <h2 class="mb-4 text-primary">
-        <i class="fas fa-history me-2"></i>Training History
-    </h2>
+<div class="container-fluid py-3" style="max-width: 99%;">
+    <div class="d-flex align-items-center mb-3">
+        <h2 class="h4 fw-bold text-primary me-3">
+            <i class="bi bi-clipboard-data"></i> Experiment Tracking
+        </h2>
+    </div>
 
-    <div class="card shadow-sm">
-        <div class="card-body p-0">
+    <div class="card border-0 shadow-sm">
+        <div class="card-header bg-primary text-white py-2">
+            <div class="d-flex align-items-center">
+                <i class="bi bi-lightning me-2"></i>
+                <h3 class="h6 mb-0">Training Runs</h3>
+            </div>
+        </div>
+
+        <div class="card-body p-2">
             {% if experiments %}
                 <div class="table-responsive">
-                    <table class="table table-hover mb-0">
-                        <thead class="table-light">
+                    <table class="table table-borderless align-middle mb-0">
+                        <thead class="bg-primary bg-opacity-10">
                             <tr>
-                                <th class="align-middle">Run ID</th>
-                                <th class="align-middle">Model</th>
-                                <th class="align-middle">Dataset</th>
-                                <th class="align-middle text-center">Accuracy</th>
-                                <th class="align-middle text-center">Training Time</th>
-                                <th class="align-middle">Parameters</th>
-                                <th class="align-middle text-center">Actions</th>
+                                <th class="ps-3 py-2 text-primary fw-bold small">Run ID</th>
+                                <th class="py-2 text-primary fw-bold small">Model</th>
+                                <th class="py-2 text-primary fw-bold small">Dataset</th>
+                                <th class="py-2 text-primary fw-bold small">Task</th>
+                                <th class="py-2 text-primary fw-bold small">Metric</th>
+                                <th class="text-center py-2 text-primary fw-bold small">Score</th>
+                                <th class="text-center py-2 text-primary fw-bold small">Duration</th>
+                                <th class="py-2 text-primary fw-bold small">Parameters</th>
+                                <th class="text-center pe-3 py-2 text-primary fw-bold small">Actions</th>
                             </tr>
                         </thead>
                         <tbody>
                             {% for exp in experiments %}
-                            <tr>
-                                <td class="text-muted">{{ exp.run_id[:8] }}</td>
-                                <td>
-                                    <span class="badge bg-primary">
+                            <tr class="experiment-row position-relative"
+                                onclick="window.location.href='{{ url_for('tracking.tracking_detail', run_id=exp.run_id) }}'">
+
+                                <td class="ps-3 py-1 small fw-medium text-primary">
+                                    {{ exp.run_id[:8] }}
+                                </td>
+
+                                <td class="py-1">
+                                    <span class="metric-badge bg-primary text-white">
                                         {{ exp.model_name }}
                                     </span>
                                 </td>
-                                <td>
-                                    <span class="badge bg-secondary">
+
+                                <td class="py-1">
+                                    <span class="metric-badge bg-info text-white">
                                         {{ exp.dataset }}
                                     </span>
                                 </td>
-                                <td class="text-center text-success fw-bold">
-                                    {{ "%.2f"|format(exp.accuracy * 100) }}%
-                                </td>
-                                <td class="text-center">
-                                    <i class="fas fa-stopwatch me-2 text-secondary"></i>
-                                    {{ "%.2f"|format(exp.training_time) }}s
-                                </td>
-                                <td>
-                                    {% for name, value in exp.params.items() %}
-                                    <span class="param-badge badge bg-light text-dark border">
-                                        {{ name }}: {{ value }}
+
+                                <td class="py-1">
+                                    <span class="metric-badge bg-warning text-dark">
+                                        {{ exp.task_type }}
                                     </span>
-                                    {% endfor %}
                                 </td>
-                                <td class="text-center">
-                                    <a href="{{ url_for('tracking.download_model', run_id=exp.run_id) }}"
-                                       class="btn btn-sm btn-outline-primary"
-                                       title="Download model">
-                                        <i class="fas fa-download"></i>
-                                    </a>
+
+                                <td class="py-1">
+                                    <span class="metric-badge bg-success text-white">
+                                        {{ exp.scoring }}
+                                    </span>
+                                </td>
+
+                                <td class="text-center py-1">
+                                    <span class="fw-medium text-success">
+                                        {{ "%.2f"|format(exp.score) }}
+                                    </span>
+                                </td>
+
+                                <td class="text-center py-1">
+                                    <div class="d-flex align-items-center justify-content-center small">
+                                        <i class="bi bi-clock-history me-1"></i>
+                                        {{ "%.2f"|format(exp.training_time) }}s
+                                    </div>
+                                </td>
+
+                                <td class="py-1">
+                                    <div class="d-flex flex-wrap gap-1">
+                                        {% for name, value in exp.params.items() %}
+                                        <span class="param-pill">
+                                            {{ name }}: {{ value }}
+                                        </span>
+                                        {% endfor %}
+                                    </div>
+                                </td>
+
+                                <td class="pe-3 py-1">
+                                    <div class="d-flex gap-1 justify-content-center">
+                                        <a href="{{ url_for('tracking.download_model', run_id=exp.run_id) }}"
+                                           class="btn btn-primary btn-sm action-btn"
+                                           onclick="event.stopPropagation()">
+                                            <i class="bi bi-download"></i>
+                                        </a>
+                                        <form action="{{ url_for('tracking.delete_run', run_id=exp.run_id) }}"
+                                              method="post"
+                                              onclick="event.stopPropagation()">
+                                            <button type="submit"
+                                                    class="btn btn-danger btn-sm action-btn">
+                                                <i class="bi bi-trash"></i>
+                                            </button>
+                                        </form>
+                                    </div>
                                 </td>
                             </tr>
                             {% endfor %}
@@ -87,10 +145,10 @@
                     </table>
                 </div>
             {% else %}
-                <div class="text-center p-5">
-                    <div class="alert alert-info d-inline-block mb-0">
-                        <i class="fas fa-info-circle me-2"></i>
-                        No experiments recorded yet. Start by creating a dataset or training a model.
+                <div class="text-center p-3">
+                    <div class="alert alert-primary d-inline-flex align-items-center py-2 px-3 small">
+                        <i class="bi bi-info-circle me-2"></i>
+                        No experiments recorded
                     </div>
                 </div>
             {% endif %}

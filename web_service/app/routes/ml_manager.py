@@ -1,53 +1,130 @@
-import time
 from flask import Blueprint, jsonify, render_template, request, redirect, url_for
-
-from ..fitter import models
+from ..fitter import classification_models, regression_models, Fitter
 from ..models import Dataset
-from ..fitter import Fitter
+import csv
 
-ml_manger_bp = Blueprint('ml_manager', __name__)
+ml_manager_bp = Blueprint('ml_manager', __name__)
 
-@ml_manger_bp.route('/ml_manager', methods=['GET'])
+
+@ml_manager_bp.route('/ml_manager', methods=['GET'])
 def index():
     datasets = Dataset.query.all()
-    return render_template('ml_manager.html', models=models, datasets=datasets, active_page='classic_ml')
+    classification_metrics = [
+        {'value': 'accuracy', 'label': 'Accuracy'},
+        {'value': 'f1', 'label': 'F1 Score'}
+    ]
+    regression_metrics = [
+        {'value': 'r2', 'label': 'R2 Score'},
+        {'value': 'mse', 'label': 'Mean Squared Error'}
+    ]
 
-@ml_manger_bp.route('/get_model_params')
+    datasets_json = [{
+        'id': d.id,
+        'file_name': d.file_name,
+        'problem_type': d.problem_type,
+        'process_status': d.process_status
+    } for d in datasets]
+
+    return render_template(
+        'ml_manager.html',
+        classification_models=classification_models,
+        regression_models=regression_models,
+        datasets_json=datasets_json,
+        classification_metrics=classification_metrics,
+        regression_metrics=regression_metrics,
+        active_page='classic_ml'
+    )
+
+
+@ml_manager_bp.route('/get_model_params')
 def get_model_params():
     model_name = request.args.get('model')
-    return jsonify(models.get(model_name, {}))
+    if model_name in classification_models:
+        params = classification_models[model_name]
+    elif model_name in regression_models:
+        params = regression_models[model_name]
+    else:
+        params = {}
+    return jsonify(params)
 
-@ml_manger_bp.route('/train', methods=['POST'])
-def train_model():
-    model_name = request.form['model']
-    dataset_id = request.form['dataset']
 
+@ml_manager_bp.route('/get_target_columns')
+def get_target_columns():
+    dataset_id = request.args.get('dataset_id')
+    if not dataset_id:
+        return jsonify([])
     dataset = Dataset.query.get(dataset_id)
     if not dataset:
+        return jsonify([])
+    columns = []
+    try:
+        with open(dataset.file_path, newline='', encoding='utf-8') as csvfile:
+            reader = csv.reader(csvfile)
+            columns = next(reader)
+    except Exception as e:
+        print("Error reading CSV file:", e)
+    return jsonify(columns)
+
+
+@ml_manager_bp.route('/train', methods=['POST'])
+def train_model():
+    dataset_id = request.form['dataset']
+    dataset = Dataset.query.get(dataset_id)
+
+    if not dataset or not dataset.process_status:
         return jsonify({
             'status': 'error',
-            'message': 'Dataset not found'
+            'message': 'Dataset not available for training. Please process dataset first.'
         }), 400
 
+
+    task_type = request.form['task_type']
+    model_name = request.form['model']
+    scoring = request.form['scoring']
+
+
     params = {}
-    # Обрабатываем только параметры, относящиеся к выбранной модели
     for key in request.form:
         if key.startswith('param_'):
             param_name = key.replace('param_', '')
+            model_dict = classification_models if task_type == 'classification' else regression_models
+            param_config = model_dict.get(model_name, {}).get(param_name, {})
             raw_value = request.form[key]
-            param_config = models[model_name].get(param_name)
-            # Если значение не передано, используем значение по умолчанию
+
+
             if raw_value == "" or raw_value is None:
-                params[param_name] = param_config['default']
+                params[param_name] = param_config.get('default')
             else:
-                if param_config['type'] == 'int':
+                if param_config.get('type') == 'int':
                     params[param_name] = int(raw_value)
-                elif param_config['type'] == 'float':
+                elif param_config.get('type') == 'float':
                     params[param_name] = float(raw_value)
                 else:
                     params[param_name] = raw_value
 
-    fitter = Fitter(model_name, params, dataset)
-    fitter.fit()
 
-    return redirect('/tracking')
+    try:
+        split_ratio = float(request.form.get('split_ratio', 70))
+    except ValueError:
+        split_ratio = 70.0
+
+    target_column = request.form.get('target_column', '')
+
+
+    try:
+        fitter = Fitter(
+            task_type=task_type,
+            model_name=model_name,
+            params=params,
+            dataset=dataset,
+            split_ratio=split_ratio,
+            target_column=target_column,
+            scoring=scoring
+        )
+        fitter.fit()
+        return redirect(url_for('tracking.index'))
+    except Exception as e:
+        return jsonify({
+            'status': 'error',
+            'message': f'Training failed: {str(e)}'
+        }), 500

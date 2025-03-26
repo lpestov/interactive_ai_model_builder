@@ -6,14 +6,11 @@ from flask import Blueprint, render_template, redirect, request, flash, url_for
 from ..extentions import db
 from ..models import Dataset
 
+
 dataset_manager_bp = Blueprint('dataset_manager', __name__)
 
-
-
-@dataset_manager_bp.route('/dataset_manager', methods=['GET', 'POST'])
+@dataset_manager_bp.route('/dataset_manager', methods=['GET'])
 def index():
-    if request.method == 'POST':
-        pass
     dataset_list = Dataset.query.all()
     return render_template('dataset_manager.html', datasets=dataset_list, active_page='table_datasets')
 
@@ -43,11 +40,10 @@ def upload_file():
 
         file.save(file_path)
 
-        # Сохраняем путь к загруженному датасету в БД
-        new_dataset = Dataset(file_name = file_name, file_path = file_path)
+        problem_type = request.form['problem_type']
+        new_dataset = Dataset(file_name = file_name, file_path = file_path, problem_type = problem_type)
         db.session.add(new_dataset)
         db.session.commit()
-
         flash('Файл успешно загружен')
         return redirect(url_for('dataset_manager.index'))
     else:
@@ -59,10 +55,7 @@ def upload_file():
 def delete_dataset(dataset_id):
     dataset = Dataset.query.get(dataset_id)
     if dataset:
-        # Удаляем файл из файловой системы
         os.remove(dataset.file_path)
-
-        # Удаляем запись из базы данных
         db.session.delete(dataset)
         db.session.commit()
         flash('Датасет удален')
