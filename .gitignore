@@ -167,6 +167,7 @@ cython_debug/
 /web_service/images
 /web_service/datasets
 /web_service/app/static
+/web_service/mlruns
 /web_service/predictions
 /web_service/utils/trained_model_classification.pt
 /web_service/utils/class_to_idx.json
