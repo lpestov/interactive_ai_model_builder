@@ -1,202 +1,342 @@
 {% extends "base.html" %}
 {% block title %}AutoML{% endblock %}
 {% block head %}
-{{ super() }}
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+  {{ super() }}
+  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
+  <meta http-equiv="Pragma" content="no-cache" />
+  <meta http-equiv="Expires" content="0" />
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
 {% endblock %}
+
 {% block body %}
 <div class="container mt-5">
-    <div class="d-flex align-items-center mb-4">
-        <h1 class="text-primary me-3">
-            <i class="bi bi-magic"></i> AutoML Training
-        </h1>
+  <form action="{{ url_for('auto_ml.train_model') }}" method="post" enctype="multipart/form-data">
+
+    <!-- Dataset Selection Block -->
+    <div class="card mb-4">
+      <div class="card-header bg-primary text-white">
+        <h5 class="mb-0"><i class="bi bi-database me-2"></i>Dataset Selection</h5>
+      </div>
+      <div class="card-body">
+        <div class="mb-3">
+          <label for="task_type" class="form-label text-primary fw-medium">Task Type</label>
+          <select id="task_type" name="task_type" class="form-select border-primary">
+            <option value="classification">Classification</option>
+            <option value="regression">Regression</option>
+          </select>
+        </div>
+        <div class="mb-3">
+          <label for="dataset_select" class="form-label text-primary fw-medium">Dataset</label>
+          <select id="dataset_select" name="dataset" class="form-select border-primary">
+          </select>
+        </div>
+        <div class="mb-3">
+          <label for="target_column" class="form-label text-primary fw-medium">Target Column</label>
+          <select id="target_column" name="target_column" class="form-select border-primary">
+          </select>
+        </div>
+        <div class="mb-3">
+          <label for="split_ratio" class="form-label text-primary fw-medium">Train/Test Split (%)</label>
+          <input type="range" class="form-range" id="split_ratio" name="split_ratio" min="10" max="90" value="70" oninput="splitOutput.value = split_ratio.value">
+          <output id="splitOutput">70</output>
+        </div>
+        <div class="mb-3">
+          <label for="scoring_select" class="form-label text-primary fw-medium">Evaluation Metric</label>
+          <select id="scoring_select" name="scoring" class="form-select border-primary">
+          </select>
+        </div>
+      </div>
     </div>
 
-    <form action="{{ url_for('auto_ml.train_model') }}" method="post" enctype="multipart/form-data">
-        <!-- Блок выбора датасета -->
-        <div class="card border-0 shadow-lg mb-4">
-            <div class="card-header bg-primary text-white">
-                <h5 class="mb-0"><i class="bi bi-database me-2"></i>Dataset Selection</h5>
+    <!-- Model Configuration Block -->
+    <div class="card border-0 shadow-lg mb-4">
+      <div class="card-header bg-primary text-white">
+        <h5 class="mb-0"><i class="bi bi-diagram-3 me-2"></i>Model Configuration</h5>
+      </div>
+      <div class="card-body">
+        <div class="row g-3">
+          <div class="col-md-6">
+            <div class="mb-3">
+              <label for="model" class="form-label text-primary fw-medium">Base Model</label>
+              <select class="form-select border-primary" id="model" name="model"></select>
             </div>
-            <div class="card-body">
-                <div class="mb-3">
-                    <label for="dataset" class="form-label text-primary fw-medium">Select Dataset</label>
-                    <select class="form-select border-primary" id="dataset" name="dataset">
-                        {% for ds in datasets %}
-                        <option value="{{ ds.id }}">{{ ds.file_name }} (id: {{ ds.id }})</option>
-                        {% endfor %}
-                    </select>
-                </div>
-            </div>
+          </div>
         </div>
-
-        <!-- Блок 1: Выбор ML модели и параметров -->
-        <div class="card border-0 shadow-lg mb-4">
-            <div class="card-header bg-primary text-white">
-                <h5 class="mb-0"><i class="bi bi-diagram-3 me-2"></i>Model Configuration</h5>
-            </div>
-            <div class="card-body">
-                <div class="row g-3">
-                    <div class="col-md-6">
-                        <div class="mb-3">
-                            <label for="model" class="form-label text-primary fw-medium">Base Model</label>
-                            <select class="form-select border-primary" id="model" name="model">
-                                {% for model in sklearn_models %}
-                                <option value="{{ model }}">{{ model }}</option>
-                                {% endfor %}
-                            </select>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="mt-3">
-                    <h6 class="text-primary mb-3"><i class="bi bi-toggles2 me-2"></i>Model Parameters Space</h6>
-                    <div id="model_param_space" class="row g-3"></div>
-                </div>
-            </div>
+        <div class="mt-3">
+          <h6 class="text-primary mb-3"><i class="bi bi-toggles2 me-2"></i>Model Parameters Space</h6>
+          <div id="model_param_space" class="row g-3"></div>
         </div>
+      </div>
+    </div>
 
-        <!-- Блок 2: Алгоритм подбора гиперпараметров -->
-        <div class="card border-0 shadow-lg mb-4">
-            <div class="card-header bg-primary text-white">
-                <h5 class="mb-0"><i class="bi bi-gear-wide-connected me-2"></i>Hyperparameter Optimization</h5>
+    <!-- HPO Block -->
+    <div class="card border-0 shadow-lg mb-4">
+      <div class="card-header bg-primary text-white">
+        <h5 class="mb-0"><i class="bi bi-gear-wide-connected me-2"></i>Hyperparameter Optimization</h5>
+      </div>
+      <div class="card-body">
+        <div class="row g-3">
+          <div class="col-md-6">
+            <div class="mb-3">
+              <label for="hpo_method" class="form-label text-primary fw-medium">Optimization Algorithm</label>
+              <select class="form-select border-primary" id="hpo_method" name="hpo_method">
+                {% for key, method in hpo_methods.items() %}
+                <option value="{{ key }}">{{ method.name }}</option>
+                {% endfor %}
+              </select>
             </div>
-            <div class="card-body">
-                <div class="row g-3">
-                    <div class="col-md-6">
-                        <div class="mb-3">
-                            <label for="hpo_method" class="form-label text-primary fw-medium">Optimization Algorithm</label>
-                            <select class="form-select border-primary" id="hpo_method" name="hpo_method">
-                                {% for key, method in hpo_methods.items() %}
-                                <option value="{{ key }}">{{ method.name }}</option>
-                                {% endfor %}
-                            </select>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="mt-3">
-                    <h6 class="text-primary mb-3"><i class="bi bi-sliders me-2"></i>Algorithm Parameters</h6>
-                    <div id="hpo_params" class="row g-3"></div>
-                </div>
-            </div>
+          </div>
         </div>
-
-        <!-- Кнопка запуска -->
-        <div class="d-grid mt-4">
-            <button type="submit" class="btn btn-primary btn-lg">
-                <i class="bi bi-lightning-charge me-2"></i>Start AutoML Training
-            </button>
+        <div class="mt-3">
+          <h6 class="text-primary mb-3"><i class="bi bi-sliders me-2"></i>Algorithm Parameters</h6>
+          <div id="hpo_params" class="row g-3"></div>
         </div>
-    </form>
+      </div>
+    </div>
+
+    <!-- Submit Button -->
+    <div class="d-grid mt-4">
+      <button type="submit" class="btn btn-primary btn-lg">
+        <i class="bi bi-lightning-charge me-2"></i>Start AutoML Training
+      </button>
+    </div>
+  </form>
 </div>
 
 <script>
-// Модифицированный JavaScript для раздельных блоков
-document.getElementById("model").addEventListener("change", function(){
-  var model = this.value;
-  fetch("/get_model_param_space?model=" + model)
-    .then(response => response.json())
-    .then(data => {
-       var container = document.getElementById("model_param_space");
-       container.innerHTML = '';
-       for(var param in data){
-         var config = data[param];
-         var div = document.createElement("div");
-         div.className = "col-md-6";
-         var innerDiv = document.createElement("div");
-         innerDiv.className = "mb-3 p-3 border rounded bg-light";
+  // Global variables
+  var allDatasets = {{ datasets_json|tojson|safe }};
+  var classificationMetrics = {{ classification_metrics|tojson|safe }};
+  var regressionMetrics = {{ regression_metrics|tojson|safe }};
+  var classificationModels = {{ classification_models|tojson|safe }};
+  var regressionModels = {{ regression_models|tojson|safe }};
 
-         var label = document.createElement("label");
-         label.className = "form-label text-primary small fw-medium";
-         label.innerHTML = param + " <span class='text-muted'>(range)</span>";
-         innerDiv.appendChild(label);
+  // Update datasets based on task type
+  function updateDatasets() {
+    var taskType = document.getElementById("task_type").value;
+    var datasetSelect = document.getElementById("dataset_select");
+    var currentDatasetId = datasetSelect.value;
+    datasetSelect.innerHTML = '';
 
-         var inputGroup = document.createElement("div");
-         inputGroup.className = "row g-2";
-
-         // Min input
-         var col1 = document.createElement("div");
-         col1.className = "col";
-         var inputLow = document.createElement("input");
-         inputLow.className = "form-control border-primary";
-         inputLow.name = "model_param_" + param + "_low";
-         inputLow.type = "number";
-         inputLow.step = (config.type === "float") ? "0.01" : "1";
-         inputLow.placeholder = "Min value";
-         inputLow.value = config.default_low;
-         col1.appendChild(inputLow);
-         inputGroup.appendChild(col1);
-
-         // Max input
-         var col2 = document.createElement("div");
-         col2.className = "col";
-         var inputHigh = document.createElement("input");
-         inputHigh.className = "form-control border-primary";
-         inputHigh.name = "model_param_" + param + "_high";
-         inputHigh.type = "number";
-         inputHigh.step = (config.type === "float") ? "0.01" : "1";
-         inputHigh.placeholder = "Max value";
-         inputHigh.value = config.default_high;
-         col2.appendChild(inputHigh);
-         inputGroup.appendChild(col2);
-
-         innerDiv.appendChild(inputGroup);
-         div.appendChild(innerDiv);
-         container.appendChild(div);
-       }
+    var filteredDatasets = allDatasets.filter(function(d) {
+      return d.problem_type === taskType;
     });
-});
 
-document.getElementById("hpo_method").addEventListener("change", function(){
-  var method = this.value;
-  fetch("/get_hpo_params?method=" + method)
-    .then(response => response.json())
-    .then(data => {
-       var container = document.getElementById("hpo_params");
-       container.innerHTML = "";
-       for(var param in data){
-         var config = data[param];
-         var div = document.createElement("div");
-         div.className = "col-md-6";
-         var innerDiv = document.createElement("div");
-         innerDiv.className = "mb-3 p-3 border rounded bg-light";
-
-         var label = document.createElement("label");
-         label.className = "form-label text-primary small fw-medium";
-         label.innerHTML = (config.label || param) + " <span class='text-muted'>(" + config.type + ")</span>";
-         innerDiv.appendChild(label);
-
-         if(config.type === "select"){
-            var select = document.createElement("select");
-            select.className = "form-select border-primary";
-            select.name = "hpo_param_" + param;
-            config.options.forEach(function(option){
-               var opt = document.createElement("option");
-               opt.value = option;
-               opt.text = option;
-               if(option === config.default) opt.selected = true;
-               select.appendChild(opt);
-            });
-            innerDiv.appendChild(select);
-         } else {
-            var input = document.createElement("input");
-            input.className = "form-control border-primary";
-            input.type = (config.type === "float" || config.type === "int") ? "number" : "text";
-            input.name = "hpo_param_" + param;
-            input.value = config.default;
-            if(config.type === "float") input.step = "0.01";
-            if(config.type === "int") input.step = "1";
-            innerDiv.appendChild(input);
-         }
-         div.appendChild(innerDiv);
-         container.appendChild(div);
-       }
+    filteredDatasets.forEach(function(dataset) {
+      var option = document.createElement("option");
+      option.value = dataset.id;
+      option.textContent = dataset.file_name + " (id:" + dataset.id + ")";
+      if (!dataset.process_status) {
+        option.disabled = true;
+        option.style.color = '#ccc';
+      }
+      if (dataset.id == currentDatasetId) {
+        option.selected = true;
+      }
+      datasetSelect.appendChild(option);
     });
-});
 
-// Инициализация
-document.getElementById("model").dispatchEvent(new Event("change"));
-document.getElementById("hpo_method").dispatchEvent(new Event("change"));
+    if (!datasetSelect.value || datasetSelect.options[datasetSelect.selectedIndex].disabled) {
+      var firstEnabled = Array.from(datasetSelect.options).find(opt => !opt.disabled);
+      if (firstEnabled) firstEnabled.selected = true;
+    }
+    updateTargetColumns();
+    updateMetricOptions();
+  }
+
+  // Update available models
+  function updateModels() {
+    var taskType = document.getElementById("task_type").value;
+    var modelSelect = document.getElementById("model");
+    var currentModel = modelSelect.value;
+
+    modelSelect.innerHTML = '';
+    var models = taskType === 'classification'
+      ? Object.keys(classificationModels)
+      : Object.keys(regressionModels);
+
+    models.forEach(function(model) {
+      var option = document.createElement("option");
+      option.value = model;
+      option.textContent = model;
+      modelSelect.appendChild(option);
+    });
+
+    modelSelect.dispatchEvent(new Event("change"));
+  }
+
+  // Update metrics based on task type
+  function updateMetricOptions() {
+    var taskType = document.getElementById("task_type").value;
+    var scoringSelect = document.getElementById("scoring_select");
+    scoringSelect.innerHTML = '';
+    var metrics = taskType === 'classification' ? classificationMetrics : regressionMetrics;
+    metrics.forEach(function(metric) {
+      var option = document.createElement("option");
+      option.value = metric.value;
+      option.textContent = metric.label;
+      scoringSelect.appendChild(option);
+    });
+  }
+
+  // Update target columns
+  function updateTargetColumns() {
+    var datasetSelect = document.getElementById("dataset_select");
+    var targetSelect = document.getElementById("target_column");
+    targetSelect.innerHTML = '';
+
+    if (!datasetSelect.value) return;
+
+    var datasetId = datasetSelect.value;
+    fetch("{{ url_for('auto_ml.get_target_columns') }}?dataset_id=" + datasetId)
+      .then(response => response.json())
+      .then(columns => {
+        columns.forEach(function(col) {
+          var option = document.createElement("option");
+          option.value = col;
+          option.textContent = col;
+          targetSelect.appendChild(option);
+        });
+      });
+  }
+
+  // Initialize
+  document.addEventListener('DOMContentLoaded', function() {
+    updateDatasets();
+    updateModels();
+    updateMetricOptions();
+
+    // Event listeners
+    document.getElementById("task_type").addEventListener('change', function() {
+      updateDatasets();
+      updateModels();
+      updateMetricOptions();
+    });
+
+    document.getElementById("dataset_select").addEventListener('change', updateTargetColumns);
+
+    // Model parameters handling
+    document.getElementById("model").addEventListener("change", function(){
+      var model = this.value;
+      var taskType = document.getElementById("task_type").value;
+
+      fetch("{{ url_for('auto_ml.get_model_param_space') }}?model=" + model + "&task_type=" + taskType)
+        .then(response => response.json())
+        .then(data => {
+           var container = document.getElementById("model_param_space");
+           container.innerHTML = '';
+           for(var param in data){
+             var config = data[param];
+             var div = document.createElement("div");
+             div.className = "col-md-6";
+             var innerDiv = document.createElement("div");
+             innerDiv.className = "mb-3 p-3 border rounded bg-light";
+
+             var label = document.createElement("label");
+             label.className = "form-label text-primary small fw-medium";
+             label.innerHTML = param + " <span class='text-muted'>(" + config.type + ")</span><br><small class='text-muted'>" + (config.description || "") + "</small>";
+             innerDiv.appendChild(label);
+
+             if(config.type === "categorical") {
+               var select = document.createElement("select");
+               select.className = "form-select border-primary";
+               select.name = "model_param_" + param + "_low";
+               config.options.forEach(function(opt) {
+                 var option = document.createElement("option");
+                 option.value = opt;
+                 option.text = opt;
+                 select.appendChild(option);
+               });
+               innerDiv.appendChild(select);
+             } else {
+               var inputGroup = document.createElement("div");
+               inputGroup.className = "row g-2";
+
+               var col1 = document.createElement("div");
+               col1.className = "col";
+               var inputLow = document.createElement("input");
+               inputLow.className = "form-control border-primary";
+               inputLow.name = "model_param_" + param + "_low";
+               inputLow.type = "number";
+               inputLow.step = config.type === "float" ? "0.01" : "1";
+               inputLow.placeholder = "Min value";
+               inputLow.value = config.default_low || "";
+               col1.appendChild(inputLow);
+               inputGroup.appendChild(col1);
+
+               var col2 = document.createElement("div");
+               col2.className = "col";
+               var inputHigh = document.createElement("input");
+               inputHigh.className = "form-control border-primary";
+               inputHigh.name = "model_param_" + param + "_high";
+               inputHigh.type = "number";
+               inputHigh.step = config.type === "float" ? "0.01" : "1";
+               inputHigh.placeholder = "Max value";
+               inputHigh.value = config.default_high || "";
+               col2.appendChild(inputHigh);
+               inputGroup.appendChild(col2);
+
+               innerDiv.appendChild(inputGroup);
+             }
+             div.appendChild(innerDiv);
+             container.appendChild(div);
+           }
+        });
+    });
+
+    // HPO parameters handling
+    document.getElementById("hpo_method").addEventListener("change", function(){
+      var method = this.value;
+      fetch("{{ url_for('auto_ml.get_hpo_params') }}?method=" + method)
+        .then(response => response.json())
+        .then(data => {
+           var container = document.getElementById("hpo_params");
+           container.innerHTML = "";
+           for(var param in data){
+             if (param === "name") continue;
+             var config = data[param];
+             var div = document.createElement("div");
+             div.className = "col-md-6";
+             var innerDiv = document.createElement("div");
+             innerDiv.className = "mb-3 p-3 border rounded bg-light";
+
+             var label = document.createElement("label");
+             label.className = "form-label text-primary small fw-medium";
+             label.innerHTML = (config.label || param) + " <span class='text-muted'>(" + config.type + ")</span><br><small class='text-muted'>" + (config.description || "") + "</small>";
+             innerDiv.appendChild(label);
+
+             if(config.type === "select"){
+                var select = document.createElement("select");
+                select.className = "form-select border-primary";
+                select.name = "hpo_param_" + param;
+                config.options.forEach(function(option){
+                   var opt = document.createElement("option");
+                   opt.value = option;
+                   opt.text = option;
+                   if(option === config.default) opt.selected = true;
+                   select.appendChild(opt);
+                });
+                innerDiv.appendChild(select);
+             } else {
+                var input = document.createElement("input");
+                input.className = "form-control border-primary";
+                input.type = ["float", "int"].includes(config.type) ? "number" : "text";
+                input.name = "hpo_param_" + param;
+                input.value = config.default;
+                input.placeholder = "Enter " + config.type + " value";
+                if(config.type === "float") input.step = "0.01";
+                if(config.type === "int") input.step = "1";
+                innerDiv.appendChild(input);
+             }
+             div.appendChild(innerDiv);
+             container.appendChild(div);
+           }
+        });
+    });
+
+    // Trigger initial load
+    document.getElementById("model").dispatchEvent(new Event("change"));
+    document.getElementById("hpo_method").dispatchEvent(new Event("change"));
+  });
 </script>
 {% endblock %}

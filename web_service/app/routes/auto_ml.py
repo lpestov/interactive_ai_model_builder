@@ -1,55 +1,255 @@
+import threading
+import time
+import csv
+
 from flask import Blueprint, jsonify, render_template, request, redirect, url_for, flash
 
 from ..automlFitter import AutoMLFitter
 from ..models import Dataset
 
-# Конфигурация методов оптимизации гиперпараметров (без random_state и verbose)
 hpo_methods = {
     "Bayesian": {
         "name": "Bayesian Optimization",
-        "init_points": {"type": "int", "default": 10, "label": "Init Points"},
-        "n_iter": {"type": "int", "default": 50, "label": "Iterations"},
-        "acq": {"type": "select", "default": "ucb", "label": "Acquisition Function", "options": ["ucb", "ei"]},
-        "kappa": {"type": "float", "default": 2.576, "label": "Kappa"},
-        "xi": {"type": "float", "default": 0.0, "label": "Xi"},
-        "n_candidates": {"type": "int", "default": 500, "label": "Candidates"}
+        "init_points": {
+            "type": "int",
+            "default": 10,
+            "label": "Init Points",
+            "description": "Number of initial random evaluations before starting the Bayesian optimization."
+        },
+        "n_iter": {
+            "type": "int",
+            "default": 50,
+            "label": "Iterations",
+            "description": "Number of iterations for the optimization process."
+        },
+        "acq": {
+            "type": "select",
+            "default": "ucb",
+            "label": "Acquisition Function",
+            "options": ["ucb", "ei"],
+            "description": "Acquisition function to determine the next evaluation point."
+        },
+        "kappa": {
+            "type": "float",
+            "default": 2.58,
+            "label": "Kappa",
+            "description": "Controls the exploration/exploitation trade-off in UCB acquisition."
+        },
+        "xi": {
+            "type": "float",
+            "default": 0.0,
+            "label": "Xi",
+            "description": "Exploration parameter for Expected Improvement (EI) acquisition."
+        },
+        "n_candidates": {
+            "type": "int",
+            "default": 500,
+            "label": "Candidates",
+            "description": "Number of candidate points to evaluate."
+        }
     },
     "Evolutionary": {
         "name": "Evolutionary Strategy",
-        "population_size": {"type": "int", "default": 20, "label": "Population Size"},
-        "mutation_variance": {"type": "float", "default": 0.1, "label": "Mutation Variance"},
-        "generations": {"type": "int", "default": 10, "label": "Generations"},
-        "mutation_rate": {"type": "float", "default": 0.25, "label": "Mutation Rate"},
-        "mutation_ratio": {"type": "float", "default": 0.75, "label": "Mutation Ratio"},
-        "elite_ratio": {"type": "float", "default": 0.2, "label": "Elite Ratio"}
+        "population_size": {
+            "type": "int",
+            "default": 20,
+            "label": "Population Size",
+            "description": "Number of individuals in the population."
+        },
+        "mutation_variance": {
+            "type": "float",
+            "default": 0.1,
+            "label": "Mutation Variance",
+            "description": "Variance of the mutation noise applied to individuals."
+        },
+        "generations": {
+            "type": "int",
+            "default": 10,
+            "label": "Generations",
+            "description": "Number of generations to run the evolutionary strategy."
+        },
+        "mutation_rate": {
+            "type": "float",
+            "default": 0.25,
+            "label": "Mutation Rate",
+            "description": "Probability of mutation per individual."
+        },
+        "mutation_ratio": {
+            "type": "float",
+            "default": 0.75,
+            "label": "Mutation Ratio",
+            "description": "Proportion of the population that will undergo mutation."
+        },
+        "elite_ratio": {
+            "type": "float",
+            "default": 0.2,
+            "label": "Elite Ratio",
+            "description": "Proportion of top individuals carried over unchanged to the next generation."
+        }
     }
 }
 
-# Дефолтные модели (f из sklearn) и их пространство поиска параметров (param_space)
-default_models = {
+classification_models = {
     "RandomForestClassifier": {
         "param_space": [
-            {"name": "n_estimators", "type": "integer", "default_low": 50, "default_high": 200},
-            {"name": "max_depth", "type": "integer", "default_low": 3, "default_high": 20},
-            {"name": "min_samples_split", "type": "integer", "default_low": 2, "default_high": 10},
-            {"name": "min_samples_leaf", "type": "integer", "default_low": 1, "default_high": 4},
-            {"name": "min_impurity_decrease", "type": "float", "default_low": 0.0, "default_high": 1.0}
+            {
+                "name": "n_estimators",
+                "type": "integer",
+                "default_low": 50,
+                "default_high": 200,
+                "description": "Number of trees in the forest."
+            },
+            {
+                "name": "max_depth",
+                "type": "integer",
+                "default_low": 3,
+                "default_high": 20,
+                "description": "Maximum depth of each tree."
+            },
+            {
+                "name": "min_samples_split",
+                "type": "integer",
+                "default_low": 2,
+                "default_high": 10,
+                "description": "Minimum number of samples required to split an internal node."
+            },
+            {
+                "name": "min_samples_leaf",
+                "type": "integer",
+                "default_low": 1,
+                "default_high": 4,
+                "description": "Minimum number of samples required to be at a leaf node."
+            },
+            {
+                "name": "min_impurity_decrease",
+                "type": "float",
+                "default_low": 0.0,
+                "default_high": 1.0,
+                "description": "A node will be split if this split induces a decrease of the impurity greater than or equal to this value."
+            }
         ]
     },
     "LogisticRegression": {
         "param_space": [
-            {"name": "C", "type": "float", "default_low": 0.01, "default_high": 10.0},
-            {"name": "max_iter", "type": "integer", "default_low": 50, "default_high": 200}
+            {
+                "name": "C",
+                "type": "float",
+                "default_low": 0.01,
+                "default_high": 10.0,
+                "description": "Inverse of regularization strength; smaller values specify stronger regularization."
+            },
+            {
+                "name": "max_iter",
+                "type": "integer",
+                "default_low": 50,
+                "default_high": 200,
+                "description": "Maximum number of iterations for the solver."
+            }
         ]
     },
     "SVC": {
         "param_space": [
-            {"name": "C", "type": "float", "default_low": 0.1, "default_high": 10.0},
-            {"name": "gamma", "type": "float", "default_low": 0.001, "default_high": 1.0}
+            {
+                "name": "C",
+                "type": "float",
+                "default_low": 0.1,
+                "default_high": 10.0,
+                "description": "Regularization parameter."
+            },
+            {
+                "name": "gamma",
+                "type": "float",
+                "default_low": 0.01,
+                "default_high": 1.0,
+                "description": "Kernel coefficient for 'rbf', 'poly' and 'sigmoid'."
+            }
+        ]
+    },
+    "GradientBoostingClassifier": {
+        "param_space": [
+            {
+                "name": "n_estimators",
+                "type": "integer",
+                "default_low": 50,
+                "default_high": 200,
+                "description": "Number of boosting stages."
+            },
+            {
+                "name": "learning_rate",
+                "type": "float",
+                "default_low": 0.01,
+                "default_high": 0.3,
+                "description": "Shrinks the contribution of each tree."
+            }
         ]
     }
 }
-sklearn_models = list(default_models.keys())
+
+regression_models = {
+    "RandomForestRegressor": {
+        "param_space": [
+            {
+                "name": "n_estimators",
+                "type": "integer",
+                "default_low": 50,
+                "default_high": 200,
+                "description": "Number of trees in the forest."
+            },
+            {
+                "name": "max_depth",
+                "type": "integer",
+                "default_low": 3,
+                "default_high": 20,
+                "description": "Maximum depth of the trees."
+            }
+        ]
+    },
+    "SVR": {
+        "param_space": [
+            {
+                "name": "C",
+                "type": "float",
+                "default_low": 0.1,
+                "default_high": 10.0,
+                "description": "Regularization parameter."
+            },
+            {
+                "name": "epsilon",
+                "type": "float",
+                "default_low": 0.01,
+                "default_high": 0.2,
+                "description": "Epsilon in the epsilon-SVR model."
+            }
+        ]
+    },
+    "GradientBoostingRegressor": {
+        "param_space": [
+            {
+                "name": "n_estimators",
+                "type": "integer",
+                "default_low": 50,
+                "default_high": 200,
+                "description": "Number of boosting stages."
+            },
+            {
+                "name": "max_depth",
+                "type": "integer",
+                "default_low": 3,
+                "default_high": 10,
+                "description": "Maximum depth of the trees."
+            }
+        ]
+    }
+}
+
+classification_metrics = [
+    {'value': 'accuracy', 'label': 'Accuracy'},
+    {'value': 'f1', 'label': 'F1 Score'}
+]
+regression_metrics = [
+    {'value': 'r2', 'label': 'R2 Score'},
+    {'value': 'mse', 'label': 'Mean Squared Error'}
+]
 
 auto_ml_bp = Blueprint('auto_ml', __name__)
 
@@ -57,10 +257,21 @@ auto_ml_bp = Blueprint('auto_ml', __name__)
 @auto_ml_bp.route('/auto_ml', methods=['GET'])
 def index():
     datasets = Dataset.query.all()
+    datasets_json = [{
+        "id": ds.id,
+        "file_name": ds.file_name,
+        "problem_type": ds.problem_type,
+        "process_status": ds.process_status
+    } for ds in datasets]
+
     return render_template("auto_ml.html",
                            datasets=datasets,
+                           datasets_json=datasets_json,
                            hpo_methods=hpo_methods,
-                           sklearn_models=sklearn_models,
+                           classification_models=classification_models,
+                           regression_models=regression_models,
+                           classification_metrics=classification_metrics,
+                           regression_metrics=regression_metrics,
                            active_page="auto_ml")
 
 
@@ -74,10 +285,27 @@ def get_hpo_params():
 @auto_ml_bp.route('/get_model_param_space')
 def get_model_param_space():
     model = request.args.get('model')
-    model_config = default_models.get(model, {})
+    task_type = request.args.get('task_type')
+
+    if task_type == 'classification':
+        model_config = classification_models.get(model, {})
+    else:
+        model_config = regression_models.get(model, {})
+
     param_space = model_config.get("param_space", [])
     param_dict = {param["name"]: param for param in param_space}
     return jsonify(param_dict)
+
+
+@auto_ml_bp.route('/get_target_columns')
+def get_target_columns():
+    dataset_id = request.args.get('dataset_id')
+    dataset = Dataset.query.get(dataset_id)
+
+    with open(dataset.file_path, newline='', encoding='utf-8') as csvfile:
+        reader = csv.reader(csvfile)
+        columns = next(reader)
+    return jsonify(columns)
 
 
 @auto_ml_bp.route('/auto_ml/train', methods=['POST'])
@@ -85,12 +313,13 @@ def train_model():
     dataset_id = request.form['dataset']
     hpo_method = request.form['hpo_method']
     model_name = request.form['model']
+    split_ratio = request.form['split_ratio']
+    target_column = request.form['target_column']
+    scoring_select = request.form['scoring']
+    task_type = request.form['task_type']
 
     dataset = Dataset.query.get(dataset_id)
-    if not dataset:
-        return jsonify({'status': 'error', 'message': 'Dataset not found'}), 400
 
-    # Собираем параметры метода HPO (без изменений)
     hpo_params = {}
     for key in request.form:
         if key.startswith('hpo_param_') and key != 'hpo_param_name':
@@ -107,7 +336,6 @@ def train_model():
                 else:
                     hpo_params[param_name] = value
 
-    # Собираем пространство поиска параметров для выбранной модели
     model_param_space = {}
     for key in request.form:
         if key.startswith('model_param_'):
@@ -120,7 +348,11 @@ def train_model():
             if bound_type not in ('low', 'high'):
                 continue
 
-            model_config = default_models.get(model_name, {})
+            if task_type == 'classification':
+                model_config = classification_models.get(model_name, {})
+            else:
+                model_config = regression_models.get(model_name, {})
+
             param_space = model_config.get("param_space", [])
             param_config = next((p for p in param_space if p["name"] == param_name), None)
             if not param_config:
@@ -128,10 +360,8 @@ def train_model():
 
             try:
                 value = request.form[key]
-                if param_config["type"] == "float":
-                    value = float(value)
-                else:
-                    value = int(value)
+                if param_config["type"] in ["float", "integer"]:
+                    value = float(value) if param_config["type"] == "float" else int(value)
 
                 if param_name not in model_param_space:
                     model_param_space[param_name] = {}
@@ -141,10 +371,13 @@ def train_model():
                 flash(f"Ошибка в параметре {param_name}: {str(e)}", "error")
                 return redirect(url_for("auto_ml.index"))
 
-    # Конвертируем в требуемый формат
     param_space_list = []
     for param_name, bounds in model_param_space.items():
-        model_config = default_models.get(model_name, {})
+        if task_type == 'classification':
+            model_config = classification_models.get(model_name, {})
+        else:
+            model_config = regression_models.get(model_name, {})
+
         param_space = model_config.get("param_space", [])
         param_config = next((p for p in param_space if p["name"] == param_name), None)
         if not param_config:
@@ -157,15 +390,25 @@ def train_model():
             "high": bounds["high"]
         })
 
-    # Запускаем обучение через AutoMLFitter
-    fitter = AutoMLFitter(
-        hpo_method,
-        hpo_params,
-        model_name,
-        model_param_space=param_space_list,
-        dataset=dataset
-    )
-    fitter.fit()
+    def async_train():
+        try:
+            fitter = AutoMLFitter(
+                hpo_method,
+                hpo_params,
+                model_name,
+                param_space_list,
+                dataset,
+                task_type,
+                split_ratio,
+                target_column,
+                scoring_select
+            )
+            fitter.fit()
+        except Exception as e:
+            print("AutoMl Training error : ", e)
 
-    flash("Обучение модели AutoML запущено! Результаты доступны в разделе Tracking.", "success")
+    train_thread = threading.Thread(target=async_train)
+    train_thread.start()
+    time.sleep(0.2)
+
     return redirect(url_for("tracking.index"))

@@ -1,7 +1,5 @@
 {% extends 'base.html' %}
-
 {% block title %}Tracking{% endblock %}
-
 {% block head %}
 {{ super() }}
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
@@ -10,29 +8,37 @@
         transition: all 0.2s ease;
         background: white !important;
     }
-
     .experiment-row:hover {
         transform: translateY(-2px);
         box-shadow: 0 3px 12px rgba(13, 110, 253, 0.1);
     }
-
     .param-pill {
         background: rgba(13, 110, 253, 0.1) !important;
         color: #0d6efd !important;
         border: none;
-        padding: 4px 8px;
-        font-size: 0.85em;
+        padding: 3px 6px;
+        font-size: 0.8em;
         border-radius: 4px;
+        white-space: nowrap;
     }
-
     .metric-badge {
         font-size: 0.9em;
         padding: 4px 8px;
         border-radius: 6px;
     }
+    .collapse-header {
+        cursor: pointer;
+    }
+    .params-cell {
+        max-width: 350px;
+        min-width: 250px;
+        font-size: 0.85em;
+        white-space: normal;
+        word-break: break-word;
+    }
+
 </style>
 {% endblock %}
-
 {% block body %}
 <div class="container-fluid py-3" style="max-width: 99%;">
     <div class="d-flex align-items-center mb-3">
@@ -40,131 +46,194 @@
             <i class="bi bi-clipboard-data"></i> Experiment Tracking
         </h2>
     </div>
-
-    <div class="card border-0 shadow-sm">
-        <div class="card-header bg-primary text-white py-2">
+    <div class="card border-0 shadow-sm mb-3">
+        <div class="card-header bg-primary text-white py-2 collapse-header" data-bs-toggle="collapse" data-bs-target="#classicTable">
             <div class="d-flex align-items-center">
                 <i class="bi bi-lightning me-2"></i>
-                <h3 class="h6 mb-0">Training Runs</h3>
+                <h3 class="h6 mb-0">ClassicML Runs</h3>
             </div>
         </div>
-
-        <div class="card-body p-2">
-            {% if experiments %}
-                <div class="table-responsive">
-                    <table class="table table-borderless align-middle mb-0">
-                        <thead class="bg-primary bg-opacity-10">
-                            <tr>
-                                <th class="ps-3 py-2 text-primary fw-bold small">Run ID</th>
-                                <th class="py-2 text-primary fw-bold small">Status</th>
-                                <th class="py-2 text-primary fw-bold small">Model</th>
-                                <th class="py-2 text-primary fw-bold small">Dataset</th>
-                                <th class="py-2 text-primary fw-bold small">Task</th>
-                                <th class="py-2 text-primary fw-bold small">Metric</th>
-                                <th class="text-center py-2 text-primary fw-bold small">Score</th>
-                                <th class="text-center py-2 text-primary fw-bold small">Duration</th>
-                                <th class="py-2 text-primary fw-bold small">Parameters</th>
-                                <th class="text-center pe-3 py-2 text-primary fw-bold small">Actions</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {% for exp in experiments %}
-                            <tr class="experiment-row position-relative"
-                                onclick="window.location.href='{{ url_for('tracking.tracking_detail', run_id=exp.run_id) }}'">
-
-                                <td class="ps-3 py-1 small fw-medium text-primary">
-                                    {{ exp.run_id[:8] }}
-                                </td>
-
-                                <td class="py-1">
-                                    {% if exp.status == 'training' %}
-                                        <span class="metric-badge bg-secondary text-white">
-                                            Training...
-                                        </span>
-                                    {% else %}
-                                        <span class="metric-badge bg-success text-white">
-                                            Finished
-                                        </span>
-                                    {% endif %}
-                                </td>
-
-                                <td class="py-1">
-                                    <span class="metric-badge bg-primary text-white">
-                                        {{ exp.model_name }}
-                                    </span>
-                                </td>
-
-                                <td class="py-1">
-                                    <span class="metric-badge bg-info text-white">
-                                        {{ exp.dataset }}
-                                    </span>
-                                </td>
-
-                                <td class="py-1">
-                                    <span class="metric-badge bg-warning text-dark">
-                                        {{ exp.task_type }}
-                                    </span>
-                                </td>
-
-                                <td class="py-1">
-                                    <span class="metric-badge bg-success text-white">
-                                        {{ exp.scoring }}
-                                    </span>
-                                </td>
-
-                                <td class="text-center py-1">
-                                    <span class="fw-medium text-success">
-                                        {{ "%.2f"|format(exp.score) }}
-                                    </span>
-                                </td>
-
-                                <td class="text-center py-1">
-                                    <div class="d-flex align-items-center justify-content-center small">
-                                        <i class="bi bi-clock-history me-1"></i>
-                                        {{ "%.2f"|format(exp.training_time) }}s
-                                    </div>
-                                </td>
-
-                                <td class="py-1">
-                                    <div class="d-flex flex-wrap gap-1">
-                                        {% for name, value in exp.params.items() %}
-                                        <span class="param-pill">
-                                            {{ name }}: {{ value }}
-                                        </span>
-                                        {% endfor %}
-                                    </div>
-                                </td>
-
-                                <td class="pe-3 py-1">
-                                    <div class="d-flex gap-1 justify-content-center">
-                                        <a href="{{ url_for('tracking.download_model', run_id=exp.run_id) }}"
-                                           class="btn btn-primary btn-sm action-btn"
-                                           onclick="event.stopPropagation()">
-                                            <i class="bi bi-download"></i>
-                                        </a>
-                                        <form action="{{ url_for('tracking.delete_run', run_id=exp.run_id) }}"
-                                              method="post"
-                                              onclick="event.stopPropagation()">
-                                            <button type="submit"
-                                                    class="btn btn-danger btn-sm action-btn">
-                                                <i class="bi bi-trash"></i>
-                                            </button>
-                                        </form>
-                                    </div>
-                                </td>
-                            </tr>
-                            {% endfor %}
-                        </tbody>
-                    </table>
-                </div>
-            {% else %}
-                <div class="text-center p-3">
-                    <div class="alert alert-primary d-inline-flex align-items-center py-2 px-3 small">
-                        <i class="bi bi-info-circle me-2"></i>
-                        No experiments recorded
+        <div id="classicTable" class="collapse show">
+            <div class="card-body p-2">
+                {% if classic_experiments %}
+                    <div class="table-responsive">
+                        <table class="table table-borderless align-middle mb-0">
+                            <thead class="bg-primary bg-opacity-10">
+                                <tr>
+                                    <th class="ps-3 py-2 text-primary fw-bold small">Run ID</th>
+                                    <th class="py-2 text-primary fw-bold small">Status</th>
+                                    <th class="py-2 text-primary fw-bold small">Model</th>
+                                    <th class="py-2 text-primary fw-bold small">Dataset</th>
+                                    <th class="py-2 text-primary fw-bold small">Task</th>
+                                    <th class="py-2 text-primary fw-bold small">Metric</th>
+                                    <th class="text-center py-2 text-primary fw-bold small">Score</th>
+                                    <th class="text-center py-2 text-primary fw-bold small">Duration</th>
+                                    <th class="py-2 text-primary fw-bold small">Parameters</th>
+                                    <th class="text-center pe-3 py-2 text-primary fw-bold small">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for exp in classic_experiments %}
+                                <tr class="experiment-row position-relative" onclick="window.location.href='{{ url_for('tracking.tracking_detail', run_id=exp.run_id) }}'">
+                                    <td class="ps-3 py-1 small fw-medium text-primary">{{ exp.run_id[:8] }}</td>
+                                    <td class="py-1">
+                                        {% if exp.status == 'training' %}
+                                            <span class="metric-badge bg-secondary text-white">Training...</span>
+                                        {% else %}
+                                            <span class="metric-badge bg-success text-white">Finished</span>
+                                        {% endif %}
+                                    </td>
+                                    <td class="py-1">
+                                        <span class="metric-badge bg-primary text-white">{{ exp.model_name }}</span>
+                                    </td>
+                                    <td class="py-1">
+                                        <span class="metric-badge bg-info text-white">{{ exp.dataset }}</span>
+                                    </td>
+                                    <td class="py-1">
+                                        <span class="metric-badge bg-warning text-dark">{{ exp.task_type }}</span>
+                                    </td>
+                                    <td class="py-1">
+                                        <span class="metric-badge bg-success text-white">{{ exp.scoring }}</span>
+                                    </td>
+                                    <td class="text-center py-1">
+                                        <span class="fw-medium text-success">{{ "%.2f"|format(exp.score) }}</span>
+                                    </td>
+                                    <td class="text-center py-1">
+                                        <div class="d-flex align-items-center justify-content-center small">
+                                            <i class="bi bi-clock-history me-1"></i>
+                                            {{ "%.2f"|format(exp.training_time) }}s
+                                        </div>
+                                    </td>
+                                    <td class="py-1">
+                                        <div class="d-flex flex-wrap gap-1">
+                                            {% for name, value in exp.params.items() %}
+                                            <span class="param-pill">{{ name }}: {{ value }}</span>
+                                            {% endfor %}
+                                        </div>
+                                    </td>
+                                    <td class="pe-3 py-1">
+                                        <div class="d-flex gap-1 justify-content-center">
+                                            <a href="{{ url_for('tracking.download_model', run_id=exp.run_id) }}" class="btn btn-primary btn-sm action-btn" onclick="event.stopPropagation()">
+                                                <i class="bi bi-download"></i>
+                                            </a>
+                                            <form action="{{ url_for('tracking.delete_run', run_id=exp.run_id) }}" method="post" onclick="event.stopPropagation()">
+                                                <button type="submit" class="btn btn-danger btn-sm action-btn">
+                                                    <i class="bi bi-trash"></i>
+                                                </button>
+                                            </form>
+                                        </div>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
                     </div>
-                </div>
-            {% endif %}
+                {% else %}
+                    <div class="text-center p-3">
+                        <div class="alert alert-primary d-inline-flex align-items-center py-2 px-3 small">
+                            <i class="bi bi-info-circle me-2"></i>
+                            No ClassicML experiments recorded
+                        </div>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    <div class="card border-0 shadow-sm">
+        <div class="card-header bg-primary text-white py-2 collapse-header" data-bs-toggle="collapse" data-bs-target="#autoTable">
+            <div class="d-flex align-items-center">
+                <i class="bi bi-robot me-2"></i>
+                <h3 class="h6 mb-0">AutoML Runs</h3>
+            </div>
+        </div>
+        <div id="autoTable" class="collapse show">
+            <div class="card-body p-2">
+                {% if automl_experiments %}
+                    <div class="table-responsive">
+                        <table class="table table-borderless align-middle mb-0">
+                            <thead class="bg-primary bg-opacity-10">
+                                <tr>
+                                    <th class="ps-3 py-2 text-primary fw-bold small">Run ID</th>
+                                    <th class="py-2 text-primary fw-bold small">Status</th>
+                                    <th class="py-2 text-primary fw-bold small">Model</th>
+                                    <th class="py-2 text-primary fw-bold small">Dataset</th>
+                                    <th class="py-2 text-primary fw-bold small">Task</th>
+                                    <th class="py-2 text-primary fw-bold small">Metric</th>
+                                    <th class="text-center py-2 text-primary fw-bold small">Score</th>
+                                    <th class="text-center py-2 text-primary fw-bold small">Duration</th>
+                                    <th class="py-2 text-primary fw-bold small">Optimizer</th>
+                                    <th class="py-2 text-primary fw-bold small">Best Params</th>
+                                    <th class="text-center pe-3 py-2 text-primary fw-bold small">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for exp in automl_experiments %}
+                                <tr class="experiment-row position-relative" onclick="window.location.href='{{ url_for('tracking.tracking_detail', run_id=exp.run_id) }}'">
+                                    <td class="ps-3 py-1 small fw-medium text-primary">{{ exp.run_id[:8] }}</td>
+                                    <td class="py-1">
+                                        {% if exp.status == 'training' %}
+                                            <span class="metric-badge bg-secondary text-white">Training...</span>
+                                        {% else %}
+                                            <span class="metric-badge bg-success text-white">Finished</span>
+                                        {% endif %}
+                                    </td>
+                                    <td class="py-1">
+                                        <span class="metric-badge bg-primary text-white">{{ exp.model_name }}</span>
+                                    </td>
+                                    <td class="py-1">
+                                        <span class="metric-badge bg-info text-white">{{ exp.dataset }}</span>
+                                    </td>
+                                    <td class="py-1">
+                                        <span class="metric-badge bg-warning text-dark">{{ exp.task_type }}</span>
+                                    </td>
+                                    <td class="py-1">
+                                        <span class="metric-badge bg-success text-white">{{ exp.scoring }}</span>
+                                    </td>
+                                    <td class="text-center py-1">
+                                        <span class="fw-medium text-success">{{ "%.2f"|format(exp.score) }}</span>
+                                    </td>
+                                    <td class="text-center py-1">
+                                        <div class="d-flex align-items-center justify-content-center small">
+                                            <i class="bi bi-clock-history me-1"></i>
+                                            {{ "%.2f"|format(exp.training_time) }}s
+                                        </div>
+                                    </td>
+                                    <td class="py-1">
+                                        <span class="fw-medium">{{ exp.optimizer }}</span>
+                                    </td>
+                                    <td class="py-1 params-cell">
+                                        <div class="d-flex flex-wrap gap-1">
+                                            {% for name, value in exp.params.items() %}
+                                            <span class="param-pill">{{ name }}: {{ value }}</span>
+                                            {% endfor %}
+                                        </div>
+                                    </td>
+                                    <td class="pe-3 py-1">
+                                        <div class="d-flex gap-1 justify-content-center">
+                                            <a href="{{ url_for('tracking.download_model', run_id=exp.run_id) }}" class="btn btn-primary btn-sm action-btn" onclick="event.stopPropagation()">
+                                                <i class="bi bi-download"></i>
+                                            </a>
+                                            <form action="{{ url_for('tracking.delete_run', run_id=exp.run_id) }}" method="post" onclick="event.stopPropagation()">
+                                                <button type="submit" class="btn btn-danger btn-sm action-btn">
+                                                    <i class="bi bi-trash"></i>
+                                                </button>
+                                            </form>
+                                        </div>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                {% else %}
+                    <div class="text-center p-3">
+                        <div class="alert alert-primary d-inline-flex align-items-center py-2 px-3 small">
+                            <i class="bi bi-info-circle me-2"></i>
+                            No AutoML experiments recorded
+                        </div>
+                    </div>
+                {% endif %}
+            </div>
         </div>
     </div>
 </div>

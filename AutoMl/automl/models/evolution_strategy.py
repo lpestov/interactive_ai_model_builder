@@ -3,7 +3,7 @@ from warnings import catch_warnings, simplefilter
 
 class EvolutionaryStrategyHPO:
     def __init__(self, f, param_space, population_size=20,
-                 mutation_variance=0.1, verbose=1, random_state=None,
+                 mutation_variance=0.1, verbose=0, random_state=None,
                  generations=10, mutation_rate=0.25, mutation_ratio=0.75, elite_ratio=0.2):
         """
         f: Objective function to minimize/maximize. Must accept parameters from param_space as kwargs
@@ -128,12 +128,11 @@ class EvolutionaryStrategyHPO:
         best_idx = np.argmax([self._evaluate(ind) for ind in population])
         best_params = population[best_idx]
 
-        if self.verbose > 0:
-            print("═" * 50)
-            print("Best params for Evolution Strategy:")
-            for k, v in best_params.items():
-                print(f"▸ {k:20} : {v}")
-            print(f"Best result: {max(self.history):.4f}")
-            print("═" * 50)
+        print("═" * 50)
+        print("Best params for Evolution Strategy:")
+        for k, v in best_params.items():
+            print(f"▸ {k:20} : {v}")
+        print(f"Best result: {max(self.history):.4f}")
+        print("═" * 50)
 
         return best_params, self.history

@@ -10,16 +10,16 @@ class BayesianOptimizationHPO:
                  init_points=10, n_iter=50, acq='ucb', kappa=2.576, xi=0.0,
                  n_candidates=500):
         """
-        f: Objective function to minimize/maximize. Must accept parameters from param_space as kwargs
-        param_space: List of dictionaries defining search space parameters (name, type, low/high/categories)
-        verbose: Verbosity level (0 = silent, 1 = basic, 2 = detailed). Default: 1
-        random_state: Seed for random number generator. Default: None
-        init_points: Number of initial random evaluations before Bayesian optimization begins. Default: 10
-        n_iter: Number of Bayesian optimization iterations. Default: 50
-        acq: Acquisition function type ('ucb' or 'ei'). Default: 'ucb'
-        kappa: Exploration-exploitation parameter for UCB. Higher values promote exploration. Default: 2.576
-        xi: Exploration parameter for EI, controls improvement threshold. Default: 0.0
-        n_candidates: Number of candidate samples to evaluate for acquisition function optimization. Default: 500
+        f: Функция цели для минимизации/максимизации. Принимает параметры из param_space как kwargs.
+        param_space: Список словарей, описывающих параметры поиска (name, type, low/high/categories).
+        verbose: Уровень подробности (0 = без вывода, 1 = базовый, 2 = подробный). По умолчанию: 1.
+        random_state: Seed для генератора случайных чисел. По умолчанию: None.
+        init_points: Количество начальных случайных точек перед началом байесовской оптимизации. По умолчанию: 10.
+        n_iter: Количество итераций байесовской оптимизации. По умолчанию: 50.
+        acq: Тип функции приобретения ('ucb' или 'ei'). По умолчанию: 'ucb'.
+        kappa: Параметр баланса исследования и эксплуатации для UCB. По умолчанию: 2.576.
+        xi: Параметр исследования для EI, контролирует порог улучшения. По умолчанию: 0.0.
+        n_candidates: Количество кандидатов для оптимизации функции приобретения. По умолчанию: 500.
         """
         self.f = f
         self.param_space = param_space
@@ -34,6 +34,7 @@ class BayesianOptimizationHPO:
 
         self._space = []
         self._values = []
+        self._history = []  # Здесь будем сохранять лучший результат до i-й итерации
         self.rng = np.random.RandomState(random_state)
         self.pbounds = {}
         self.categorical_mapping = {}
@@ -62,8 +63,7 @@ class BayesianOptimizationHPO:
                     raise ValueError(f"Unsupported parameter type {param_type} for {name}")
                 self.pbounds[name] = (low, high)
 
-
-        # Issue warning if categorical parameters are present
+        # Вывод предупреждения при наличии категориальных параметров
         if self.categorical_mapping:
             warnings.warn(
                 "Warning: The use of categorical parameters is strongly discouraged in Bayesian Optimization. "
@@ -87,7 +87,7 @@ class BayesianOptimizationHPO:
                 self.probe(self._next())
 
             if self.verbose >= 1:
-                print(f"Iteration {i + 1}/{self.n_iter} | Best: {self.max['target']:.4f}")
+                print(f"Iteration {i + 1}/{self.n_iter} | Best so far: {self._history[-1]:.4f}")
 
         best_params = {}
         for param in self.param_space:
@@ -103,15 +103,14 @@ class BayesianOptimizationHPO:
             else:
                 best_params[name] = value
 
-        history = self._values.copy()
+        history = self._history.copy()
 
-        if self.verbose > 0:
-            print("═" * 50)
-            print("Best params for Bayesian Optimization:")
-            for k, v in best_params.items():
-                print(f"▸ {k:20} : {v}")
-            print(f"\nBest result: {self.max['target']:.4f}")
-            print("═" * 50)
+        print("═" * 50)
+        print("Best params for Bayesian Optimization:")
+        for k, v in best_params.items():
+            print(f"▸ {k:20} : {v}")
+        print(f"\nBest result: {self.max['target']:.4f}")
+        print("═" * 50)
 
         return best_params, history
 
@@ -150,18 +149,29 @@ class BayesianOptimizationHPO:
 
     def probe(self, x):
         params = dict(zip(self.pbounds.keys(), x))
-        for name in self.categorical_mapping:
-            continuous_val = params[name]
-            categories = self.categorical_mapping[name]
-            index = int(np.round(continuous_val))
-            index = np.clip(index, 0, len(categories) - 1)
-            params[name] = categories[index]
-
+        for param in self.param_space:
+            name = param['name']
+            if name in self.categorical_mapping:
+                # Обработка категориальных переменных
+                continuous_val = params[name]
+                categories = self.categorical_mapping[name]
+                index = int(np.round(continuous_val))
+                index = np.clip(index, 0, len(categories) - 1)
+                params[name] = categories[index]
+            else:
+                # Обработка целочисленных и вещественных переменных
+                param_type = param['type']
+                if param_type == 'integer':
+                    params[name] = int(round(params[name]))
+                elif param_type == 'float':
+                    params[name] = float(params[name])
 
         target = self.f(**params)
 
         self._space.append(x)
         self._values.append(target)
+        # Обновляем историю: сохраняем лучший результат, достигнутый до текущей итерации
+        self._history.append(max(self._values))
 
         if self.verbose > 1:
             print(f"Probe: {params} → Score: {target:.4f}")

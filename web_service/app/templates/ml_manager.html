@@ -1,14 +1,14 @@
 {% extends 'base.html' %}
 
-{% block title %}ClassicML{% endblock %}
+{% block title %}Classic ML{% endblock %}
 
 {% block head %}
-{{ super() }}
-<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
-<meta http-equiv="Pragma" content="no-cache" />
-<meta http-equiv="Expires" content="0" />
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
-<script>
+  {{ super() }}
+  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
+  <meta http-equiv="Pragma" content="no-cache" />
+  <meta http-equiv="Expires" content="0" />
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+  <script>
     var classificationModels = {{ classification_models|tojson }};
     var regressionModels = {{ regression_models|tojson }};
     var classificationMetrics = {{ classification_metrics|tojson }};
@@ -19,7 +19,6 @@
         var taskType = document.getElementById("task_type").value;
         var datasetSelect = document.getElementById("dataset_select");
         var currentDatasetId = datasetSelect.value;
-
         datasetSelect.innerHTML = '';
 
         var filteredDatasets = allDatasets.filter(function(d) {
@@ -30,16 +29,13 @@
             var option = document.createElement("option");
             option.value = dataset.id;
             option.textContent = dataset.file_name + " (id:" + dataset.id + ")";
-
             if (!dataset.process_status) {
                 option.disabled = true;
                 option.style.color = '#ccc';
             }
-
             if (dataset.id == currentDatasetId) {
                 option.selected = true;
             }
-
             datasetSelect.appendChild(option);
         });
 
@@ -47,8 +43,8 @@
             var firstEnabled = Array.from(datasetSelect.options).find(opt => !opt.disabled);
             if (firstEnabled) firstEnabled.selected = true;
         }
-
         updateTargetColumns();
+        updateMetricOptions();
     }
 
     function updateModelOptions() {
@@ -93,9 +89,12 @@
                     var paramInfo = params[param];
                     var divGroup = document.createElement("div");
                     divGroup.className = "mb-3 p-3 border rounded";
+
+                    // Изменённый способ показа: название параметра жирным, описание мелким текстом ниже
                     var label = document.createElement("label");
                     label.className = "form-label text-primary fw-medium";
-                    label.textContent = param + " (" + paramInfo.description + "):";
+                    label.innerHTML = "<strong>" + param + "</strong><br><small class='text-muted'>" + (paramInfo.description || "") + "</small>";
+
                     if (paramInfo.options) {
                         var select = document.createElement("select");
                         select.className = "form-select border-primary";
@@ -174,84 +173,71 @@
         document.getElementById("model_select").addEventListener('change', loadModelParams);
         document.getElementById("dataset_select").addEventListener('change', updateTargetColumns);
     });
-</script>
+  </script>
 {% endblock %}
 
 {% block body %}
 <div class="container mt-5">
-    <div class="d-flex align-items-center mb-4">
-        <h1 class="text-primary me-3">
-            Classic ML Training
-        </h1>
+  <h1 class="text-primary mb-4"><i class="bi bi-lightning-charge me-2"></i>Classic ML Training</h1>
+
+  <form action="{{ url_for('ml_manager.train_model') }}" method="post">
+    <div class="card mb-4">
+      <div class="card-header bg-primary text-white">
+        <h5 class="mb-0"><i class="bi bi-database me-2"></i>Dataset Selection</h5>
+      </div>
+      <div class="card-body">
+        <div class="mb-3">
+          <label for="task_type" class="form-label text-primary fw-medium">Task Type</label>
+          <select id="task_type" name="task_type" class="form-select border-primary">
+            <option value="classification">Classification</option>
+            <option value="regression">Regression</option>
+          </select>
+        </div>
+        <div class="mb-3">
+          <label for="dataset_select" class="form-label text-primary fw-medium">Dataset</label>
+          <select id="dataset_select" name="dataset" class="form-select border-primary">
+          </select>
+        </div>
+        <div class="mb-3">
+          <label for="target_column" class="form-label text-primary fw-medium">Target Column</label>
+          <select id="target_column" name="target_column" class="form-select border-primary">
+          </select>
+        </div>
+        <div class="mb-3">
+          <label for="split_ratio" class="form-label text-primary fw-medium">Train/Test Split (%)</label>
+          <input type="range" class="form-range" id="split_ratio" name="split_ratio" min="10" max="90" value="70" oninput="splitOutput.value = split_ratio.value">
+          <output id="splitOutput">70</output>
+        </div>
+        <div class="mb-3">
+          <label for="scoring_select" class="form-label text-primary fw-medium">Evaluation Metric</label>
+          <select id="scoring_select" name="scoring" class="form-select border-primary">
+          </select>
+        </div>
+      </div>
     </div>
 
-    <div class="card border-0 shadow-lg">
-        <div class="card-header bg-primary text-white">
-            <h5 class="mb-0"><i class="bi bi-gear-wide-connected me-2"></i>Training Configuration</h5>
+    <div class="card mb-4">
+      <div class="card-header bg-primary text-white">
+        <h5 class="mb-0"><i class="bi bi-gear me-2"></i>Model Configuration</h5>
+      </div>
+      <div class="card-body">
+        <div class="mb-3">
+          <label for="model_select" class="form-label text-primary fw-medium">Model</label>
+          <select id="model_select" name="model" class="form-select border-primary">
+          </select>
         </div>
-        <div class="card-body">
-            <form action="{{ url_for('ml_manager.train_model') }}" method="post">
-                <div class="row g-4">
-                    <div class="col-md-6">
-                        <div class="mb-3">
-                            <label for="task_type" class="form-label text-primary fw-medium">Task Type</label>
-                            <select id="task_type" name="task_type" class="form-select border-primary">
-                                <option value="classification">Classification</option>
-                                <option value="regression">Regression</option>
-                            </select>
-                        </div>
-
-                        <div class="mb-3">
-                            <label for="model_select" class="form-label text-primary fw-medium">Model Selection</label>
-                            <select id="model_select" name="model" class="form-select border-primary"></select>
-                        </div>
-                    </div>
-
-                    <div class="col-md-6">
-                        <div class="mb-3">
-                            <label for="dataset_select" class="form-label text-primary fw-medium">Dataset</label>
-                            <select id="dataset_select" name="dataset" class="form-select border-primary">
-                                <!-- Options will be populated by JavaScript -->
-                            </select>
-                        </div>
-
-                        <div class="mb-3">
-                            <label for="scoring_select" class="form-label text-primary fw-medium">Evaluation Metric</label>
-                            <select id="scoring_select" name="scoring" class="form-select border-primary"></select>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="row g-4 mt-3">
-                    <div class="col-md-6">
-                        <div class="mb-3">
-                            <label for="split_ratio" class="form-label text-primary fw-medium">Train/Test Split (%)</label>
-                            <input type="range" class="form-range" id="split_ratio" name="split_ratio" min="10" max="90" value="70" oninput="splitOutput.value = split_ratio.value">
-                            <output id="splitOutput">70</output>
-                        </div>
-                    </div>
-                    <div class="col-md-6">
-                        <div class="mb-3">
-                            <label for="target_column" class="form-label text-primary fw-medium">Target Column</label>
-                            <select id="target_column" name="target_column" class="form-select border-primary">
-                                <!-- Options will be populated by JavaScript -->
-                            </select>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="mt-4">
-                    <h5 class="text-primary mb-3"><i class="bi bi-toggles2 me-2"></i>Model Parameters</h5>
-                    <div id="model_params" class="p-3 rounded bg-light"></div>
-                </div>
-
-                <div class="d-grid mt-4">
-                    <button type="submit" class="btn btn-primary btn-lg">
-                        <i class="bi bi-lightning-charge me-2"></i>Start Training
-                    </button>
-                </div>
-            </form>
+        <div class="mt-4">
+          <h5 class="text-primary mb-3"><i class="bi bi-toggles2 me-2"></i>Model Parameters</h5>
+          <div id="model_params" class="p-3 rounded bg-light"></div>
         </div>
+      </div>
     </div>
+
+    <div class="d-grid">
+      <button type="submit" class="btn btn-primary btn-lg">
+        <i class="bi bi-play-circle me-2"></i>Start Training
+      </button>
+    </div>
+  </form>
 </div>
 {% endblock %}

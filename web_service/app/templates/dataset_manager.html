@@ -29,7 +29,7 @@
                         <th class="text-primary">Dataset Name</th>
                         <th class="text-primary">Problem Type</th>
                         <th class="text-primary">Process Status</th>
-                        <th class="text-primary text-end">Actions</th>  <!-- Изменено на text-end -->
+                        <th class="text-primary text-center " style="padding-left: 13rem;">Actions</th>
                     </tr>
                     </thead>
                     <tbody>
@@ -40,15 +40,15 @@
                         <td>{{ dataset.problem_type|capitalize }}</td>
                         <td>
                             {% if dataset.process_status %}
-                                <i class="bi bi-check-circle-fill text-success fs-5 ms-5" data-bs-toggle="tooltip"
-                                   title="Dataset processed. Ready for training"></i>
+                            <i class="bi bi-check-circle-fill text-success fs-5 ms-5" data-bs-toggle="tooltip"
+                               title="Dataset processed. Ready for training"></i>
                             {% else %}
-                                <i class="bi bi-x-circle-fill text-danger fs-5 ms-5" data-bs-toggle="tooltip"
-                                   title="Dataset not processed. Please process it"></i>
+                            <i class="bi bi-x-circle-fill text-danger fs-5 ms-5" data-bs-toggle="tooltip"
+                               title="Dataset not processed. Please process it"></i>
                             {% endif %}
                         </td>
-                        <td class="text-end">  <!-- Изменено на text-end -->
-                            <div class="d-flex gap-2 justify-content-end">  <!-- Изменено на justify-content-end -->
+                        <td class="text-end">
+                            <div class="d-flex gap-2 justify-content-end">
                                 <a href="{{ url_for('table_processor.process_dataset', dataset_id=dataset.id) }}"
                                    class="btn btn-sm btn-primary">
                                     <i class="bi bi-gear"></i> Process
@@ -59,6 +59,10 @@
                                         <i class="bi bi-trash"></i> Delete
                                     </button>
                                 </form>
+                                <a href="{{ url_for('dataset_manager.download_dataset', dataset_id=dataset.id) }}"
+                                   class="btn btn-sm btn-success">
+                                    <i class="bi bi-download"></i> Download
+                                </a>
                             </div>
                         </td>
                     </tr>
@@ -70,7 +74,6 @@
     </div>
     {% endif %}
 
-    <!-- Остальная часть кода без изменений -->
     <div class="card border-0 shadow-lg">
         <div class="card-header bg-primary text-white">
             <h5 class="mb-0"><i class="bi bi-cloud-upload me-2"></i>Upload New Dataset</h5>

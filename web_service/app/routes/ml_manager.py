@@ -91,7 +91,6 @@ def train_model():
                 else:
                     params[param_name] = raw_value
 
-
     def async_train():
         try:
             fitter = Fitter(

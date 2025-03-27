@@ -1,5 +1,5 @@
 {% extends 'base.html' %}
-{% block title %}Tracking Detail{% endblock %}
+{% block title %}AutoML Tracking Detail{% endblock %}
 {% block head %}
 {{ super() }}
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
@@ -14,7 +14,7 @@
 <div class="container mt-4">
     <div class="card shadow-sm">
         <div class="card-header bg-primary text-white">
-            Tracking Detail - {{ run.info.run_id[:8] }}
+            AutoML Tracking Detail - {{ run.info.run_id[:8] }}
         </div>
         <div class="card-body">
             <div class="detail-section">

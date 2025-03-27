@@ -1,7 +1,7 @@
 import os
 import uuid
 
-from flask import Blueprint, render_template, redirect, request, flash, url_for
+from flask import Blueprint, render_template, redirect, request, flash, url_for, send_file
 
 from ..extentions import db
 from ..models import Dataset
@@ -63,3 +63,12 @@ def delete_dataset(dataset_id):
         flash('Датасет не найден')
 
     return redirect(url_for('dataset_manager.index'))
+
+@dataset_manager_bp.route('/download/<int:dataset_id>', methods=['GET'])
+def download_dataset(dataset_id):
+    dataset = Dataset.query.get(dataset_id)
+    if dataset and os.path.exists(dataset.file_path):
+        return send_file("../" + dataset.file_path, as_attachment=True, download_name=dataset.file_name)
+    else:
+        flash('Файл не найден')
+        return redirect(url_for('dataset_manager.index'))

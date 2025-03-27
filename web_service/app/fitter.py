@@ -84,35 +84,36 @@ class Fitter:
             mlflow.log_metric("score", score)
             mlflow.log_metric("training_time", training_time)
             mlflow.set_tag("status", "finished")
+            mlflow.set_tag("model_type", "classic_ml")
 
 classification_models = {
     'RandomForestClassifier': {
         'n_estimators': {
             'type': 'int',
             'default': 100,
-            'description': 'Количество деревьев в лесу'
+            'description': 'Number of trees in the forest'
         },
         'max_depth': {
             'type': 'int',
             'default': 20,
-            'description': 'Максимальная глубина дерева'
+            'description': 'Maximum tree depth'
         },
         'min_samples_split' : {
             'type' : 'int',
             'default' : 2,
-            'description' : 'Минимальное количество выборок, необходимое для разделения внутреннего узла:'
+            'description' : 'Minimum number of samples required to split an internal node'
         }
     },
     'SVM': {
         'C': {
             'type': 'float',
             'default': 1.0,
-            'description': 'Параметр регуляризации'
+            'description': 'Regularization parameter'
         },
         'kernel': {
             'type': 'str',
             'default': 'rbf',
-            'description': 'Ядро SVM',
+            'description': 'SVM kernel',
             'options': ['rbf', 'linear', 'poly', 'sigmoid']
         }
     },
@@ -120,24 +121,24 @@ classification_models = {
         'C': {
             'type': 'float',
             'default': 1.0,
-            'description': 'Обратная величина регуляризации'
+            'description': 'Inverse regularization strength'
         },
         'max_iter': {
             'type': 'int',
             'default': 100,
-            'description': 'Максимальное число итераций'
+            'description': 'Maximum number of iterations'
         }
     },
     'KNN': {
         'n_neighbors': {
             'type': 'int',
             'default': 5,
-            'description': 'Количество соседей'
+            'description': 'Number of neighbors'
         },
         'weights': {
             'type': 'str',
             'default': 'uniform',
-            'description': 'Метод взвешивания',
+            'description': 'Weighting method',
             'options': ['uniform', 'distance']
         }
     }
@@ -148,24 +149,24 @@ regression_models = {
         'n_estimators': {
             'type': 'int',
             'default': 100,
-            'description': 'Количество деревьев в лесу'
+            'description': 'Number of trees in the forest'
         },
         'max_depth': {
             'type': 'int',
             'default': 20,
-            'description': 'Максимальная глубина дерева'
+            'description': 'Maximum tree depth'
         }
     },
     'SVR': {
         'C': {
             'type': 'float',
             'default': 1.0,
-            'description': 'Параметр регуляризации'
+            'description': 'Regularization parameter'
         },
         'kernel': {
             'type': 'str',
             'default': 'rbf',
-            'description': 'Ядро SVR',
+            'description': 'SVR kernel',
             'options': ['rbf', 'linear', 'poly', 'sigmoid']
         }
     },
@@ -174,12 +175,12 @@ regression_models = {
         'n_neighbors': {
             'type': 'int',
             'default': 5,
-            'description': 'Количество соседей'
+            'description': 'Number of neighbors'
         },
         'weights': {
             'type': 'str',
             'default': 'uniform',
-            'description': 'Метод взвешивания',
+            'description': 'Weighting method',
             'options': ['uniform', 'distance']
         }
     }
