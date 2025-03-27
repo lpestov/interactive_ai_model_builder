@@ -26,8 +26,11 @@ def index():
                 param_key = k.replace('params.', '')
                 if param_key in allowed_params:
                     params[param_key] = v
+
+        status = run.get('tags.status', 'finished')
         experiments.append({
             'run_id': run.run_id,
+            'status' : status,
             'model_name': model_name,
             'score': run.get('metrics.score', 0),
             'training_time': run.get('metrics.training_time', 0),

@@ -1,7 +1,10 @@
+import time
+
 from flask import Blueprint, jsonify, render_template, request, redirect, url_for
 from ..fitter import classification_models, regression_models, Fitter
 from ..models import Dataset
 import csv
+import threading
 
 ml_manager_bp = Blueprint('ml_manager', __name__)
 
@@ -51,18 +54,11 @@ def get_model_params():
 @ml_manager_bp.route('/get_target_columns')
 def get_target_columns():
     dataset_id = request.args.get('dataset_id')
-    if not dataset_id:
-        return jsonify([])
     dataset = Dataset.query.get(dataset_id)
-    if not dataset:
-        return jsonify([])
-    columns = []
-    try:
-        with open(dataset.file_path, newline='', encoding='utf-8') as csvfile:
-            reader = csv.reader(csvfile)
-            columns = next(reader)
-    except Exception as e:
-        print("Error reading CSV file:", e)
+
+    with open(dataset.file_path, newline='', encoding='utf-8') as csvfile:
+        reader = csv.reader(csvfile)
+        columns = next(reader)
     return jsonify(columns)
 
 
@@ -71,17 +67,11 @@ def train_model():
     dataset_id = request.form['dataset']
     dataset = Dataset.query.get(dataset_id)
 
-    if not dataset or not dataset.process_status:
-        return jsonify({
-            'status': 'error',
-            'message': 'Dataset not available for training. Please process dataset first.'
-        }), 400
-
-
     task_type = request.form['task_type']
     model_name = request.form['model']
     scoring = request.form['scoring']
-
+    split_ratio = float(request.form.get('split_ratio', 70))
+    target_column = request.form.get('target_column', '')
 
     params = {}
     for key in request.form:
@@ -90,7 +80,6 @@ def train_model():
             model_dict = classification_models if task_type == 'classification' else regression_models
             param_config = model_dict.get(model_name, {}).get(param_name, {})
             raw_value = request.form[key]
-
 
             if raw_value == "" or raw_value is None:
                 params[param_name] = param_config.get('default')
@@ -103,28 +92,23 @@ def train_model():
                     params[param_name] = raw_value
 
 
-    try:
-        split_ratio = float(request.form.get('split_ratio', 70))
-    except ValueError:
-        split_ratio = 70.0
+    def async_train():
+        try:
+            fitter = Fitter(
+                task_type=task_type,
+                model_name=model_name,
+                params=params,
+                dataset=dataset,
+                split_ratio=split_ratio,
+                target_column=target_column,
+                scoring=scoring
+            )
+            fitter.fit()
+        except Exception as e:
+            print(f"Training failed: {str(e)}")
 
-    target_column = request.form.get('target_column', '')
+    train_thread = threading.Thread(target=async_train)
+    train_thread.start()
+    time.sleep(0.2)
 
-
-    try:
-        fitter = Fitter(
-            task_type=task_type,
-            model_name=model_name,
-            params=params,
-            dataset=dataset,
-            split_ratio=split_ratio,
-            target_column=target_column,
-            scoring=scoring
-        )
-        fitter.fit()
-        return redirect(url_for('tracking.index'))
-    except Exception as e:
-        return jsonify({
-            'status': 'error',
-            'message': f'Training failed: {str(e)}'
-        }), 500
+    return redirect(url_for('tracking.index'))

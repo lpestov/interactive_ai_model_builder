@@ -56,6 +56,7 @@
                         <thead class="bg-primary bg-opacity-10">
                             <tr>
                                 <th class="ps-3 py-2 text-primary fw-bold small">Run ID</th>
+                                <th class="py-2 text-primary fw-bold small">Status</th>
                                 <th class="py-2 text-primary fw-bold small">Model</th>
                                 <th class="py-2 text-primary fw-bold small">Dataset</th>
                                 <th class="py-2 text-primary fw-bold small">Task</th>
@@ -73,6 +74,18 @@
 
                                 <td class="ps-3 py-1 small fw-medium text-primary">
                                     {{ exp.run_id[:8] }}
+                                </td>
+
+                                <td class="py-1">
+                                    {% if exp.status == 'training' %}
+                                        <span class="metric-badge bg-secondary text-white">
+                                            Training...
+                                        </span>
+                                    {% else %}
+                                        <span class="metric-badge bg-success text-white">
+                                            Finished
+                                        </span>
+                                    {% endif %}
                                 </td>
 
                                 <td class="py-1">
