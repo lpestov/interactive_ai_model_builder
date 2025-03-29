@@ -81,4 +81,36 @@ def upload_images():
                text=True)
             
     return redirect(url_for('image_predictor.index'))
+
+@image_bp.route('/save_hyperparameters', methods = ['POST'])
+def save_hyperparameters():
+    try:
+        # Получаем данные в JSON формате
+        data = request.get_json()
+        
+        hyperparams = {
+            "num_epochs": int(data.get('num_epochs', 10)),
+            "learning_rate": float(data.get('learning_rate', 0.0001)),
+            "batch_size": int(data.get('batch_size', 8)),
+            "weight_decay": float(data.get('weight_decay', 0.0001))
+        }
+        
+        # Сохраняем гиперпараметры в JSON файл
+        hyperparams_path = os.path.join(UTILS_PATH, 'hyperparams.json')
+        with open(hyperparams_path, 'w') as f:
+            json.dump(hyperparams, f, indent=4)
+        
+        return jsonify({
+            "success": True,
+            "message": "Hyperparameters saved successfully",
+            "hyperparameters": hyperparams
+        }), 200
+        
+    except Exception as e:
+        return jsonify({
+            "success": False,
+            "message": f"Failed to save hyperparameters: {str(e)}"
+        }), 500
+    
+
     

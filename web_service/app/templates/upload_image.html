@@ -57,7 +57,7 @@ Image Upload
         font-weight: bold;
     }
 
-    .form-group input {
+    .form-group input, .form-group select {
         width: 100%;
         padding: 8px;
         border: 1px solid #ccc;
@@ -69,6 +69,7 @@ Image Upload
         border: none;
         border-radius: 4px;
         cursor: pointer;
+        margin-right: 10px;
     }
 
     .btn-primary {
@@ -80,6 +81,24 @@ Image Upload
         background-color: #6c757d;
         color: white;
     }
+
+    .alert {
+        padding: 10px;
+        margin-bottom: 15px;
+        border-radius: 4px;
+    }
+
+    .alert-warning {
+        background-color: #fff3cd;
+        border: 1px solid #ffeeba;
+        color: #856404;
+    }
+
+    .alert-success {
+        background-color: #d4edda;
+        border: 1px solid #c3e6cb;
+        color: #155724;
+    }
 </style>
 {% endblock %}
 
@@ -87,46 +106,52 @@ Image Upload
 <div class="container mt-4">
     <h1 class="mb-4">Классификация изображений</h1>
 
-    <!-- Форма для ввода количества классов -->
     <div class="section">
         <h2>Введите количество классов:</h2>
         <div class="form-group">
-            <input type="number" id="classCount" min="1" class="form-control" placeholder="Введите число">
+            <input type="number" id="classCount" min="2" max="100" class="form-control" placeholder="Введите число от 2 до 100">
         </div>
         <button type="button" class="btn btn-primary" onclick="generateClassInputs()">Продолжить</button>
     </div>
 
-    <!-- Форма для ввода названий классов -->
-    <div id="classNames" class="section"></div>
+    <div id="classNames" class="section" style="display: none;"></div>
 
-    <!-- Форма для загрузки изображений -->
     <form id="uploadForm" style="display: none;" class="section">
         <div id="classForms"></div>
         <button type="submit" id="uploadButton" class="btn btn-primary">Загрузить все</button>
+        <span id="uploadStatus" class="alert" style="display: none;"></span>
     </form>
 
-    <!-- Форма для настройки гиперпараметров -->
     <div id="hyperparametersForm" class="hyperparameters" style="display: none;">
         <h2>Настройка гиперпараметров модели</h2>
+        <div id="hyperparametersStatus" class="alert alert-warning">
+            Гиперпараметры не сохранены! Пожалуйста, сохраните перед загрузкой изображений.
+        </div>
         <form id="hyperparametersFormContent">
             <div class="form-group">
-                <label for="num_epochs">Количество эпох (от 1 до 100):</label>
-                <input type="number" id="num_epochs" name="num_epochs" min="1" max="100" value="10">
+                <label for="num_epochs">Количество эпох (от 1 до 50):</label>
+                <input type="number" id="num_epochs" name="num_epochs" min="1" max="50" value="10" required>
                 <div class="error-message" id="num_epochs_error">Недопустимое значение для количества эпох.</div>
             </div>
             <div class="form-group">
                 <label for="learning_rate">Скорость обучения (от 0.00001 до 0.1):</label>
-                <input type="number" id="learning_rate" name="learning_rate" step="0.00001" min="0.00001" max="0.1" value="0.0001">
+                <input type="number" id="learning_rate" name="learning_rate" step="0.00001" min="0.00001" max="0.1" value="0.0001" required>
                 <div class="error-message" id="learning_rate_error">Недопустимое значение для скорости обучения.</div>
             </div>
             <div class="form-group">
-                <label for="batch_size">Размер батча (от 1 до 32):</label>
-                <input type="number" id="batch_size" name="batch_size" min="1" max="32" value="8">
+                <label for="batch_size">Размер батча:</label>
+                <select id="batch_size" name="batch_size" class="form-control" required>
+                    <option value="4">4</option>
+                    <option value="8" selected>8</option>
+                    <option value="16">16</option>
+                    <option value="32">32</option>
+                    <option value="64">64</option>
+                </select>
                 <div class="error-message" id="batch_size_error">Недопустимое значение для размера батча.</div>
             </div>
             <div class="form-group">
-                <label for="weight_decay">Снижение веса (от 0.00001 до 0.01):</label>
-                <input type="number" id="weight_decay" name="weight_decay" step="0.00001" min="0.00001" max="0.01" value="0.0001">
+                <label for="weight_decay">Снижение веса (от 0.00001 до 0.1):</label>
+                <input type="number" id="weight_decay" name="weight_decay" step="0.00001" min="0.00001" max="0.1" value="0.0001" required>
                 <div class="error-message" id="weight_decay_error">Недопустимое значение для снижения веса.</div>
             </div>
             <button type="button" class="btn btn-primary" onclick="validateAndSubmit()">Сохранить гиперпараметры</button>
@@ -135,23 +160,33 @@ Image Upload
 </div>
 
 <script>
-    function generateClassInputs() {
-        const count = document.getElementById("classCount").value;
-        const container = document.getElementById("classNames");
-        container.innerHTML = "";
+    let hyperparametersSaved = false;
 
-        if (count < 2 || count > 100) return;
+    function generateClassInputs() {
+        const count = parseInt(document.getElementById("classCount").value);
+        const container = document.getElementById("classNames");
+        
+        if (count < 2 || count > 100) {
+            alert("Пожалуйста, введите число от 2 до 100");
+            return;
+        }
+
+        container.innerHTML = "";
+        container.style.display = "block";
 
         for (let i = 1; i <= count; i++) {
             const div = document.createElement("div");
-            div.innerHTML = `<label>Название класса ${i}: </label>
-                             <input type="text" id="className${i}" class="form-control" placeholder="Введите название">`;
+            div.className = "form-group";
+            div.innerHTML = `
+                <label for="className${i}">Название класса ${i}:</label>
+                <input type="text" id="className${i}" class="form-control" placeholder="Введите название" required>
+            `;
             container.appendChild(div);
         }
 
         const button = document.createElement("button");
-        button.innerText = "Создать формы";
-        button.className = "btn btn-secondary mt-2";
+        button.innerText = "Создать формы для загрузки";
+        button.className = "btn btn-primary mt-2";
         button.type = "button";
         button.onclick = generateForms;
         container.appendChild(button);
@@ -160,49 +195,47 @@ Image Upload
     function generateForms() {
         const container = document.getElementById("classForms");
         container.innerHTML = "";
-        const form = document.getElementById("uploadForm");
-        form.style.display = "block";
-
-        const uploadButton = document.getElementById("uploadButton");
-        uploadButton.style.display = "block";
-
-        const hyperparametersForm = document.getElementById("hyperparametersForm");
-        hyperparametersForm.style.display = "block";
-
+        
+        const count = parseInt(document.getElementById("classCount").value);
         let classNames = [];
-        const count = document.getElementById("classCount").value;
+        
         for (let i = 1; i <= count; i++) {
             const className = document.getElementById(`className${i}`).value.trim();
-            if (className) {
-                classNames.push(className);
-            } else {
-                classNames.push(`Класс ${i}`);
+            if (!className) {
+                alert(`Пожалуйста, введите название для класса ${i}`);
+                return;
             }
+            classNames.push(className);
         }
 
         classNames.forEach((name, index) => {
             const div = document.createElement("div");
-            div.classList.add("class-container");
+            div.className = "class-container form-group";
             div.innerHTML = `
                 <label>${name}:</label>
-                <input type="file" name="${name}" class="form-control" accept="image/*" multiple>
+                <input type="file" name="${name}" class="form-control" accept="image/*" multiple required>
             `;
             container.appendChild(div);
         });
+
+        document.getElementById("uploadForm").style.display = "block";
+        document.getElementById("uploadButton").style.display = "block";
+        document.getElementById("hyperparametersForm").style.display = "block";
     }
 
     function validateAndSubmit() {
         let isValid = true;
+        const statusElement = document.getElementById("hyperparametersStatus");
 
-        const numEpochs = document.getElementById("num_epochs").value;
-        if (numEpochs < 1 || numEpochs > 100) {
+        const numEpochs = parseInt(document.getElementById("num_epochs").value);
+        if (numEpochs < 1 || numEpochs > 50) {
             document.getElementById("num_epochs_error").style.display = "block";
             isValid = false;
         } else {
             document.getElementById("num_epochs_error").style.display = "none";
         }
 
-        const learningRate = document.getElementById("learning_rate").value;
+        const learningRate = parseFloat(document.getElementById("learning_rate").value);
         if (learningRate < 0.00001 || learningRate > 0.1) {
             document.getElementById("learning_rate_error").style.display = "block";
             isValid = false;
@@ -210,16 +243,17 @@ Image Upload
             document.getElementById("learning_rate_error").style.display = "none";
         }
 
-        const batchSize = document.getElementById("batch_size").value;
-        if (batchSize < 1 || batchSize > 32) {
+        const batchSize = parseInt(document.getElementById("batch_size").value);
+        const validBatchSizes = [4, 8, 16, 32, 64];
+        if (!validBatchSizes.includes(batchSize)) {
             document.getElementById("batch_size_error").style.display = "block";
             isValid = false;
         } else {
             document.getElementById("batch_size_error").style.display = "none";
         }
 
-        const weightDecay = document.getElementById("weight_decay").value;
-        if (weightDecay < 0.00001 || weightDecay > 0.01) {
+        const weightDecay = parseFloat(document.getElementById("weight_decay").value);
+        if (weightDecay < 0.00001 || weightDecay > 0.1) {
             document.getElementById("weight_decay_error").style.display = "block";
             isValid = false;
         } else {
@@ -228,13 +262,12 @@ Image Upload
 
         if (isValid) {
             const hyperparameters = {
-                num_epochs: parseInt(numEpochs),
-                learning_rate: parseFloat(learningRate),
-                batch_size: parseInt(batchSize),
-                weight_decay: parseFloat(weightDecay)
+                num_epochs: numEpochs,
+                learning_rate: learningRate,
+                batch_size: batchSize,
+                weight_decay: weightDecay
             };
 
-            // Отправка гиперпараметров на сервер
             fetch("/save_hyperparameters", {
                 method: "POST",
                 headers: {
@@ -245,35 +278,75 @@ Image Upload
             .then(response => response.json())
             .then(data => {
                 if (data.success) {
-                    alert("Гиперпараметры успешно сохранены!");
+                    hyperparametersSaved = true;
+                    statusElement.className = "alert alert-success";
+                    statusElement.textContent = "Гиперпараметры успешно сохранены!";
+                    document.getElementById("uploadStatus").style.display = "none";
                 } else {
-                    alert("Ошибка при сохранении гиперпараметров.");
+                    statusElement.className = "alert alert-warning";
+                    statusElement.textContent = "Ошибка: " + (data.message || "неизвестная ошибка");
                 }
+            })
+            .catch(error => {
+                statusElement.className = "alert alert-warning";
+                statusElement.textContent = "Ошибка сети: " + error.message;
             });
         }
     }
 
     document.getElementById("uploadForm").addEventListener("submit", async function(event) {
         event.preventDefault();
+        
+        const statusElement = document.getElementById("uploadStatus");
+        statusElement.style.display = "block";
+        statusElement.className = "alert alert-warning";
+        statusElement.textContent = "Обучение модели...";
+
+        if (!hyperparametersSaved) {
+            statusElement.textContent = "Ошибка: Сначала сохраните гиперпараметры!";
+            return;
+        }
+
         const formData = new FormData();
-
         const inputs = document.querySelectorAll("input[type='file']");
+        
+        let filesExist = false;
         inputs.forEach(input => {
-            const className = input.name;
-            Array.from(input.files).forEach(file => {
-                formData.append(`${className}[]`, file);
+            if (input.files.length > 0) {
+                filesExist = true;
+                const className = input.name;
+                Array.from(input.files).forEach(file => {
+                    formData.append(`${className}[]`, file);
+                });
+            }
+        });
+
+        if (!filesExist) {
+            statusElement.textContent = "Ошибка: Пожалуйста, загрузите хотя бы один файл!";
+            return;
+        }
+
+        try {
+            const response = await fetch("/upload_images", {
+                method: "POST",
+                body: formData
             });
-        });
 
-        const response = await fetch("/upload_images", {
-            method: "POST",
-            body: formData
-        });
-
-        if (response.ok) {
-            window.location.href = "/image_prediction";
-        } else {
-            alert("Ошибка загрузки файлов.");
+            const result = await response.json();
+            if (response.ok) {
+                if (result.success) {
+                    window.location.href = "/image_prediction";
+                } else {
+                    statusElement.className = "alert alert-warning";
+                    statusElement.textContent = "Ошибка: " + (result.message || "неизвестная ошибка");
+                }
+            } else {
+                statusElement.className = "alert alert-warning";
+                statusElement.textContent = "Ошибка сервера: " + (result.message || "неизвестная ошибка");
+            }
+        } catch (error) {
+            statusElement.className = "alert alert-warning";
+            statusElement.textContent = "Ошибка сети: " + error.message;
         }
     });
 </script>
