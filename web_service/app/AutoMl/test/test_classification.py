@@ -2,8 +2,8 @@ import sys
 import os
 
 sys.path.append(os.path.join(os.path.dirname(__file__), '../AutoML'))
-from AutoMl.automl.models import BayesianOptimizationHPO, EvolutionaryStrategyHPO
-from AutoMl.automl.comparison import compare_hpo_methods
+from web_service.app.AutoMl.automl.models import BayesianOptimizationHPO, EvolutionaryStrategyHPO
+from web_service.app.AutoMl.automl.comparison import compare_hpo_methods
 
 from sklearn.ensemble import RandomForestClassifier
 config_classification = {

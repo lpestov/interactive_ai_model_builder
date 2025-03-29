@@ -2,7 +2,6 @@
 import sys
 import os
 import time
-import numpy as np
 import pandas as pd
 import mlflow
 import mlflow.sklearn
@@ -18,8 +17,8 @@ from sklearn.linear_model import LogisticRegression
 from sklearn.model_selection import train_test_split
 from sklearn.metrics import accuracy_score, f1_score, r2_score, mean_squared_error
 
-sys.path.append(os.path.join(os.path.dirname(__file__), '../AutoML'))
-from AutoMl.automl.models import BayesianOptimizationHPO, EvolutionaryStrategyHPO
+
+from .AutoMl.automl.models import BayesianOptimizationHPO, EvolutionaryStrategyHPO
 
 
 class AutoMLFitter:
