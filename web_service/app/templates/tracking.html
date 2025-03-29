@@ -36,7 +36,6 @@
         white-space: normal;
         word-break: break-word;
     }
-
 </style>
 {% endblock %}
 {% block body %}
@@ -74,7 +73,10 @@
                             </thead>
                             <tbody>
                                 {% for exp in classic_experiments %}
-                                <tr class="experiment-row position-relative" onclick="window.location.href='{{ url_for('tracking.tracking_detail', run_id=exp.run_id) }}'">
+                                <tr class="experiment-row position-relative"
+                                    {% if exp.status != 'training' %}
+                                        onclick="window.location.href='{{ url_for('tracking.tracking_detail', run_id=exp.run_id) }}'"
+                                    {% endif %}>
                                     <td class="ps-3 py-1 small fw-medium text-primary">{{ exp.run_id[:8] }}</td>
                                     <td class="py-1">
                                         {% if exp.status == 'training' %}
@@ -168,7 +170,10 @@
                             </thead>
                             <tbody>
                                 {% for exp in automl_experiments %}
-                                <tr class="experiment-row position-relative" onclick="window.location.href='{{ url_for('tracking.tracking_detail', run_id=exp.run_id) }}'">
+                                <tr class="experiment-row position-relative"
+                                    {% if exp.status != 'training' %}
+                                        onclick="window.location.href='{{ url_for('tracking.tracking_detail', run_id=exp.run_id) }}'"
+                                    {% endif %}>
                                     <td class="ps-3 py-1 small fw-medium text-primary">{{ exp.run_id[:8] }}</td>
                                     <td class="py-1">
                                         {% if exp.status == 'training' %}
