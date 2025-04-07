@@ -4,7 +4,17 @@
 \usepackage[left=2cm,right=2cm, top=2cm,bottom=2cm]{geometry}
 \usepackage[english,russian]{babel}
 \usepackage[pdftex,unicode=true,colorlinks,filecolor=black,citecolor=black,linkcolor=black]{hyperref}
+\usepackage{booktabs}
+\usepackage{amsmath} 
+\usepackage{listings}
+\usepackage{xcolor}
+\usepackage{graphicx}
+\graphicspath{ {./} }
 \usepackage{enumitem}
+\usepackage{siunitx}
+\usepackage[font={footnotesize, itshape}]{caption}
+\usepackage{tabularx}
+\usepackage{float}
 \usepackage[backend=biber,style=numeric,sorting=none]{biblatex}
 \addbibresource{references.bib}
 \usepackage{titlesec}
@@ -18,9 +28,35 @@
   {\normalfont\normalsize\itshape\bfseries}  
   {\thesubsection.}                 
   {1em}                            
-  {}                               
+  {}
+  \titleformat{\subsubsection}
+  {\normalfont\small\bfseries}  
+  {\thesubsubsection.}               
+  {1em}                            
+  {}           
 
+\definecolor{codegreen}{rgb}{0,0.6,0}
+\definecolor{codeblue}{rgb}{0,0,0.6} 
+\definecolor{codepurple}{rgb}{0.58,0,0.82} 
+\definecolor{backcolour}{rgb}{0.98,0.98,0.98} 
 
+\lstdefinestyle{json}{
+    backgroundcolor=\color{backcolour},   
+    commentstyle=\color{codegreen},
+    stringstyle=\color{codepurple}, % Ключи JSON - строки
+    numberstyle=\color{codeblue}\footnotesize, % Числа - мелкие, синие
+    basicstyle=\ttfamily\footnotesize,
+    breakatwhitespace=false,         
+    breaklines=true,                 
+    captionpos=b,                    
+    keepspaces=true,                 
+    showspaces=false,                
+    showstringspaces=false,
+    showtabs=false,                  
+    tabsize=2,
+    frame=single,                    
+    rulecolor=\color{black}
+}
 \setcounter{secnumdepth}{5}
 \setlength{\parskip}{10pt}
 \begin{document}
@@ -119,8 +155,10 @@
 Обращая внимание на архитектуры основанных на трансформерах, стоит упомянуть \textbf{Vision Transformer} (ViT), предложенный в 2020 году \cite{dosovitskiy2020image}, адаптирует архитектуру трансформера для изображений. ViT разбивает изображение на последовательность непересекающихся патчей, преобразует их в эмбеддинги и подает эту последовательность на вход стандартного трансформера. ViT демонстрирует впечатляющие результаты при обучении на больших наборах данных (ViT-L/16 получил 85.30\% top-1 точности после предобучения на датасете JFT-300M), но уступает CNN на меньших датасетах (ViT-B/16 показал слабые результаты при обучении только на ImageNet-1k без предварительного обучения на больших наборах данных, 79,9\% top-1 точности на ImageNet, что уступало современным CNNs) и требует значительных вычислительных ресурсов для обучения.
 
 Также важно отметить семейство моделей \textbf{YOLO} (You Only Look Once), разработанных специально для детекции объектов в изображениях в режиме реального времени \cite{redmon2015you}. В отличие от обычных CNN, которые часто используются для классификации изображений или извлечения признаков, YOLO объединяет в себе процессы детекции объектов и их классификации, обрабатывая изображение целиком за один проход. Традиционно многие системы сначала выделяют регионы интереса, а затем отдельно классифицируют содержимое этих регионов. В случае YOLO всё это происходит за один шаг - сеть делит изображение на сетку и для каждой ячейки одновременно предсказывает координаты прямоугольника и вероятность того, что в нём находится объект определённого класса. Это объединение позволяет существенно ускорить задачу классификации. \textbf{YOLOv11} \cite{Khanam2024yolov11} является одной из последних моделей этой серии, конкурируя с классическими CNNs.
+\vspace{-15pt}
 
-\textbf{Обоснование выбора архитектур для работы}
+\subsubsection{Обоснование выбора архитектур для работы}
+
 
 \hspace{1cm}
 Для задач класса \textit{Few-Shot Learning} - необходимо выбрать такие архитектуры, которые обеспечат баланс между точности, скорости обучения и возможности обучаться на небольших данных. На основе проведенного анализа современных архитектур, особенно учитывая требование адаптации к малым объемам данных, для экспериментов выбраны две архитектуры:
@@ -141,8 +179,316 @@
     \item Масштабируемость --- доступны варианты разного размера (nano, small, medium, large, xlarge)
 \end{itemize}
 \end{enumerate}
-
+\vspace{-10pt}
 \subsection{Аугментации данных и реализация процесса обучения моделей}
+\begin{table}[H]
+  \centering
+  \caption{Сравнение характеристик выбранных архитектур для классификации (тестирование на ImageNet)}
+  \label{tab:model_comparison}
+  \begin{tabularx}{\textwidth}{ l >{\centering\arraybackslash}X >{\centering\arraybackslash}X >{\centering\arraybackslash}X c }
+    \toprule
+    Модель & Параметры\newline(млн) & Точность\newline Top-1 (\%) & Точность\newline Top-5 (\%) & FLOPs (B)\\
+    \midrule
+    EfficientNet-B0 & 5.3 & 77.1 & 93.3 & 0.39 \\
+    EfficientNet-B7 & 66.0 & 84.3 & 97.0 & 37.0 \\
+    YOLOv11n-cls    & 1.6 & 70.0 & 89.4 & 0.5 \\
+    YOLOv11s-cls    & 5.5 & 75.4 & 92.7 & 1.6 \\
+    \bottomrule
+  \end{tabularx}
+  \par\medskip 
+  \footnotesize{ 
+    \textit{Примечание:} Тестирование проводилось на наборе данных ImageNet \cite{tan2019efficientnet} и \cite{Khanam2024yolov11}. \\
+    \textbf{Точность Top-1} (Top-1 Accuracy) — это процент правильно классифицированных изображений, где предсказанный класс с самой высокой вероятностью совпадает с истинным классом изображения. \\
+    \textbf{Точность Top-5} (Top-5 Accuracy) — это процент правильно классифицированных изображений, где истинный класс изображения входит в пять наиболее вероятных классов, предсказанных моделью. \\
+    \textbf{FLOPs} (Floating Point Operations per Second) - метрика, показывающая количество арифметических операций с плавающей запятой, необходимых для выполнения одного прохода (инференса) модели.
+  }
+\end{table}
+
+\hspace{0,5cm}
+Столь большая модель EfficentNet-B7 была взята лишь для исследования - "Насколько можно увеличить метрики на малом обьеме данных увеличив лишь кол-во обучаемых параметров?"
+
+Так как важным фактором проекта является лучшая интерпретируемость результатов и предсказуемость поведения на небольших датасетах, то для этого помогут 2 важные стратегии - Аугментации данных и Трансферное обучение.
+
+\textbf{Аугментации данных} (Data augmentation) - процесс синтетического <<раздутия>> тренировочных данных по специальному алгоритму для увеличения объема выборки. Аугментации направлены на увеличение разнообразия обучающих данных, что помогает модели лучше обобщать и справляться с новыми, ранее не виденными обьектами.
+
+\textbf{Трансферное обучение} (Transfer Learning) - это методика машинного обучения, с помощью которой можно применять накопленные знания, полученные из одной задачи, к другой такой же задаче этого класса.
+
+\subsubsection{Аугментации данных для EfficentNet}
+Для моделей семейства EfficentNet была выбрана следующая стратегия аугментации данных:
+\begin{enumerate}
+    \item \textbf{Изменение размера изображений (Resize):} Все изображения были приведены к размеру 224x224 (или 600x600 для B7) пикселя. Это необходимо, чтобы обеспечить совместимость входных данных с архитектурой модели.
+    \item \textbf{Случайные горизонтальные отражения (RandomHorizontalFlip):} Данная аугментация случайным образом отражает изображения по горизонтали, имитируя изменение точки обзора объекта. Это помогает модели стать более устойчивой к зеркальным отражениям.
+    \item \textbf{Случайные повороты (RandomRotation):} Изображения поворачиваются на случайный угол в диапазоне ±15 градусов. Повышает способность модели игнорировать небольшие изменения ориентации объекта.
+    \item \textbf{Изменение цветовой гаммы (ColorJitter):} Яркость, контрастность и насыщенность изображений случайным образом изменяются. Обучает модель быть менее чувствительной к изменениям освещения и цветовых характеристик.
+    \item \textbf{Нормализация (Normalize):} Изображения нормализуются с использованием средних и стандартных отклонений, полученных из ImageNet. Значительное улучшение процесса обучения, приводя значения пикселей к диапазону, более удобному для нейросети.\cite{tan2019efficientnet}
+    \item \textbf{Искусственное увеличение тренировчного датасета (Target Size):} Если пользователь в сумме по классу загружает < 50 сэмплов изображений, то тренировочный датасет увеличивается дубликатами до необходимого минимума.
+\end{enumerate}
+
+\textit{Все указанные аугментации применялись только к обучающей выборке. Тестовая выборка использовалась для оценки производительности модели без дополнительных преобразований, для честной оценки обобщающей способности.}
+\subsubsection{Пайплайн обучения (EfficentNet)}
+
+Примененные техники в процессе обучения:
+\begin{enumerate}
+    \item \textbf{Загрузка предобученной модели:} EfficientNet B0 загружается с предобученными весами, полученными на датасете ImageNet, позволяя модели быстро освоить общие признаки изображений, что особенно важно при обучении на небольших датасетах.
+    \item \textbf{Заморозка слоев (RandomHorizontalFlip):} Чтобы предотвратить переобучение, все слои модели, кроме классификатора, замораживаются. Это означает, что их веса не будут изменяться в процессе обучения, для сохранения информации, полученной на предтрейне ImageNet. \cite{yosinski2014transferable}
+    \item \textbf{Замена классификатора (Fine-Tuning):} Классификатор (последний полносвязный слой) заменяется на новый, с количеством выходных нейронов, соответствующим количеству классов в нашем датасете. Это тот самый слой, который будет обучаться.
+    \item \textbf{Оптимизаторы и настройка гиперпараметров:} Для оптимизации используется алгоритм Adam, который хорошо подходит для обучения глубоких нейросетей. В качестве функции потерь используется CrossEntropyLoss, стандартная функция для задач многоклассовой классификации. Значения learning rate - \textit{0.0001} (скорость обучения), weight decay - \textit{0.0001} (коэффициент L2 регуляризации), Batch size \textit{(8)} и количество эпох \textit{(10)} были выбраны на основе эмпирических наблюдений
+    \item \textbf{Обучение:} Модель обучается на аугментированных данных в течение заданного количества эпох. На каждой эпохе вычисляется функция потерь на обучающей выборке, и веса классификатора обновляются с использованием обратного распространения ошибки. Для контроля переобучения производилась валидация модели на тестовой выборке после каждой эпохи.
+\end{enumerate}
+
+\subsubsection{Аугментации данных и процесс обучения YOLOv11}
+
+Несмотря на потенциальные преимущества использования аугментации для повышения обобщающей способности, в ходе экспериментов с YOLOv11 было решено отказаться от их применения на данном этапе исследования. Это связано с несколькими причинами:
+
+
+\begin{itemize}
+    \item \textbf{Сложность интеграции:} Ultralytics YOLOv11 использует собственную систему обучения и аугментации данных. Интеграция кастомных аугментаций потребовала бы значительного изменения кода, что выходило за рамки задач данного этапа проекта.
+    \item \textbf{Необходимость адаптации параметров:} Аугментации, которые хорошо работают для CNN, могут быть неэффективны или даже вредны для YOLO, ведь изначально модель была разработана для детекции обьектов. Требуется тщательная настройка параметров аугментаций, чтобы избежать ухудшения производительности.
+\end{itemize}
+
+Также отметим, что в пайплайне обучения использовался стандартный \textit{trainer} на 10 эпохах, с аналогичным EfficientNet \textit{resize} изображений.
+
+\subsection{Тестирование и сравнение выбранных архитектур на различных данных}
+Наша цель - эмпирически проверить и сравнить производительность выбранных архитектур (EfficientNet B0, B7 и YOLOv11 n-cls, s-cls) в условиях, релевантных для задачи сервиса, а именно: на данных разного объема и новизны (известные/неизвестные классы), чтобы окончательно подтвердить выбор основной модели.
+\vspace{5pt}
+\subsubsection{Описание тестовых сценариев и метрик}
+\vspace{-5pt}
+\begin{table}[htbp]
+\centering
+\caption{Описание наборов данных, использованных для тестирования моделей}
+\vspace{5pt}
+\label{tab:datasets_description}
+\begin{tabularx}{\textwidth}{l c c X}
+\toprule
+Название & Кол-во & Исходных изобр. & Тип классов \\ 
+датасета  & классов & (тренировка, на класс) & (относит. ImageNet) \\
+\midrule
+CatsDogs-50       & 2       & 50                     & Известные (Cat, Dog) \\
+CatsDogs-15       & 2       & 15                     & Известные (Cat, Dog) \\
+Celeb-15          & 2       & 15                     & Неизвестные (Celebrity Faces) \\
+\bottomrule
+\end{tabularx} 
+\par\medskip
+\footnotesize{
+\textit{Примечание:} "Известные" классы присутствовали в датасете ImageNet, на котором предобучались модели, в то время как "неизвестные" классы (лица знаменитостей) отсутствовали в ImageNet. Количество изображений указано до применения аугментаций (включая дублирование до \texttt{target\_size=50} для EfficientNet).
+Ссылка для просмотра датасетов: \href{https://drive.google.com/drive/folders/15sB_uKL3jGbAPhytC0EaE44mOfEbUL0C?usp=sharing}{Google Drive}
+}
+\end{table}
+\vspace{\baselineskip}
+
+\textbf{Метрики оценки:} Для количественной оценки моделей EfficientNet использовались стандартные метрики классификации, основанные на значениях True Positives (TP), True Negatives (TN), False Positives (FP) и False Negatives (FN) для каждого класса:
+\begin{itemize}
+    \item \textbf{TP (True Positives):} Количество правильно классифицированных объектов данного класса.
+    \item \textbf{TN (True Negatives):} Количество объектов других классов, правильно классифицированных как не относящиеся к данному классу.
+    \item \textbf{FP (False Positives):} Количество объектов других классов, ошибочно классифицированных как данный класс (ошибка I рода).
+    \item \textbf{FN (False Negatives):} Количество объектов данного класса, ошибочно классифицированных как объекты других классов (ошибка II рода).
+\end{itemize}
+На основе этих значений рассчитывались:
+\begin{itemize}
+    \item \textbf{Accuracy (Точность):} Общая доля правильно классифицированных объектов.
+      \begin{equation} \label{eq:accuracy}
+      \text{Accuracy} = \frac{TP + TN}{TP + TN + FP + FN}
+      \end{equation}
+    \item \textbf{Precision (Точность предсказания):} Доля объектов, действительно относящихся к классу, среди всех объектов, которые модель отнесла к этому классу.
+      \begin{equation} \label{eq:precision}
+      \text{Precision} = \frac{TP}{TP + FP}
+      \end{equation}
+    \item \textbf{Recall (Полнота):} Доля объектов данного класса, которые модель смогла правильно обнаружить.
+      \begin{equation} \label{eq:recall}
+      \text{Recall} = \frac{TP}{TP + FN}
+      \end{equation}
+    \item \textbf{F1-score (F-мера):} Среднее гармоническое Precision и Recall, используется как обобщенная метрика качества, особенно полезная при несбалансированных классах.
+      \begin{equation} \label{eq:f1}
+      \text{F1-score} = 2 \times \frac{\text{Precision} \times \text{Recall}}{\text{Precision} + \text{Recall}} = \frac{2TP}{2TP + FP + FN}
+      \end{equation}
+\end{itemize}
+
+\vspace{\baselineskip}
+
+\textbf{Матрица ошибок (Confusion Matrix):} Для визуального анализа ошибок классификации по всем моделям (включая YOLOv11) использовалась матрица ошибок. Это таблица, где строки соответствуют истинным классам объектов, а столбцы --- предсказанным моделью классам. Элементы на главной диагонали показывают количество правильно классифицированных объектов для каждого класса. Внедиагональные элементы показывают количество ошибок, то есть объекты одного класса, которые были ошибочно отнесены к другому классу. Нормализованная матрица ошибок показывает долю объектов (от 0 до 1) для каждой ячейки, что облегчает сравнение производительности по разным классам.
+
+
+\textbf{\textit{Нюанс с метриками YOLOv11:}} Стандартный модуль обучения классификации в библиотеке Ultralytics на момент проведения экспериментов не предоставлял прямого доступа к расчету метрик Precision, Recall и F1-score на валидационной выборке в том же формате, что и для EfficientNet. Поэтому для сравнения моделей YOLOv11 между собой и с EfficientNet использовался \textbf{визуальный анализ нормализованных матриц ошибок}, генерируемый библиотекой Ultralytics по окончании обучения.
+
+\vspace{\baselineskip}
+
+\textbf{Гиперпараметры обучения:} Основные гиперпараметры, использованные при обучении моделей, были заданы в конфигурационном файле.
+
+\begin{lstlisting}[style=json, caption={Содержимое файла \texttt{hyperparams.json}}, label={lst:hyperparams}]
+{
+  "num_epochs": 10,
+  "learning_rate": 0.0001,
+  "batch_size": 8,
+  "weight_decay": 0.0001
+}
+\end{lstlisting}
+
+\subsubsection{Эксперименты с EfficientNet B0}
+Для начала посмотрим на результаты обучения на датасете CatsDogs-50:
+Основные показатели на 10-й эпохе обучения:
+\begin{itemize}[leftmargin=*, itemsep=0pt]
+    \item Train Loss: 0.3249, Train Accuracy: 0.9300
+    \item Validation Loss: 0.3550, Validation Accuracy: 0.9150
+    \item Validation F1-score (weighted): 0.9149
+    \item Validation Precision (weighted): 0.9175
+    \item Validation Recall (weighted): 0.9150
+\end{itemize}
+
+Затраченные ресурсы на обучение составили:
+\begin{itemize}[leftmargin=*, itemsep=0pt]
+    \item Время обучения: $\approx$ 72.6 секунд ($\approx$ 1.21 минуты).
+    \item Пиковое потребление GPU памяти для обучения: $\approx$ 0.145 ГБ. 
+\end{itemize}
+
+Модель показывает отличные результаты на данном датасете, с очень оптимальным использованиемм памяти, проведем сравнение с уменьшенной версией CatsDogs-15:
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=1.0\textwidth]{b0_15_50.png}
+    \caption{Метрики efficentnet\textunderscore b0\textunderscore 50 vs efficentnet\textunderscore b0\textunderscore 15}
+    \label{fig:имя_метки}
+\end{figure}
+
+
+Заметим, что метрики идентичны. Сравним графики лоссов:
+
+\begin{figure}[htbp] 
+    \centering 
+    \begin{tabular}{cc} 
+        \includegraphics[width=0.50\textwidth]{loss_b0_50.png} & 
+        \includegraphics[width=0.50\textwidth]{loss_b0_15.png} \\
+        (а) CatsDogs-50 & 
+        (б) CatsDogs-15
+    \end{tabular}
+
+    \caption{Сравнение графиков потерь (Loss) для EfficientNet B0 на обучающей (синий) и валидационной (красный) выборках при разном количестве исходных образцов.}
+    \label{fig:loss_b0_comparison} 
+\end{figure}
+
+В целом тенденция лоссов также схожа, единственное наблюдение -- больший разрыв между тренировочной и валидационной выборкой, что, возможно, предшествует переобучению.
+
+Теперь посмотрим на те же метрики и график лосса уже на другом тренировочном датасете Celeb-15:
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=1.0\textwidth]{bo_15_50_15N.png}
+    \caption{Метрики efficentnet\textunderscore b0\textunderscore 50 vs efficentnet\textunderscore b0\textunderscore 15 vs efficentnet\textunderscore b0\textunderscore 15N}
+    \label{fig:имя_метки}
+\end{figure}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=1.0\textwidth]{loss_b0_15N.png}
+    \caption{Loss efficentnet\textunderscore b0\textunderscore 15N}
+    \label{fig:имя_метки}
+\end{figure}
+
+В среднем качество инференса упало на 10\%, однако показатель Accuracy $\approx$ 0.8 остаётся отличным результатом на столь малом тренировочном датасете. По графику лосса также можно сделать вывод, что модель на 10-й эпохе была максимально близка к моменту переобучения, так как лосс на валидации перестал снижаться, и разрыв между лоссом при обучении стал максимальным.
+
+\subsubsection{Эксперименты с EfficientNet B7}
+\begin{table}[htbp] 
+  \centering
+  \caption{Сравнение вычислительных ресурсов при обучении EfficientNet B0 и B7 (датасет CatsDogs-50, 10 эпох)}
+  \label{tab:resource_comparison_efficientnet}
+  \begin{tabular}{l c c}
+    \toprule
+    Модель & Время обучения & Пиковое потребление GPU памяти \\
+           & (минуты)        & (ГБ) \\
+    \midrule
+    EfficientNet-B0 & 1.21  & 0.145 \\
+    EfficientNet-B7 & 14.41 & 2.096 \\
+    \bottomrule
+  \end{tabular}
+  \par\medskip 
+  \footnotesize{ 
+    \textit{Примечание:} Данные измерены на Google Colab с GPU Tesla T4. Время обучения и потребление памяти могут варьироваться в зависимости от аппаратного обеспечения, размера батча и других факторов.
+  }
+\end{table}
+
+Время обучения и потребление видеопамяти $\ge$ в 10 раз больше, чем у младшей модели, посмотрим, смогли ли мы улучшить наши метрики, потратив столько ресурсов:
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=1.0\textwidth]{b0_b7_all.png}
+    \caption{
+    \centering
+    Метрики моделей семейства EfficentNet\\ 
+    \textit{Примечание:} В ходе тестирования было выявлено, что 10 эпох для обучения модели B7 недостаточно для нахождения экстремума функции потерь, Val Loss $\approx$ 0.5305, после дополнительных 10 эпох, Val Loss $\approx$ 0.3699, и метрики качества незначительно улучшились. Подробнее, см. ноутбук \href{https://drive.google.com/drive/folders/15sB_uKL3jGbAPhytC0EaE44mOfEbUL0C?usp=sharing}{Google Drive}}
+    \label{fig:имя_метки}
+\end{figure}
+
+По диаграмме видно, что в эксперименте с датасетом CatsDogs-50 EfficientNet B7 показывает способность практически с 100\% вероятностью предсказывать правильный класс (ведь изображений этих классов было гораздо больше на момент предтрейна на ImageNet), однако на более реальном пользовательском случае, когда классы неизвестны (Celeb-50), метрики лишь на 5\% выше младшей модели. Это явно говорит, что количество параметров у модели B0 достаточно для запоминания основных признаков на столь малой выборке данных. 
+
+Рассмотрим также график лосса при обучении на датасете CatsDogs-50:
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=1.0\textwidth]{loss_b7_50.png}
+    \caption{Loss efficentnet\textunderscore b7\textunderscore 50}
+    \label{fig:имя_метки}
+\end{figure}
+
+Это подтверждает нашу гипотезу о том, что EfficientNet B7 практически не обучается на знакомых классах, так как падение Val Loss совсем незначительное, при том что метрики около 1.
+\subsubsection{Эксперименты с YOLOv11}
+
+Будем сравнивать Confusion Matrix наших моделей, из-за технических ограничений в библиотеке Ultralytics. Рассмотрим самую малую модель - \textit{yolo11n-cls} на датасете CatsDogs-50 без использования Transfer Learning:
+\begin{figure}[H] 
+    \centering 
+    \begin{tabular}{cc} 
+        \includegraphics[width=0.50\textwidth]{b0_50.png} & 
+        \includegraphics[width=0.50\textwidth]{11n_50.png} \\
+        (а)  EfficientNet B0  & 
+        (б) yolo11n-cls
+    \end{tabular}
+
+    \caption{Сравнение Confusion Matrix для EfficientNet B0 и yolo11n-cls (Full Train) на датасете CatsDogs-50.}
+\end{figure}
+\begin{figure}[H] 
+    \centering 
+    \begin{tabular}{cc} 
+        \includegraphics[width=0.50\textwidth]{b0_15N.png} & 
+        \includegraphics[width=0.50\textwidth]{11n_15N.png} \\
+        (а)  EfficientNet B0  & 
+        (б) yolo11n-cls
+    \end{tabular}
+
+    \caption{Сравнение Confusion Matrix для EfficientNet B0 и yolo11n-cls (Full Train) на датасете Celeb-15.}
+\end{figure}
+
+Отметим, что EfficientNet B0 плохо справляется с детекцией одного из классов, в то время как YOLO показывает более ожидаемые результаты на этих тестах, однако в целом результаты сопоставимы. Рассмотрим также потраченные ресурсы при обучении \textit{yolo11n-cls} на датасете CatsDogs-50(Full Train):
+\begin{itemize}[leftmargin=*, itemsep=0pt]
+    \item Время обучения: $\approx$ 83.1 секунд ($\approx$ 1.39 минуты).
+    \item Пиковое потребление GPU памяти для обучения: $\approx$ 0.133 ГБ.
+\end{itemize}
+
+YOLO очень эффективно справляется с обучением всех весов модели, попробуем использовать Transer Learning \textit{(Подробности см. в ноутбук)}:
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=1.0\textwidth]{11n_15NT.png}
+    \caption{Confusion Matrix для yolo11n-cls (Transfer Learning) на датасете Celeb-15}
+    \label{fig:имя_метки}
+\end{figure}
+
+Результаты упали более чем на 10\%, из-за сложностей архитектуры YOLO, Transfer Learning лишь помогает модели забыть уже полученные знания на этапе тренировки на ImageNet. Для чистоты эксперимента, посмотрим на результаты обучения старшей модели \textit{yolo11s-cls} на датасете Celeb-15:
+\begin{figure}[H] 
+    \centering 
+    \begin{tabular}{cc} 
+        \includegraphics[width=0.50\textwidth]{11s_15N.png} & 
+        \includegraphics[width=0.50\textwidth]{11s_15NT.png} \\
+        (а) Full Train  & 
+        (б) Transfer Learning
+    \end{tabular}
+
+    \caption{Сравнение Confusion Matrix для yolo11s-cls с разными методиками обучения на датасете Celeb-15.}
+\end{figure}
+
+\subsubsection{Сводное сравнение и выводы по тестированию}
+\begin{itemize}[leftmargin=*, itemsep=5pt]
+    \item \textbf{EfficientNet B0} показала стабильно хорошие результаты, особенно на малых и неизвестных данных, при низких затратах ресурсов. \textit{Fine-tuning} работает эффективно.
+    \item \textbf{EfficientNet B7} дает лучшие результаты на более объемных и известных выборках, но требует значительно больше ресурсов и не дает преимуществ на очень малых выборках.
+    \item \textbf{YOLOv11n} показала себя конкурентоспособной (без заморозки), но стратегия заморозки слоев оказалась неудачной. Результаты YOLO были менее предсказуемыми. \textbf{YOLOv11s} в данных условиях показала себя хуже младшей модели.
+\end{itemize}
+На основе проведенных тестов, учитывая требования сервиса, выбор \textbf{\textit{EfficientNet B0}} с применением \textit{Fine-Tuning} и аугментаций данных подтверждается как наиболее сбалансированное решение.
+\newpage
+\section{Разработка пайплайна обучения нейросетей для задачи классификации звуков}
+
+\newpage
 \section*{Список использованной литературы}
 \printbibliography[heading=none]
 \end{document}
