@@ -9,6 +9,25 @@
   <meta http-equiv="Expires" content="0" />
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
   <script>
+
+  function validateForm(event) {
+    var taskType = document.getElementById("task_type").value;
+    var datasetId = document.getElementById("dataset_select").value;
+    var targetColumn = document.getElementById("target_column").value;
+
+    if (!taskType || !datasetId || !targetColumn) {
+      event.preventDefault();
+      alert("Пожалуйста, выберите тип задачи, датасет и целевую колонку перед запуском обучения.");
+      return false;
+    }
+    return true;
+  }
+
+  document.addEventListener('DOMContentLoaded', function() {
+    var form = document.querySelector("form");
+    form.addEventListener('submit', validateForm);
+  });
+
     var classificationModels = {{ classification_models|tojson }};
     var regressionModels = {{ regression_models|tojson }};
     var classificationMetrics = {{ classification_metrics|tojson }};
@@ -24,6 +43,18 @@
         var filteredDatasets = allDatasets.filter(function(d) {
             return d.problem_type === taskType;
         });
+
+        // Если для выбранного типа датасета нет, можно показать сообщение или оставить select пустым
+        if (filteredDatasets.length === 0) {
+            var option = document.createElement("option");
+            option.value = "";
+            option.textContent = "Нет доступных датасетов";
+            option.disabled = true;
+            datasetSelect.appendChild(option);
+            updateTargetColumns();
+            updateMetricOptions();
+            return;
+        }
 
         filteredDatasets.forEach(function(dataset) {
             var option = document.createElement("option");
@@ -90,7 +121,6 @@
                     var divGroup = document.createElement("div");
                     divGroup.className = "mb-3 p-3 border rounded";
 
-                    // Изменённый способ показа: название параметра жирным, описание мелким текстом ниже
                     var label = document.createElement("label");
                     label.className = "form-label text-primary fw-medium";
                     label.innerHTML = "<strong>" + param + "</strong><br><small class='text-muted'>" + (paramInfo.description || "") + "</small>";
@@ -130,11 +160,26 @@
     function updateTargetColumns() {
         var datasetSelect = document.getElementById("dataset_select");
         var datasetId = datasetSelect.value;
+        var targetSelect = document.getElementById("target_column");
+        targetSelect.innerHTML = '';
+        if(!datasetId) {
+            var option = document.createElement("option");
+            option.value = "";
+            option.textContent = "Нет выбранного датасета";
+            targetSelect.appendChild(option);
+            return;
+        }
         fetch("{{ url_for('ml_manager.get_target_columns') }}?dataset_id=" + datasetId)
             .then(response => response.json())
             .then(columns => {
-                var targetSelect = document.getElementById("target_column");
-                targetSelect.innerHTML = '';
+                if (columns.error) {
+                    targetSelect.innerHTML = '';
+                    var option = document.createElement("option");
+                    option.value = "";
+                    option.textContent = "Ошибка загрузки колонок";
+                    targetSelect.appendChild(option);
+                    return;
+                }
                 columns.forEach(function(col) {
                     var option = document.createElement("option");
                     option.value = col;
@@ -189,8 +234,8 @@
         <div class="mb-3">
           <label for="task_type" class="form-label text-primary fw-medium">Task Type</label>
           <select id="task_type" name="task_type" class="form-select border-primary">
-            <option value="classification">Classification</option>
-            <option value="regression">Regression</option>
+            <option value="classification" {% if not classification_available %}disabled{% endif %}>Classification</option>
+            <option value="regression" {% if not regression_available %}disabled{% endif %}>Regression</option>
           </select>
         </div>
         <div class="mb-3">
@@ -240,4 +285,6 @@
     </div>
   </form>
 </div>
+
+
 {% endblock %}

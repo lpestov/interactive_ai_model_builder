@@ -1,17 +1,20 @@
 import time
-
+import csv
+import threading
 from flask import Blueprint, jsonify, render_template, request, redirect, url_for
 from ..fitter import classification_models, regression_models, Fitter
 from ..models import Dataset
-import csv
-import threading
 
 ml_manager_bp = Blueprint('ml_manager', __name__)
-
 
 @ml_manager_bp.route('/ml_manager', methods=['GET'])
 def index():
     datasets = Dataset.query.all()
+
+    # Вычисляем, доступны ли датасеты для каждого типа задач
+    classification_available = any(d.problem_type == 'classification' for d in datasets)
+    regression_available = any(d.problem_type == 'regression' for d in datasets)
+
     classification_metrics = [
         {'value': 'accuracy', 'label': 'Accuracy'},
         {'value': 'f1', 'label': 'F1 Score'}
@@ -35,9 +38,10 @@ def index():
         datasets_json=datasets_json,
         classification_metrics=classification_metrics,
         regression_metrics=regression_metrics,
+        classification_available=classification_available,
+        regression_available=regression_available,
         active_page='classic_ml'
     )
-
 
 @ml_manager_bp.route('/get_model_params')
 def get_model_params():
@@ -50,28 +54,36 @@ def get_model_params():
         params = {}
     return jsonify(params)
 
-
 @ml_manager_bp.route('/get_target_columns')
 def get_target_columns():
     dataset_id = request.args.get('dataset_id')
     dataset = Dataset.query.get(dataset_id)
-
-    with open(dataset.file_path, newline='', encoding='utf-8') as csvfile:
-        reader = csv.reader(csvfile)
-        columns = next(reader)
+    if not dataset:
+        return jsonify([])
+    try:
+        with open(dataset.file_path, newline='', encoding='utf-8') as csvfile:
+            reader = csv.reader(csvfile)
+            columns = next(reader)
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
     return jsonify(columns)
-
 
 @ml_manager_bp.route('/train', methods=['POST'])
 def train_model():
-    dataset_id = request.form['dataset']
-    dataset = Dataset.query.get(dataset_id)
+    dataset_id = request.form.get('dataset')
+    task_type = request.form.get('task_type')
+    target_column = request.form.get('target_column')
 
-    task_type = request.form['task_type']
+    if not dataset_id or not task_type or not target_column:
+        return jsonify({'error': 'Не выбраны обязательные параметры: датасет, тип задачи или целевая колонка'}), 400
+
+    dataset = Dataset.query.get(dataset_id)
+    if not dataset:
+        return jsonify({'error': 'Выбранный датасет не найден'}), 400
+
     model_name = request.form['model']
     scoring = request.form['scoring']
     split_ratio = float(request.form.get('split_ratio', 70))
-    target_column = request.form.get('target_column', '')
 
     params = {}
     for key in request.form:
@@ -80,7 +92,6 @@ def train_model():
             model_dict = classification_models if task_type == 'classification' else regression_models
             param_config = model_dict.get(model_name, {}).get(param_name, {})
             raw_value = request.form[key]
-
             if raw_value == "" or raw_value is None:
                 params[param_name] = param_config.get('default')
             else:

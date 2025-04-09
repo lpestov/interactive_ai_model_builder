@@ -1,9 +1,7 @@
 import threading
 import time
 import csv
-
 from flask import Blueprint, jsonify, render_template, request, redirect, url_for, flash
-
 from ..automlFitter import AutoMLFitter
 from ..models import Dataset
 
@@ -253,7 +251,6 @@ regression_metrics = [
 
 auto_ml_bp = Blueprint('auto_ml', __name__)
 
-
 @auto_ml_bp.route('/auto_ml', methods=['GET'])
 def index():
     datasets = Dataset.query.all()
@@ -264,6 +261,9 @@ def index():
         "process_status": ds.process_status
     } for ds in datasets]
 
+    classification_available = any(ds.problem_type == 'classification' and ds.process_status for ds in datasets)
+    regression_available = any(ds.problem_type == 'regression' and ds.process_status for ds in datasets)
+
     return render_template("auto_ml.html",
                            datasets=datasets,
                            datasets_json=datasets_json,
@@ -272,7 +272,9 @@ def index():
                            regression_models=regression_models,
                            classification_metrics=classification_metrics,
                            regression_metrics=regression_metrics,
-                           active_page="auto_ml")
+                           active_page="auto_ml",
+                           classification_available=classification_available,
+                           regression_available=regression_available)
 
 
 @auto_ml_bp.route('/get_hpo_params')
@@ -281,45 +283,48 @@ def get_hpo_params():
     params = hpo_methods.get(method, {})
     return jsonify(params)
 
-
 @auto_ml_bp.route('/get_model_param_space')
 def get_model_param_space():
     model = request.args.get('model')
     task_type = request.args.get('task_type')
-
     if task_type == 'classification':
         model_config = classification_models.get(model, {})
     else:
         model_config = regression_models.get(model, {})
-
     param_space = model_config.get("param_space", [])
     param_dict = {param["name"]: param for param in param_space}
     return jsonify(param_dict)
-
 
 @auto_ml_bp.route('/get_target_columns')
 def get_target_columns():
     dataset_id = request.args.get('dataset_id')
     dataset = Dataset.query.get(dataset_id)
-
-    with open(dataset.file_path, newline='', encoding='utf-8') as csvfile:
-        reader = csv.reader(csvfile)
-        columns = next(reader)
+    if not dataset:
+        return jsonify([])
+    try:
+        with open(dataset.file_path, newline='', encoding='utf-8') as csvfile:
+            reader = csv.reader(csvfile)
+            columns = next(reader)
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
     return jsonify(columns)
-
 
 @auto_ml_bp.route('/auto_ml/train', methods=['POST'])
 def train_model():
-    dataset_id = request.form['dataset']
+    dataset_id = request.form.get('dataset')
+    task_type = request.form.get('task_type')
+    target_column = request.form.get('target_column')
+    if not dataset_id or not task_type or not target_column:
+        flash("Пожалуйста, выберите обязательные поля: датасет, тип задачи и целевую колонку", "error")
+        return redirect(url_for("auto_ml.index"))
+    dataset = Dataset.query.get(dataset_id)
+    if not dataset:
+        flash("Выбранный датасет не существует", "error")
+        return redirect(url_for("auto_ml.index"))
     hpo_method = request.form['hpo_method']
     model_name = request.form['model']
     split_ratio = request.form['split_ratio']
-    target_column = request.form['target_column']
     scoring_select = request.form['scoring']
-    task_type = request.form['task_type']
-
-    dataset = Dataset.query.get(dataset_id)
-
     hpo_params = {}
     for key in request.form:
         if key.startswith('hpo_param_') and key != 'hpo_param_name':
@@ -335,7 +340,6 @@ def train_model():
                     hpo_params[param_name] = float(value)
                 else:
                     hpo_params[param_name] = value
-
     model_param_space = {}
     for key in request.form:
         if key.startswith('model_param_'):
@@ -343,53 +347,42 @@ def train_model():
             parts = suffix.rsplit('_', 1)
             if len(parts) != 2:
                 continue
-
             param_name, bound_type = parts[0], parts[1]
             if bound_type not in ('low', 'high'):
                 continue
-
             if task_type == 'classification':
                 model_config = classification_models.get(model_name, {})
             else:
                 model_config = regression_models.get(model_name, {})
-
             param_space = model_config.get("param_space", [])
             param_config = next((p for p in param_space if p["name"] == param_name), None)
             if not param_config:
                 continue
-
             try:
                 value = request.form[key]
-                if param_config["type"] in ["float", "integer"]:
-                    value = float(value) if param_config["type"] == "float" else int(value)
-
+                value = float(value) if param_config["type"] == "float" else int(value)
                 if param_name not in model_param_space:
                     model_param_space[param_name] = {}
-
                 model_param_space[param_name][bound_type] = value
             except (ValueError, KeyError) as e:
                 flash(f"Ошибка в параметре {param_name}: {str(e)}", "error")
                 return redirect(url_for("auto_ml.index"))
-
     param_space_list = []
     for param_name, bounds in model_param_space.items():
         if task_type == 'classification':
             model_config = classification_models.get(model_name, {})
         else:
             model_config = regression_models.get(model_name, {})
-
         param_space = model_config.get("param_space", [])
         param_config = next((p for p in param_space if p["name"] == param_name), None)
         if not param_config:
             continue
-
         param_space_list.append({
             "name": param_name,
             "type": param_config["type"],
             "low": bounds["low"],
             "high": bounds["high"]
         })
-
     def async_train():
         try:
             fitter = AutoMLFitter(
@@ -406,9 +399,7 @@ def train_model():
             fitter.fit()
         except Exception as e:
             print("AutoMl Training error : ", e)
-
     train_thread = threading.Thread(target=async_train)
     train_thread.start()
     time.sleep(0.2)
-
     return redirect(url_for("tracking.index"))
