@@ -1,2 +1,0 @@
-class FolderNotFoundError(Exception):
-    pass
