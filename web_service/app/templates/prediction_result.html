@@ -1,6 +1,6 @@
 {% extends 'base.html' %}
 
-{% block title %}Результат предсказания{% endblock %}
+{% block title %}Prediction result{% endblock %}
 
 {% block head %}
 <style>
@@ -28,17 +28,17 @@
 
 {% block body %}
 <div class="container mt-4">
-    <h1 class="mb-4">Результат предсказания</h1>
+    <h1 class="mb-4">Prediction result</h1>
 
     <div class="section">
         <h2>Input Image</h2>
         <div class="image-container">
-            <img src="{{ url_for('static', filename=image_url) }}" alt="Результат предсказания">
+            <img src="{{ url_for('static', filename=image_url) }}" alt="Prediction result">
         </div>
     </div>
 
     <div class="section">
-        <a href="{{ url_for('image_predictor.index') }}" class="btn btn-secondary">Назад</a>
+        <a href="{{ url_for('image_predictor.index') }}" class="btn btn-secondary">Back</a>
     </div>
 </div>
 {% endblock %}
