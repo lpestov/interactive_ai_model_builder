@@ -1,6 +1,6 @@
 {% extends 'base.html' %}
 
-{% block title %}Использование модели{% endblock %}
+{% block title %}Using the model{% endblock %}
 
 {% block head %}
 <style>
@@ -19,20 +19,20 @@
 
 {% block body %}
 <div class="container mt-4">
-    <h1 class="mb-4">Использование модели</h1>
+    <h1 class="mb-4">Using the model</h1>
 
     <div class="section">
-        <h2>Загрузите изображение:</h2>
+        <h2>Upload an image:</h2>
         <form method="POST" enctype="multipart/form-data" action="{{ url_for('image_predictor.predict') }}">
             <div class="mb-3">
                 <input type="file" id="fileInput" name="image" class="form-control" accept="image/*">
             </div>
-            <button type="submit" class="btn btn-primary">Запустить модель для предсказания</button>
+            <button type="submit" class="btn btn-primary">Run the model for prediction</button>
         </form>
     </div>
 
     <div class="section">
-        <a href="{{ url_for('image.index') }}" class="btn btn-secondary">Назад</a>
+        <a href="{{ url_for('image.index') }}" class="btn btn-secondary">Back</a>
     </div>
 </div>
 {% endblock %}
