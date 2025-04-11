@@ -6,6 +6,7 @@ Image Upload
 
 {% block head %}
 <style>
+    /* CSS styles remain the same */
     .class-container {
         margin-bottom: 20px;
         padding: 15px;
@@ -104,42 +105,42 @@ Image Upload
 
 {% block body %}
 <div class="container mt-4">
-    <h1 class="mb-4">Классификация изображений</h1>
+    <h1 class="mb-4">Image Classification</h1>
 
     <div class="section">
-        <h2>Введите количество классов:</h2>
+        <h2>Enter the number of classes:</h2>
         <div class="form-group">
-            <input type="number" id="classCount" min="2" max="100" class="form-control" placeholder="Введите число от 2 до 100">
+            <input type="number" id="classCount" min="2" max="100" class="form-control" placeholder="Enter a number between 2 and 100">
         </div>
-        <button type="button" class="btn btn-primary" onclick="generateClassInputs()">Продолжить</button>
+        <button type="button" class="btn btn-primary" onclick="generateClassInputs()">Continue</button>
     </div>
 
     <div id="classNames" class="section" style="display: none;"></div>
 
     <form id="uploadForm" style="display: none;" class="section">
         <div id="classForms"></div>
-        <button type="submit" id="uploadButton" class="btn btn-primary">Загрузить все</button>
+        <button type="submit" id="uploadButton" class="btn btn-primary">Upload All</button>
         <span id="uploadStatus" class="alert" style="display: none;"></span>
     </form>
 
     <div id="hyperparametersForm" class="hyperparameters" style="display: none;">
-        <h2>Настройка гиперпараметров модели</h2>
+        <h2>Model Hyperparameter Settings</h2>
         <div id="hyperparametersStatus" class="alert alert-warning">
-            Гиперпараметры не сохранены! Пожалуйста, сохраните перед загрузкой изображений.
+            Hyperparameters are not saved! Please save before uploading images.
         </div>
         <form id="hyperparametersFormContent">
             <div class="form-group">
-                <label for="num_epochs">Количество эпох (от 1 до 50):</label>
+                <label for="num_epochs">Number of epochs (from 1 to 50):</label>
                 <input type="number" id="num_epochs" name="num_epochs" min="1" max="50" value="10" required>
-                <div class="error-message" id="num_epochs_error">Недопустимое значение для количества эпох.</div>
+                <div class="error-message" id="num_epochs_error">Invalid value for the number of epochs.</div>
             </div>
             <div class="form-group">
-                <label for="learning_rate">Скорость обучения (от 0.00001 до 0.1):</label>
+                <label for="learning_rate">Learning rate (0.00001 to 0.1):</label>
                 <input type="number" id="learning_rate" name="learning_rate" step="0.00001" min="0.00001" max="0.1" value="0.0001" required>
-                <div class="error-message" id="learning_rate_error">Недопустимое значение для скорости обучения.</div>
+                <div class="error-message" id="learning_rate_error">Invalid value for the learning rate.</div>
             </div>
             <div class="form-group">
-                <label for="batch_size">Размер батча:</label>
+                <label for="batch_size">Batch Size</label>
                 <select id="batch_size" name="batch_size" class="form-control" required>
                     <option value="4">4</option>
                     <option value="8" selected>8</option>
@@ -147,14 +148,14 @@ Image Upload
                     <option value="32">32</option>
                     <option value="64">64</option>
                 </select>
-                <div class="error-message" id="batch_size_error">Недопустимое значение для размера батча.</div>
+                <div class="error-message" id="batch_size_error">Invalid value for the batch size.</div>
             </div>
             <div class="form-group">
-                <label for="weight_decay">Снижение веса (от 0.00001 до 0.1):</label>
+                <label for="weight_decay">Regularization parameter (0.00001 to 0.1):</label> <!-- Corrected spelling -->
                 <input type="number" id="weight_decay" name="weight_decay" step="0.00001" min="0.00001" max="0.1" value="0.0001" required>
-                <div class="error-message" id="weight_decay_error">Недопустимое значение для снижения веса.</div>
+                <div class="error-message" id="weight_decay_error">Invalid value for the regularization parameter.</div>
             </div>
-            <button type="button" class="btn btn-primary" onclick="validateAndSubmit()">Сохранить гиперпараметры</button>
+            <button type="button" class="btn btn-primary" onclick="validateAndSubmit()">Save Hyperparameters</button>
         </form>
     </div>
 </div>
@@ -165,27 +166,27 @@ Image Upload
     function generateClassInputs() {
         const count = parseInt(document.getElementById("classCount").value);
         const container = document.getElementById("classNames");
-        
-        if (count < 2 || count > 100) {
-            alert("Пожалуйста, введите число от 2 до 100");
+
+        if (isNaN(count) || count < 2 || count > 100) { // Added isNaN check
+            alert("Please enter a number between 2 and 100");
             return;
         }
 
-        container.innerHTML = "";
+        container.innerHTML = "<h2>Enter Class Names:</h2>"; // Added title for clarity
         container.style.display = "block";
 
         for (let i = 1; i <= count; i++) {
             const div = document.createElement("div");
             div.className = "form-group";
             div.innerHTML = `
-                <label for="className${i}">Название класса ${i}:</label>
-                <input type="text" id="className${i}" class="form-control" placeholder="Введите название" required>
+                <label for="className${i}">Class name ${i}:</label>
+                <input type="text" id="className${i}" class="form-control" placeholder="Enter name" required>
             `;
             container.appendChild(div);
         }
 
         const button = document.createElement("button");
-        button.innerText = "Создать формы для загрузки";
+        button.innerText = "Create Upload Forms";
         button.className = "btn btn-primary mt-2";
         button.type = "button";
         button.onclick = generateForms;
@@ -194,15 +195,17 @@ Image Upload
 
     function generateForms() {
         const container = document.getElementById("classForms");
-        container.innerHTML = "";
-        
+        container.innerHTML = "<h2>Upload Images for Each Class:</h2>"; // Added title for clarity
+
         const count = parseInt(document.getElementById("classCount").value);
         let classNames = [];
-        
+
         for (let i = 1; i <= count; i++) {
-            const className = document.getElementById(`className${i}`).value.trim();
+            const classNameInput = document.getElementById(`className${i}`);
+            if (!classNameInput) continue; // Safety check
+            const className = classNameInput.value.trim();
             if (!className) {
-                alert(`Пожалуйста, введите название для класса ${i}`);
+                alert(`Please enter a name for class ${i}`);
                 return;
             }
             classNames.push(className);
@@ -221,43 +224,47 @@ Image Upload
         document.getElementById("uploadForm").style.display = "block";
         document.getElementById("uploadButton").style.display = "block";
         document.getElementById("hyperparametersForm").style.display = "block";
+        document.getElementById("classNames").style.display = "none"; // Hide class name inputs after forms are generated
     }
 
     function validateAndSubmit() {
         let isValid = true;
         const statusElement = document.getElementById("hyperparametersStatus");
 
-        const numEpochs = parseInt(document.getElementById("num_epochs").value);
-        if (numEpochs < 1 || numEpochs > 50) {
+        // Clear previous errors
+        document.getElementById("num_epochs_error").style.display = "none";
+        document.getElementById("learning_rate_error").style.display = "none";
+        document.getElementById("batch_size_error").style.display = "none";
+        document.getElementById("weight_decay_error").style.display = "none";
+
+
+        const numEpochsInput = document.getElementById("num_epochs");
+        const numEpochs = parseInt(numEpochsInput.value);
+        if (isNaN(numEpochs) || numEpochs < 1 || numEpochs > 50) {
             document.getElementById("num_epochs_error").style.display = "block";
             isValid = false;
-        } else {
-            document.getElementById("num_epochs_error").style.display = "none";
         }
 
-        const learningRate = parseFloat(document.getElementById("learning_rate").value);
-        if (learningRate < 0.00001 || learningRate > 0.1) {
+        const learningRateInput = document.getElementById("learning_rate");
+        const learningRate = parseFloat(learningRateInput.value);
+        if (isNaN(learningRate) || learningRate < 0.00001 || learningRate > 0.1) {
             document.getElementById("learning_rate_error").style.display = "block";
             isValid = false;
-        } else {
-            document.getElementById("learning_rate_error").style.display = "none";
         }
 
-        const batchSize = parseInt(document.getElementById("batch_size").value);
+        const batchSizeInput = document.getElementById("batch_size");
+        const batchSize = parseInt(batchSizeInput.value);
         const validBatchSizes = [4, 8, 16, 32, 64];
-        if (!validBatchSizes.includes(batchSize)) {
+        if (isNaN(batchSize) || !validBatchSizes.includes(batchSize)) {
             document.getElementById("batch_size_error").style.display = "block";
             isValid = false;
-        } else {
-            document.getElementById("batch_size_error").style.display = "none";
         }
 
-        const weightDecay = parseFloat(document.getElementById("weight_decay").value);
-        if (weightDecay < 0.00001 || weightDecay > 0.1) {
+        const weightDecayInput = document.getElementById("weight_decay");
+        const weightDecay = parseFloat(weightDecayInput.value);
+        if (isNaN(weightDecay) || weightDecay < 0.00001 || weightDecay > 0.1) {
             document.getElementById("weight_decay_error").style.display = "block";
             isValid = false;
-        } else {
-            document.getElementById("weight_decay_error").style.display = "none";
         }
 
         if (isValid) {
@@ -275,78 +282,82 @@ Image Upload
                 },
                 body: JSON.stringify(hyperparameters),
             })
-            .then(response => response.json())
-            .then(data => {
-                if (data.success) {
-                    hyperparametersSaved = true;
-                    statusElement.className = "alert alert-success";
-                    statusElement.textContent = "Гиперпараметры успешно сохранены!";
-                    document.getElementById("uploadStatus").style.display = "none";
-                } else {
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        hyperparametersSaved = true;
+                        statusElement.className = "alert alert-success";
+                        statusElement.textContent = "Hyperparameters saved successfully!";
+                        document.getElementById("uploadStatus").style.display = "none"; // Hide upload status if hyperparams just saved
+                    } else {
+                        statusElement.className = "alert alert-warning";
+                        statusElement.textContent = "Error: " + (data.message || "unknown error");
+                    }
+                })
+                .catch(error => {
                     statusElement.className = "alert alert-warning";
-                    statusElement.textContent = "Ошибка: " + (data.message || "неизвестная ошибка");
-                }
-            })
-            .catch(error => {
-                statusElement.className = "alert alert-warning";
-                statusElement.textContent = "Ошибка сети: " + error.message;
-            });
+                    statusElement.textContent = "Network Error: " + error.message;
+                });
         }
     }
 
     document.getElementById("uploadForm").addEventListener("submit", async function(event) {
         event.preventDefault();
-        
+
         const statusElement = document.getElementById("uploadStatus");
         statusElement.style.display = "block";
         statusElement.className = "alert alert-warning";
-        statusElement.textContent = "Обучение модели...";
+        statusElement.textContent = "Training model...";
 
         if (!hyperparametersSaved) {
-            statusElement.textContent = "Ошибка: Сначала сохраните гиперпараметры!";
+            statusElement.textContent = "Error: Please save hyperparameters first!";
             return;
         }
 
         const formData = new FormData();
-        const inputs = document.querySelectorAll("input[type='file']");
-        
+        const inputs = document.querySelectorAll("#classForms input[type='file']"); // Target inputs within the specific container
+
         let filesExist = false;
         inputs.forEach(input => {
             if (input.files.length > 0) {
                 filesExist = true;
                 const className = input.name;
                 Array.from(input.files).forEach(file => {
-                    formData.append(`${className}[]`, file);
+                    formData.append(`${className}[]`, file); // Keep server-side logic expecting className[]
                 });
             }
         });
 
         if (!filesExist) {
-            statusElement.textContent = "Ошибка: Пожалуйста, загрузите хотя бы один файл!";
+            statusElement.textContent = "Error: Please upload at least one file!";
             return;
         }
 
         try {
+            // Assuming '/upload_images' triggers training and redirects on success
             const response = await fetch("/upload_images", {
                 method: "POST",
                 body: formData
             });
 
-            const result = await response.json();
+            const result = await response.json(); // Assuming server returns JSON status
             if (response.ok) {
                 if (result.success) {
-                    window.location.href = "/image_prediction";
+                    // Redirect to prediction page or show success message
+                    statusElement.className = "alert alert-success";
+                    statusElement.textContent = "Training started successfully! Redirecting..."; // Optional message before redirect
+                    window.location.href = "/image_prediction"; // Redirect on success
                 } else {
                     statusElement.className = "alert alert-warning";
-                    statusElement.textContent = "Ошибка: " + (result.message || "неизвестная ошибка");
+                    statusElement.textContent = "Error: " + (result.message || "unknown error during training");
                 }
             } else {
                 statusElement.className = "alert alert-warning";
-                statusElement.textContent = "Ошибка сервера: " + (result.message || "неизвестная ошибка");
+                statusElement.textContent = "Server Error: " + (result.message || "unknown server error");
             }
         } catch (error) {
             statusElement.className = "alert alert-warning";
-            statusElement.textContent = "Ошибка сети: " + error.message;
+            statusElement.textContent = "Network Error: " + error.message;
         }
     });
 </script>
