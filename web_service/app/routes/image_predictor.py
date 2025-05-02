@@ -1,4 +1,4 @@
-from flask import Blueprint, flash, render_template, request, redirect, url_for
+from flask import Blueprint, flash, render_template, request, redirect, url_for, send_file, abort
 import subprocess
 import os
 import re
@@ -9,12 +9,37 @@ from app.routes.image import file_extension_validation
 INFERENCE_SCRIPT_PATH = 'utils/inference.py'
 UPLOAD_FOLDER_PATH = 'images'
 STATIC_FOLDER = 'app/static'  # папка для статических файлов
+MODEL_PATH = 'utils/trained_model_classification.pt'  # путь к обученной модели
 
 image_predictor_bp = Blueprint('image_predictor', __name__)
+
 
 @image_predictor_bp.route('/image_prediction', methods=['GET'])
 def index():
     return render_template('image_prediction.html')
+
+
+@image_predictor_bp.route('/download_model', methods=['GET'])
+def download_model():
+    print(f"Attempting to download model from: {MODEL_PATH}")
+    print(f"File exists check: {os.path.exists(MODEL_PATH)}")
+
+    if os.path.exists(MODEL_PATH):
+        try:
+            model_absolute_path = os.path.abspath(MODEL_PATH)
+            return send_file(model_absolute_path, as_attachment=True,
+                             download_name="trained_model_classification.pt")
+        except Exception as e:
+            error_msg = f'Error while downloading the model: {str(e)}'
+            print(error_msg)
+            flash(error_msg)
+            return redirect(url_for('image_predictor.index'))
+    else:
+        error_msg = f'Model not found at path: {MODEL_PATH}'
+        print(error_msg)
+        flash(error_msg)
+        return redirect(url_for('image_predictor.index'))
+
 
 @image_predictor_bp.route('/predict_image_class', methods=['POST'])
 def predict():
@@ -39,11 +64,11 @@ def predict():
             ['python', INFERENCE_SCRIPT_PATH, file_path],
             capture_output=True, text=True
         )
-                
+
         if result.returncode != 0:
             flash(f"Ошибка при исполнении скрипта для предсказания: {result.stderr}")
             return redirect(url_for('image_predictor.index'))
-        
+
         # Получаем данные из inference-скрипта
         output = result.stdout
         match = re.search(r'Plot saved to: (.*\.png)', output)
@@ -57,7 +82,7 @@ def predict():
 
         if not os.path.exists(STATIC_FOLDER):
             os.makedirs(STATIC_FOLDER)
-    
+
         # Перемещаем изображение в папку static
         static_image_path = os.path.join(STATIC_FOLDER, image_filename)
         print(f"Перемещение {image_path} в {static_image_path}")
