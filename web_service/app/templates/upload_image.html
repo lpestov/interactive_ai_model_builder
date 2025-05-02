@@ -5,8 +5,19 @@ Image Upload
 {% endblock %}
 
 {% block head %}
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
 <style>
     /* CSS styles remain the same */
+    @keyframes spin {
+        0% { transform: rotate(0deg); }
+        100% { transform: rotate(360deg); }
+    }
+
+    .spinner-icon {
+        animation: spin 1s linear infinite;
+        display: inline-block;
+        margin-right: 8px;
+    }
     .class-container {
         margin-bottom: 20px;
         padding: 15px;
@@ -100,6 +111,69 @@ Image Upload
         border: 1px solid #c3e6cb;
         color: #155724;
     }
+
+    .tooltip-icon {
+        margin-left: 5px;
+        color: #007bff;
+        cursor: pointer;
+    }
+
+    .custom-tooltip {
+        position: relative;
+        display: inline-block;
+    }
+
+    .custom-tooltip .tooltip-text {
+        visibility: hidden;
+        width: 250px;
+        background-color: #555;
+        color: #fff;
+        text-align: left;
+        border-radius: 6px;
+        padding: 10px;
+        position: absolute;
+        z-index: 1;
+        bottom: 125%;
+        left: 50%;
+        margin-left: -125px;
+        opacity: 0;
+        transition: opacity 0.3s;
+        font-weight: normal;
+        line-height: 1.4;
+    }
+
+    .custom-tooltip .tooltip-text::after {
+        content: "";
+        position: absolute;
+        top: 100%;
+        left: 50%;
+        margin-left: -5px;
+        border-width: 5px;
+        border-style: solid;
+        border-color: #555 transparent transparent transparent;
+    }
+
+    .custom-tooltip:hover .tooltip-text {
+        visibility: visible;
+        opacity: 1;
+    }
+    .file-count {
+        margin-top: 5px;
+        font-size: 0.9em;
+    }
+    .file-count.invalid {
+        color: #dc3545;
+    }
+    .file-count.valid {
+        color: #28a745;
+    }
+    .requirements-note {
+        margin-top: 10px;
+        padding: 8px;
+        background-color: #f8f9fa;
+        border-left: 3px solid #007bff;
+        color: #495057;
+    }
 </style>
 {% endblock %}
 
@@ -110,7 +184,8 @@ Image Upload
     <div class="section">
         <h2>Enter the number of classes:</h2>
         <div class="form-group">
-            <input type="number" id="classCount" min="2" max="100" class="form-control" placeholder="Enter a number between 2 and 100">
+            <input type="number" id="classCount" min="2" max="100" class="form-control"
+                   placeholder="Enter a number between 2 and 100">
         </div>
         <button type="button" class="btn btn-primary" onclick="generateClassInputs()">Continue</button>
     </div>
@@ -130,17 +205,38 @@ Image Upload
         </div>
         <form id="hyperparametersFormContent">
             <div class="form-group">
-                <label for="num_epochs">Number of epochs (from 1 to 50):</label>
+                <label for="num_epochs">
+                    Number of epochs (from 1 to 50):
+                    <span class="custom-tooltip">
+            <i class="fa fa-question-circle tooltip-icon"></i>
+            <span class="tooltip-text">Количество итераций обучения модели на всем наборе данных. Больше эпох может улучшить точность, но повышает риск переобучения.</span>
+        </span>
+                </label>
                 <input type="number" id="num_epochs" name="num_epochs" min="1" max="50" value="10" required>
                 <div class="error-message" id="num_epochs_error">Invalid value for the number of epochs.</div>
             </div>
+
             <div class="form-group">
-                <label for="learning_rate">Learning rate (0.00001 to 0.1):</label>
-                <input type="number" id="learning_rate" name="learning_rate" step="0.00001" min="0.00001" max="0.1" value="0.0001" required>
+                <label for="learning_rate">
+                    Learning rate (0.00001 to 0.1):
+                    <span class="custom-tooltip">
+            <i class="fa fa-question-circle tooltip-icon"></i>
+            <span class="tooltip-text">Скорость обучения определяет величину шага при оптимизации. Меньшие значения дают более точное, но медленное обучение. Большие значения ускоряют обучение, но могут пропустить оптимум.</span>
+        </span>
+                </label>
+                <input type="number" id="learning_rate" name="learning_rate" step="0.00001" min="0.00001" max="0.1"
+                       value="0.0001" required>
                 <div class="error-message" id="learning_rate_error">Invalid value for the learning rate.</div>
             </div>
+
             <div class="form-group">
-                <label for="batch_size">Batch Size</label>
+                <label for="batch_size">
+                    Batch Size
+                    <span class="custom-tooltip">
+            <i class="fa fa-question-circle tooltip-icon"></i>
+            <span class="tooltip-text">Размер пакета определяет количество изображений, обрабатываемых за один раз. Больший размер ускоряет обучение, но требует больше памяти. Меньший размер может дать лучшую точность.</span>
+        </span>
+                </label>
                 <select id="batch_size" name="batch_size" class="form-control" required>
                     <option value="4">4</option>
                     <option value="8" selected>8</option>
@@ -150,9 +246,17 @@ Image Upload
                 </select>
                 <div class="error-message" id="batch_size_error">Invalid value for the batch size.</div>
             </div>
+
             <div class="form-group">
-                <label for="weight_decay">Regularization parameter (0.00001 to 0.1):</label> <!-- Corrected spelling -->
-                <input type="number" id="weight_decay" name="weight_decay" step="0.00001" min="0.00001" max="0.1" value="0.0001" required>
+                <label for="weight_decay">
+                    Regularization parameter (0.00001 to 0.1):
+                    <span class="custom-tooltip">
+            <i class="fa fa-question-circle tooltip-icon"></i>
+            <span class="tooltip-text">Параметр регуляризации помогает предотвратить переобучение, добавляя штраф за сложность модели. Большее значение - более простая модель, может предотвратить переобучение, но снизить точность.</span>
+        </span>
+                </label>
+                <input type="number" id="weight_decay" name="weight_decay" step="0.00001" min="0.00001" max="0.1"
+                       value="0.0001" required>
                 <div class="error-message" id="weight_decay_error">Invalid value for the regularization parameter.</div>
             </div>
             <button type="button" class="btn btn-primary" onclick="validateAndSubmit()">Save Hyperparameters</button>
@@ -193,9 +297,16 @@ Image Upload
         container.appendChild(button);
     }
 
+    // Replace the existing generateForms() function with this implementation
     function generateForms() {
         const container = document.getElementById("classForms");
-        container.innerHTML = "<h2>Upload Images for Each Class:</h2>"; // Added title for clarity
+        container.innerHTML = "<h2>Upload Images for Each Class:</h2>";
+
+        // Add a requirements note
+        const requirementsNote = document.createElement("div");
+        requirementsNote.className = "requirements-note";
+        requirementsNote.innerHTML = '<i class="fa fa-info-circle"></i> Each class requires at least 15 images for model training';
+        container.appendChild(requirementsNote);
 
         const count = parseInt(document.getElementById("classCount").value);
         let classNames = [];
@@ -215,16 +326,36 @@ Image Upload
             const div = document.createElement("div");
             div.className = "class-container form-group";
             div.innerHTML = `
-                <label>${name}:</label>
-                <input type="file" name="${name}" class="form-control" accept="image/*" multiple required>
-            `;
+            <label>${name}:</label>
+            <input type="file" name="${name}" class="form-control" accept="image/*" multiple required>
+            <div id="fileCount-${name}" class="file-count invalid">0/15 images selected</div>
+        `;
             container.appendChild(div);
+
+            const input = div.querySelector('input[type="file"]');
+            input.addEventListener('change', function() {
+                updateFileCounter(this);
+            });
         });
 
         document.getElementById("uploadForm").style.display = "block";
         document.getElementById("uploadButton").style.display = "block";
         document.getElementById("hyperparametersForm").style.display = "block";
-        document.getElementById("classNames").style.display = "none"; // Hide class name inputs after forms are generated
+        document.getElementById("classNames").style.display = "none";
+    }
+
+    function updateFileCounter(input) {
+        const fileCount = input.files.length;
+        const className = input.name;
+        const countDisplay = document.getElementById(`fileCount-${className}`);
+
+        if (fileCount >= 15) {
+            countDisplay.className = "file-count valid";
+            countDisplay.innerHTML = `<i class="fa fa-check-circle"></i> ${fileCount}/15 images selected`;
+        } else {
+            countDisplay.className = "file-count invalid";
+            countDisplay.innerHTML = `<i class="fa fa-exclamation-circle"></i> ${fileCount}/15 images selected`;
+        }
     }
 
     function validateAndSubmit() {
@@ -301,30 +432,31 @@ Image Upload
         }
     }
 
-    document.getElementById("uploadForm").addEventListener("submit", async function(event) {
+    document.getElementById("uploadForm").addEventListener("submit", async function (event) {
         event.preventDefault();
 
         const statusElement = document.getElementById("uploadStatus");
         statusElement.style.display = "block";
         statusElement.className = "alert alert-warning";
-        statusElement.textContent = "Training model...";
 
         if (!hyperparametersSaved) {
-            statusElement.textContent = "Error: Please save hyperparameters first!";
+            statusElement.innerHTML = "Error: Please save hyperparameters first!";
             return;
         }
 
-        const formData = new FormData();
-        const inputs = document.querySelectorAll("#classForms input[type='file']"); // Target inputs within the specific container
-
+        const inputs = document.querySelectorAll("#classForms input[type='file']");
         let filesExist = false;
+        let invalidClasses = [];
+
         inputs.forEach(input => {
-            if (input.files.length > 0) {
+            const className = input.name;
+            const fileCount = input.files.length;
+
+            if (fileCount > 0) {
                 filesExist = true;
-                const className = input.name;
-                Array.from(input.files).forEach(file => {
-                    formData.append(`${className}[]`, file); // Keep server-side logic expecting className[]
-                });
+                if (fileCount < 15) {
+                    invalidClasses.push(`${className} (${fileCount}/15)`);
+                }
             }
         });
 
@@ -333,27 +465,52 @@ Image Upload
             return;
         }
 
+        if (invalidClasses.length > 0) {
+            statusElement.innerHTML = `Error: Not enough images for these classes:<br>
+            ${invalidClasses.join('<br>')}<br>
+            Each class requires minimum 15 images.`;
+            return;
+        }
+
+        statusElement.innerHTML = '<i class="fa fa-spinner spinner-icon"></i> Training model... (About 10 minutes)';
+
+        const formData = new FormData();
+        inputs.forEach(input => {
+            if (input.files.length > 0) {
+                const className = input.name;
+                Array.from(input.files).forEach(file => {
+                    formData.append(`${className}[]`, file);
+                });
+            }
+        });
+
         try {
-            // Assuming '/upload_images' triggers training and redirects on success
             const response = await fetch("/upload_images", {
                 method: "POST",
                 body: formData
             });
 
-            const result = await response.json(); // Assuming server returns JSON status
-            if (response.ok) {
-                if (result.success) {
-                    // Redirect to prediction page or show success message
+            if (response.redirected) {
+                window.location.href = response.url;
+            } else if (response.ok) {
+                try {
+                    const result = await response.json();
                     statusElement.className = "alert alert-success";
-                    statusElement.textContent = "Training started successfully! Redirecting..."; // Optional message before redirect
-                    window.location.href = "/image_prediction"; // Redirect on success
-                } else {
-                    statusElement.className = "alert alert-warning";
-                    statusElement.textContent = "Error: " + (result.message || "unknown error during training");
+                    statusElement.textContent = result.message || "Success!";
+                } catch (e) {
+                    statusElement.className = "alert alert-success";
+                    statusElement.textContent = "Operation successful, but response was not JSON.";
+                    window.location.href = "{{ url_for('image_predictor.index') }}";
                 }
             } else {
-                statusElement.className = "alert alert-warning";
-                statusElement.textContent = "Server Error: " + (result.message || "unknown server error");
+                statusElement.className = "alert alert-danger";
+                let errorMsg = `Error: ${response.statusText}`;
+                try {
+                    const errorResult = await response.json();
+                    errorMsg = errorResult.message || errorMsg;
+                } catch (e) {
+                }
+                statusElement.textContent = errorMsg;
             }
         } catch (error) {
             statusElement.className = "alert alert-warning";
