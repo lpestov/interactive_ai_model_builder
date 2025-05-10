@@ -178,7 +178,7 @@ cython_debug/
 datasets/classification/dogvscat_small
 
 #trained model
-models/classification/utils/trained_model_classification.pt
+models/image_classification/utils/trained_model_classification.pt
 
 #predictions
-models/classification/utils/predictions
+models/image_classification/utils/predictions
