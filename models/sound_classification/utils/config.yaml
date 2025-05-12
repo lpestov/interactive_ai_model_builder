@@ -1,0 +1,43 @@
+name: classification-sound-neural-network
+desc: "Training a classification sound model in DataSphere"
+
+# Параметры точки входа для запуска вычислений
+cmd: >
+  python3 sound_classification_datasphere.py
+
+# Файлы с входными данными (Исполняемый скрипт должен отсутствовать!)
+inputs:
+  - sound_dataset.zip
+  - hyperparams.json
+  - class_to_idx.json
+
+# Файлы с результатами
+outputs:
+  - trained_model_sound_classification.pt
+
+# Параметры окружения
+env:
+  python:
+    type: manual
+    version: 3.11
+    pip:
+      index-url: https://pypi.org/simple
+      trusted-hosts:
+        - download.pytorch.org
+      extra-index-urls:
+        - https://download.pytorch.org/whl/cu121
+    requirements-file: requirements.txt
+    local-paths:
+      - sound_classification_datasphere.py
+
+# Флаг, дающий доступ к хранилищу проекта для чтения/записи дополнительных данных
+flags:
+  - attach-project-disk
+
+# Выбор типов инстансов для вычислений (Расположены по приоритетности)
+cloud-instance-types:
+  - g1.1
+# (Если имеется доступ)
+#  - gt4.1
+#  - g2.1
+
