@@ -191,3 +191,8 @@ models/image_classification/utils/predictions
 /models/sound_classification/utils/predictions_sound/
 /models/sound_classification/utils/trained_model_sound_classification.pt
 /models/sound_classification/utils/test/
+
+/web_service/utils/trained_model_classification.pt
+/web_service/utils/hyperparams.json
+/web_service/utils/classification_dataset.zip
+/web_service/utils/class_to_idx.json
