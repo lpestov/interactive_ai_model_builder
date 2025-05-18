@@ -6,10 +6,10 @@ import shutil
 
 from app.routes.image import file_extension_validation
 
-INFERENCE_SCRIPT_PATH = 'utils/inference.py'
+INFERENCE_SCRIPT_PATH = 'utils/image_classification/inference.py'
 UPLOAD_FOLDER_PATH = 'images'
 STATIC_FOLDER = 'app/static'  # папка для статических файлов
-MODEL_PATH = 'utils/trained_model_classification.pt'  # путь к обученной модели
+MODEL_PATH = 'utils/image_classification/trained_model_classification.pt'  # путь к обученной модели
 
 image_predictor_bp = Blueprint('image_predictor', __name__)
 
@@ -85,21 +85,12 @@ def predict():
 
         # Перемещаем изображение в папку static
         static_image_path = os.path.join(STATIC_FOLDER, image_filename)
-        print(f"Перемещение {image_path} в {static_image_path}")
         shutil.move(image_path, static_image_path)
-
-        if os.path.exists(static_image_path):
-            print(f"Файл успешно перемещен в {static_image_path}")
-        else:
-            print(f"Ошибка: Файл не найден в {static_image_path}")
 
         # Формируем URL для изображения (относительный путь от папки static)
         image_url = os.path.join(image_filename)
 
-        print(f"Путь к изображению: {static_image_path}")
-        print(f"URL изображения: {image_url}")
-
-        return render_template('prediction_result.html', image_url=image_url)
+        return render_template('image_prediction_result.html', image_url=image_url)
 
     except Exception as e:
         flash(f"Ошибка при попытке предсказания: {str(e)}")

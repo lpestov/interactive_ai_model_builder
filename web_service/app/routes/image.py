@@ -11,7 +11,7 @@ load_dotenv()
 
 ALLOWED_EXTENSIONS = {'jpg', 'jpeg', 'png'}
 UPLOAD_FOLDER_PATH = 'images/classification_dataset/train'
-UTILS_PATH = 'utils'
+UTILS_PATH = 'utils/image_classification'
 YC_TOKEN = os.environ.get('YC_TOKEN')
 PROJECT_ID = os.environ.get('PROJECT_ID')
 CONFIG_YAML_FILE = os.environ.get('CONFIG_YAML_FILE')
@@ -97,7 +97,7 @@ def upload_images():
 
     subprocess.run(['datasphere', 'project', 'job', 'execute',
                     '-p', PROJECT_ID, '-c', CONFIG_YAML_FILE],
-                   cwd='utils',
+                   cwd='utils/image_classification',
                    capture_output=False,
                    text=True)
 

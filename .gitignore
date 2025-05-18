@@ -169,10 +169,15 @@ cython_debug/
 /web_service/app/static
 /web_service/mlruns
 /web_service/predictions
-/web_service/utils/trained_model_classification.pt
-/web_service/utils/class_to_idx.json
-/web_service/utils/classification_dataset.zip
-/web_service/utils/hyperparams.json
+/web_service/sounds
+/web_service/utils/image_classification/trained_model_classification.pt
+/web_service/utils/image_classification/class_to_idx.json
+/web_service/utils/image_classification/classification_dataset.zip
+/web_service/utils/image_classification/hyperparams.json
+/web_service/utils/sound_classification/trained_model_sound_classification.pt
+/web_service/utils/sound_classification/class_to_idx.json
+/web_service/utils/sound_classification/sound_dataset.zip
+/web_service/utils/sound_classification/hyperparams.json
 
 #dataset for classification
 datasets/classification/dogvscat_small

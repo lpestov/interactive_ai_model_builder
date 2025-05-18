@@ -1,0 +1,137 @@
+{% extends 'base.html' %}
+
+{% block title %}sound Classification{% endblock %}
+
+{% block head %}
+    <!-- Bootstrap Icons -->
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
+    <!-- GitHub Markdown CSS -->
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/github-markdown-css/5.1.0/github-markdown.min.css">
+
+<style>
+    /* Сохраняем все оригинальные стили */
+    .section {
+        margin-bottom: 20px;
+        padding: 15px;
+        border: 1px solid #ddd;
+        border-radius: 5px;
+        background-color: #f9f9f9;
+    }
+    .section h2 {
+        margin-top: 0;
+        margin-bottom: 15px;
+        font-size: 1.5rem;
+        border-bottom: 1px solid #eee;
+        padding-bottom: 10px;
+    }
+
+    .modal-body .markdown-body {
+        box-sizing: border-box;
+        min-width: 200px;
+        max-width: 980px;
+        margin: 0 auto;
+        padding: 25px;
+    }
+
+    .modal-body .markdown-body pre {
+        background-color: #f6f8fa;
+        padding: 16px;
+        overflow: auto;
+        font-size: 85%;
+        line-height: 1.45;
+        border-radius: 6px;
+        border: 1px solid #ddd;
+    }
+
+    /* Добавляем специфичные иконки для аудио */
+    .bi-file-earmark-music {
+        margin-right: 8px;
+        color: #28a745;
+    }
+</style>
+{% endblock %}
+
+{% block body %}
+<div class="container mt-4">
+    <h1 class="mb-4">Sound Classification</h1>
+
+    <!-- Секция загрузки аудио -->
+    <div class="section">
+        <h2>Upload sound File</h2>
+        <form method="POST" enctype="multipart/form-data" action="{{ url_for('sound_predictor.predict') }}">
+            <div class="mb-3">
+                <label for="soundInput" class="form-label">Select sound file:</label>
+                <input type="file" id="soundInput" name="sound" class="form-control" 
+                       accept="sound/*" required>
+            </div>
+            <button type="submit" class="btn btn-primary">
+                <i class="bi bi-cpu me-2"></i>Analyze sound
+            </button>
+        </form>
+    </div>
+
+    <!-- Секция модели и инструкций -->
+    <div class="section">
+        <h2>Model and Documentation</h2>
+        <div class="row">
+            <div class="col-md-6 mb-3 mb-md-0">
+                <a href="{{ url_for('sound_predictor.download_model') }}" 
+                   class="btn btn-success w-100">
+                    <i class="bi bi-download me-2"></i>Download sound Model (.pt)
+                </a>
+            </div>
+            <div class="col-md-6">
+                <button type="button" class="btn btn-info w-100 text-white" 
+                        data-bs-toggle="modal" data-bs-target="#instructionsModal">
+                    <i class="bi bi-book me-2"></i>Usage Guide
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Навигация -->
+    <div class="section">
+        <a href="{{ url_for('sound_classification.index') }}" class="btn btn-secondary">
+           <i class="bi bi-arrow-left me-2"></i>Back to Training
+        </a>
+    </div>
+</div>
+
+    <!-- Модальное окно инструкций -->
+<div class="modal fade" id="instructionsModal" tabindex="-1" 
+     aria-labelledby="instructionsModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-xl modal-dialog-scrollable">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="instructionsModalLabel">
+                    <i class="bi bi-file-earmark-music"></i>sound Model Guide
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" 
+                        aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <article class="markdown-body">
+
+                    <h2>Sound Classification Guide</h2>
+
+                    <p>Usage instructions for the trained sound classification model:</p>
+
+                    <h4>Requirements:</h4>
+
+                    <h3>Implementation Steps:</h3>
+                    <ol>
+                        <li>Sample classification script:
+                            <pre><code class="language-python">...</code></pre>
+                        </li>
+
+                </article>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" 
+                        data-bs-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endblock %}

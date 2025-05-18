@@ -212,10 +212,10 @@ def main():
         print("Используйте: python inference.py <path_to_image>")
         sys.exit(1)
     # Константы
-    MODEL_PATH = "utils/trained_model_classification.pt"
-    CLASS_MAPPING_PATH = "utils/class_to_idx.json"
+    MODEL_PATH = "utils/image_classification/trained_model_classification.pt"
+    CLASS_MAPPING_PATH = "utils/image_classification/class_to_idx.json"
     IMAGE_PATH = sys.argv[1]
-    OUTPUT_DIR = "predictions"
+    OUTPUT_DIR = "predictions/images"
 
 
     # Проверка существования файлов 
