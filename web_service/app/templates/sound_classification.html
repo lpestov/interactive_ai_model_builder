@@ -211,7 +211,7 @@ Audio Upload
                     Number of epochs (from 1 to 50):
                     <span class="custom-tooltip">
                         <i class="fa fa-question-circle tooltip-icon"></i>
-                        <span class="tooltip-text">Количество итераций обучения модели на всем наборе данных. Больше эпох может улучшить точность, но повышает риск переобучения.</span>
+                        <span class="tooltip-text">The number of training iterations on the entire dataset. More epochs may improve accuracy but increase the risk of overfitting.</span>
                     </span>
                 </label>
                 <input type="number" id="num_epochs" name="num_epochs" min="1" max="50" value="10" required>
@@ -223,7 +223,7 @@ Audio Upload
                     Learning rate (0.00001 to 0.1):
                     <span class="custom-tooltip">
                         <i class="fa fa-question-circle tooltip-icon"></i>
-                        <span class="tooltip-text">Скорость обучения определяет величину шага при оптимизации. Меньшие значения дают более точное, но медленное обучение. Большие значения ускоряют обучение, но могут пропустить оптимум.</span>
+                        <span class="tooltip-text">Learning rate determines the step size during optimization. Lower values provide more accurate but slower training. Higher values speed up training but may miss the optimum.</span>
                     </span>
                 </label>
                 <input type="number" id="learning_rate" name="learning_rate" step="0.00001" min="0.00001" max="0.1"
@@ -236,7 +236,7 @@ Audio Upload
                     Batch Size
                     <span class="custom-tooltip">
                         <i class="fa fa-question-circle tooltip-icon"></i>
-                        <span class="tooltip-text">Размер пакета определяет количество аудиофайлов, обрабатываемых за один раз. Больший размер ускоряет обучение, но требует больше памяти.</span>
+                        <span class="tooltip-text">Batch size determines the number of audio files processed at once. Larger size speeds up training but requires more memory.</span>
                     </span>
                 </label>
                 <select id="batch_size" name="batch_size" class="form-control" required>
@@ -253,7 +253,7 @@ Audio Upload
                     Regularization parameter (0.00001 to 0.1):
                     <span class="custom-tooltip">
                         <i class="fa fa-question-circle tooltip-icon"></i>
-                        <span class="tooltip-text">Параметр регуляризации помогает предотвратить переобучение, добавляя штраф за сложность модели.</span>
+                        <span class="tooltip-text">The regularization parameter helps prevent overfitting by adding a penalty for model complexity.</span>
                     </span>
                 </label>
                 <input type="number" id="weight_decay" name="weight_decay" step="0.00001" min="0.00001" max="0.1"
@@ -263,14 +263,14 @@ Audio Upload
 
             <div class="form-group">
                 <label for="target_size">
-                    Target Duration (ms, 10-1000):
+                    Dataset size after augmentation (samples, 50-250):
                     <span class="custom-tooltip">
                         <i class="fa fa-question-circle tooltip-icon"></i>
-                        <span class="tooltip-text">Длительность аудиофайлов после обработки (в миллисекундах).</span>
+                        <span class="tooltip-text">Determines how many synthetic images will be added to the dataset for training</span>
                     </span>
                 </label>
-                <input type="number" id="target_size" name="target_size" min="10" max="1000" value="1000" required>
-                <div class="error-message" id="target_size_error">Invalid value for target duration.</div>
+                <input type="number" id="target_size" name="target_size" min="50" max="250" value="50" required>
+                <div class="error-message" id="target_size_error">Invalid value for target class's size.</div>
             </div>
             <button type="button" class="btn btn-primary" onclick="validateAndSubmit()">Save Hyperparameters</button>
         </form>
@@ -316,7 +316,7 @@ Audio Upload
 
         const requirementsNote = document.createElement("div");
         requirementsNote.className = "requirements-note";
-        requirementsNote.innerHTML = '<i class="fa fa-info-circle"></i> Each class requires at least 20 audio samples (WAV format, 1-4 sec)';
+        requirementsNote.innerHTML = '<i class="fa fa-info-circle"></i> Each class requires at least 15 audio samples (WAV, FLAC, MP3 format)';
         container.appendChild(requirementsNote);
 
         const count = parseInt(document.getElementById("classCount").value);
@@ -339,7 +339,7 @@ Audio Upload
             div.innerHTML = `
                 <label>${name}:</label>
                 <input type="file" name="${name}" class="form-control" accept="audio/*" multiple required>
-                <div id="fileCount-${name}" class="file-count invalid">0/20 files selected</div>
+                <div id="fileCount-${name}" class="file-count invalid">0/15 files selected</div>
             `;
             container.appendChild(div);
 
@@ -360,12 +360,12 @@ Audio Upload
         const className = input.name;
         const countDisplay = document.getElementById(`fileCount-${className}`);
 
-        if (fileCount >= 20) {
+        if (fileCount >= 15) {
             countDisplay.className = "file-count valid";
-            countDisplay.innerHTML = `<i class="fa fa-check-circle"></i> ${fileCount}/20 files selected`;
+            countDisplay.innerHTML = `<i class="fa fa-check-circle"></i> ${fileCount}/15 files selected`;
         } else {
             countDisplay.className = "file-count invalid";
-            countDisplay.innerHTML = `<i class="fa fa-exclamation-circle"></i> ${fileCount}/20 files selected`;
+            countDisplay.innerHTML = `<i class="fa fa-exclamation-circle"></i> ${fileCount}/15 files selected`;
         }
     }
 
@@ -385,7 +385,7 @@ Audio Upload
         validateRange(parseInt(document.getElementById("num_epochs").value), 1, 50, 'num_epochs_error');
         validateRange(parseFloat(document.getElementById("learning_rate").value), 0.00001, 0.1, 'learning_rate_error');
         validateRange(parseFloat(document.getElementById("weight_decay").value), 0.00001, 0.1, 'weight_decay_error');
-        validateRange(parseInt(document.getElementById("target_size").value), 10, 1000, 'target_size_error');
+        validateRange(parseInt(document.getElementById("target_size").value), 50, 250, 'target_size_error');
 
         if (isValid) {
             const hyperparameters = {
@@ -443,8 +443,8 @@ Audio Upload
 
             if (fileCount > 0) {
                 filesExist = true;
-                if (fileCount < 20) {
-                    invalidClasses.push(`${className} (${fileCount}/20)`);
+                if (fileCount < 15) {
+                    invalidClasses.push(`${className} (${fileCount}/15)`);
                 }
             }
         });
@@ -457,7 +457,7 @@ Audio Upload
         if (invalidClasses.length > 0) {
             statusElement.innerHTML = `Error: Not enough files for these classes:<br>
             ${invalidClasses.join('<br>')}<br>
-            Each class requires minimum 20 files.`;
+            Each class requires minimum 15 files.`;
             return;
         }
 
@@ -474,7 +474,7 @@ Audio Upload
             if (response.redirected) {
                 window.location.href = response.url;
             } else if (response.ok) {
-                statusElement.className = "alert alert-success";
+                statusElement.className = "alert alerаt-success";
                 statusElement.textContent = "Training started successfully!";
                 window.location.href = "{{ url_for('sound_predictor.index') }}";
             } else {

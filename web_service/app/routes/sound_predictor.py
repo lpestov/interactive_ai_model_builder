@@ -7,7 +7,7 @@ import shutil
 INFERENCE_SCRIPT_PATH = 'utils/sound_classification/inference.py'
 UPLOAD_FOLDER_PATH = 'sounds'
 STATIC_FOLDER = 'app/static'  # папка для статических файлов
-MODEL_PATH = 'utils/sound_classification/trained_sound_model.pt'  # путь к обученной модели
+MODEL_PATH = 'utils/sound_classification/trained_model_sound_classification.pt'  # путь к обученной модели
 
 sound_predictor_bp = Blueprint('sound_predictor', __name__)
 
@@ -19,24 +19,47 @@ def sound_extension_validation(filename):
 def index():
     return render_template('sound_prediction.html')
 
-@sound_predictor_bp.route('/download_model', methods=['GET'])
+@sound_predictor_bp.route('/download_sound_model', methods=['GET'])
 def download_model():
-    print(f"Attempting to download model from: {MODEL_PATH}")
-    print(f"File exists check: {os.path.exists(MODEL_PATH)}")
+    print(f"Attempting to download sound model package...")
 
-    if os.path.exists(MODEL_PATH):
-        try:
-            model_absolute_path = os.path.abspath(MODEL_PATH)
-            return send_file(model_absolute_path, 
-                           as_attachment=True,
-                           download_name="trained_sound_model.pt")
-        except Exception as e:
-            error_msg = f'Error downloading model: {str(e)}'
-            print(error_msg)
-            flash(error_msg)
-            return redirect(url_for('sound_predictor.index'))
-    else:
-        error_msg = f'Model not found: {MODEL_PATH}'
+    model_path = 'utils/sound_classification/trained_model_sound_classification.pt'
+    class_to_idx_path = 'utils/sound_classification/class_to_idx.json'
+    hyperparams_path = 'utils/sound_classification/hyperparams.json'
+
+    missing_files = []
+    if not os.path.exists(model_path):
+        missing_files.append('модель')
+    if not os.path.exists(class_to_idx_path):
+        missing_files.append('сопоставление классов')
+    if not os.path.exists(hyperparams_path):
+        missing_files.append('гиперпараметры')
+
+    if missing_files:
+        error_msg = f'Файлы не найдены: {", ".join(missing_files)}'
+        print(error_msg)
+        flash(error_msg)
+        return redirect(url_for('sound_predictor.index'))
+
+    try:
+        import tempfile
+        import zipfile
+
+        temp_file = tempfile.NamedTemporaryFile(suffix='.zip', delete=False)
+        with zipfile.ZipFile(temp_file.name, 'w') as zipf:
+            zipf.write(model_path, arcname='trained_model_sound_classification.pt')
+
+            zipf.write(class_to_idx_path, arcname='class_to_idx.json')
+
+            zipf.write(hyperparams_path, arcname='hyperparameters.json')
+
+        return send_file(
+            temp_file.name,
+            as_attachment=True,
+            download_name="sound_classification_package.zip"
+        )
+    except Exception as e:
+        error_msg = f'Ошибка при создании архива: {str(e)}'
         print(error_msg)
         flash(error_msg)
         return redirect(url_for('sound_predictor.index'))

@@ -73,7 +73,7 @@ def predict():
         output = result.stdout
         match = re.search(r'Plot saved to: (.*\.png)', output)
         if not match:
-            flash('Не удалось найти путь к изображению с диаграммой классов')
+            flash('Could not find path to class diagram image')
             return redirect(url_for('image_predictor.index'))
 
         # Получаем путь к .png файлу

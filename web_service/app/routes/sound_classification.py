@@ -51,11 +51,11 @@ def upload_sounds():
         class_file_count[class_name] += len(valid_files)
 
     invalid_classes = {name: count for name, count in class_file_count.items()
-                      if count < 20}
+                      if count < 15}
 
     if invalid_classes:
         error_message = "Not enough audio files for classes: "
-        error_message += ", ".join([f"{name} ({count}/20)" for name, count in invalid_classes.items()])
+        error_message += ", ".join([f"{name} ({count}/15)" for name, count in invalid_classes.items()])
         flash(error_message)
         return redirect(url_for('sound_classification.index'))
 
@@ -106,7 +106,7 @@ def save_hyperparameters():
             "learning_rate": float(data.get('learning_rate', 0.0001)),
             "batch_size": int(data.get('batch_size', 8)),
             "weight_decay": float(data.get('weight_decay', 0.0001)),
-            "target_size": int(data.get('target_size', 1000))
+            "target_size": int(data.get('target_size', 50))
         }
 
         hyperparams_path = os.path.join(UTILS_PATH, 'hyperparams.json')
