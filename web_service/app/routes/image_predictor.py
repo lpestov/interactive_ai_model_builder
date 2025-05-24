@@ -3,13 +3,18 @@ import subprocess
 import os
 import re
 import shutil
+import tempfile
+import zipfile
+
 
 from app.routes.image import file_extension_validation
 
 INFERENCE_SCRIPT_PATH = 'utils/image_classification/inference.py'
 UPLOAD_FOLDER_PATH = 'images'
 STATIC_FOLDER = 'app/static'  # папка для статических файлов
-MODEL_PATH = 'utils/image_classification/trained_model_classification.pt'  # путь к обученной модели
+MODEL_PATH = 'utils/image_classification/trained_model_classification.pt'
+СLASS_TO_IDX_PATH = 'utils/image_classification/class_to_idx.json'
+HYPERPARAMS_PATH = 'utils/image_classification/hyperparams.json'
 
 image_predictor_bp = Blueprint('image_predictor', __name__)
 
@@ -21,21 +26,41 @@ def index():
 
 @image_predictor_bp.route('/download_model', methods=['GET'])
 def download_model():
-    print(f"Attempting to download model from: {MODEL_PATH}")
-    print(f"File exists check: {os.path.exists(MODEL_PATH)}")
+    print(f"Attempting to download image model package...")
 
-    if os.path.exists(MODEL_PATH):
-        try:
-            model_absolute_path = os.path.abspath(MODEL_PATH)
-            return send_file(model_absolute_path, as_attachment=True,
-                             download_name="trained_model_classification.pt")
-        except Exception as e:
-            error_msg = f'Error while downloading the model: {str(e)}'
-            print(error_msg)
-            flash(error_msg)
-            return redirect(url_for('image_predictor.index'))
-    else:
-        error_msg = f'Model not found at path: {MODEL_PATH}'
+    model_path = MODEL_PATH
+    class_to_idx_path = СLASS_TO_IDX_PATH
+    hyperparams_path = HYPERPARAMS_PATH
+
+    missing_files = []
+    if not os.path.exists(model_path):
+        missing_files.append('модель')
+    if not os.path.exists(class_to_idx_path):
+        missing_files.append('сопоставление классов')
+    if not os.path.exists(hyperparams_path):
+        missing_files.append('гиперпараметры')
+
+    if missing_files:
+        error_msg = f'Файлы не найдены: {", ".join(missing_files)}'
+        print(error_msg)
+        flash(error_msg)
+        return redirect(url_for('image_predictor.index'))
+
+    try:
+
+        temp_file = tempfile.NamedTemporaryFile(suffix='.zip', delete=False)
+        with zipfile.ZipFile(temp_file.name, 'w') as zipf:
+            zipf.write(model_path, arcname='trained_model_classification.pt')
+            zipf.write(class_to_idx_path, arcname='class_to_idx.json')
+            zipf.write(hyperparams_path, arcname='hyperparameters.json')
+
+        return send_file(
+            temp_file.name,
+            as_attachment=True,
+            download_name="image_classification_package.zip"
+        )
+    except Exception as e:
+        error_msg = f'Ошибка при создании архива: {str(e)}'
         print(error_msg)
         flash(error_msg)
         return redirect(url_for('image_predictor.index'))

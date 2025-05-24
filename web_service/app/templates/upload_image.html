@@ -1,13 +1,12 @@
 {% extends 'base.html' %}
 
 {% block title %}
-Image Upload
+Image Classification Setup
 {% endblock %}
 
 {% block head %}
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
 <style>
-    /* CSS styles remain the same */
     @keyframes spin {
         0% { transform: rotate(0deg); }
         100% { transform: rotate(360deg); }
@@ -16,13 +15,14 @@ Image Upload
     .spinner-icon {
         animation: spin 1s linear infinite;
         display: inline-block;
-        margin-right: 8px;
+        margin-right: 8px; /* Отступ для спиннера */
     }
     .class-container {
         margin-bottom: 20px;
         padding: 15px;
-        border: 1px solid #ddd;
+        border: 1px solid #e0e0e0;
         border-radius: 5px;
+        background-color: #fff;
     }
 
     #uploadButton {
@@ -30,34 +30,73 @@ Image Upload
         margin-top: 20px;
     }
 
-    .hyperparameters {
-        margin-top: 20px;
-        padding: 15px;
-        border: 1px solid #ddd;
-        border-radius: 5px;
-    }
-
-    .hyperparameters h2 {
-        margin-bottom: 15px;
-        font-size: 1.5rem;
-    }
+    /* Убрали .hyperparameters, т.к. используем .section */
 
     .error-message {
-        color: red;
+        color: #dc3545;
         display: none;
+        font-size: 0.875em;
+        margin-top: 5px;
     }
 
+    /* General Page Title Style */
+    .page-title {
+        color: #007bff;
+        display: flex;
+        align-items: center;
+        font-weight: 500;
+        padding-bottom: 10px;
+        border-bottom: 2px solid #e0e0e0;
+        margin-bottom: 2rem !important;
+    }
+
+    .page-title .fas { /* Иконка в главном заголовке */
+        font-size: 1.2em;
+        margin-right: 10px; /* Отступ справа от иконки */
+        color: #007bff;     /* Явно синий цвет */
+    }
+
+    /* Consistent Section Styling */
     .section {
-        margin-bottom: 20px;
-        padding: 15px;
-        border: 1px solid #ddd;
-        border-radius: 5px;
+        margin-bottom: 25px;
+        padding: 20px;
+        border: 1px solid #e0e0e0;
+        border-radius: 8px;
+        background-color: #f9f9f9;
+        box-shadow: 0 2px 5px rgba(0,0,0,0.05);
     }
 
     .section h2 {
-        margin-bottom: 15px;
-        font-size: 1.5rem;
+        margin-bottom: 20px;
+        font-size: 1.4rem; /* Сделаем подзаголовки секций чуть меньше основного */
+        color: #333;
+        display: flex;
+        align-items: center;
     }
+    .section h2 .fas { /* Иконки в заголовках секций */
+        margin-right: 10px; /* Отступ */
+        color: #007bff;     /* Синий цвет */
+        font-size: 1.1em;
+    }
+
+    /* Style for the first input section */
+    .initial-setup-section .form-group {
+        display: flex;
+        align-items: center;
+        gap: 15px;
+    }
+    .initial-setup-section .form-control {
+        flex-grow: 1;
+    }
+    .initial-setup-section .btn {
+        flex-shrink: 0;
+    }
+    .initial-setup-section p {
+        font-size: 0.95rem;
+        color: #6c757d;
+        margin-bottom: 15px;
+    }
+
 
     .form-group {
         margin-bottom: 15px;
@@ -67,13 +106,21 @@ Image Upload
         display: block;
         margin-bottom: 5px;
         font-weight: bold;
+        color: #495057;
     }
 
-    .form-group input, .form-group select {
+    .form-group input[type="number"],
+    .form-group input[type="text"],
+    .form-group input[type="file"],
+    .form-group select {
         width: 100%;
-        padding: 8px;
-        border: 1px solid #ccc;
+        padding: 10px;
+        border: 1px solid #ced4da;
         border-radius: 4px;
+        box-sizing: border-box;
+    }
+    .form-group input[type="file"] {
+        padding: 7px;
     }
 
     .btn {
@@ -82,22 +129,47 @@ Image Upload
         border-radius: 4px;
         cursor: pointer;
         margin-right: 10px;
+        font-size: 1rem;
+        transition: background-color 0.2s ease-in-out, border-color 0.2s ease-in-out;
+    }
+    .btn .fas { /* Иконки внутри кнопок */
+        margin-right: 8px; /* Отступ для иконок в кнопках */
+        /* Цвет иконки будет унаследован от цвета текста кнопки (обычно белый для .btn-primary) */
     }
 
     .btn-primary {
         background-color: #007bff;
         color: white;
+        border: 1px solid #007bff;
+    }
+    .btn-primary:hover {
+        background-color: #0056b3;
+        border-color: #0056b3;
     }
 
     .btn-secondary {
         background-color: #6c757d;
         color: white;
+        border: 1px solid #6c757d;
+    }
+    .btn-secondary:hover {
+        background-color: #545b62;
+        border-color: #545b62;
     }
 
+
     .alert {
-        padding: 10px;
-        margin-bottom: 15px;
+        padding: 15px;
+        margin-bottom: 20px;
         border-radius: 4px;
+        font-size: 0.95rem;
+        display: flex;
+        align-items: center;
+    }
+    .alert .fas, .alert .spinner-icon { /* Иконки в alert'ах */
+        margin-right: 10px; /* Отступ */
+        font-size: 1.2em;
+        /* Цвет иконки будет унаследован от цвета текста alert'а */
     }
 
     .alert-warning {
@@ -110,6 +182,16 @@ Image Upload
         background-color: #d4edda;
         border: 1px solid #c3e6cb;
         color: #155724;
+    }
+    .alert-danger {
+        background-color: #f8d7da;
+        border-color: #f5c6cb;
+        color: #721c24;
+    }
+    .alert-info { /* Добавим стиль для alert-info, если он используется */
+        background-color: #d1ecf1;
+        border-color: #bee5eb;
+        color: #0c5460;
     }
 
     .tooltip-icon {
@@ -126,20 +208,22 @@ Image Upload
     .custom-tooltip .tooltip-text {
         visibility: hidden;
         width: 250px;
-        background-color: #555;
+        background-color: #343a40;
         color: #fff;
         text-align: left;
         border-radius: 6px;
         padding: 10px;
         position: absolute;
-        z-index: 1;
+        z-index: 1050;
         bottom: 125%;
         left: 50%;
         margin-left: -125px;
         opacity: 0;
         transition: opacity 0.3s;
         font-weight: normal;
+        font-size: 0.85rem;
         line-height: 1.4;
+        box-shadow: 0 2px 5px rgba(0,0,0,0.2);
     }
 
     .custom-tooltip .tooltip-text::after {
@@ -150,7 +234,7 @@ Image Upload
         margin-left: -5px;
         border-width: 5px;
         border-style: solid;
-        border-color: #555 transparent transparent transparent;
+        border-color: #343a40 transparent transparent transparent;
     }
 
     .custom-tooltip:hover .tooltip-text {
@@ -158,84 +242,114 @@ Image Upload
         opacity: 1;
     }
     .file-count {
-        margin-top: 5px;
+        margin-top: 8px;
         font-size: 0.9em;
+        padding: 5px 8px;
+        border-radius: 4px;
+        display: inline-block;
+    }
+    .file-count .fas {
+        margin-right: 5px;
     }
     .file-count.invalid {
-        color: #dc3545;
+        color: #721c24;
+        background-color: #f8d7da;
+        border: 1px solid #f5c6cb;
     }
     .file-count.valid {
-        color: #28a745;
+        color: #155724;
+        background-color: #d4edda;
+        border: 1px solid #c3e6cb;
     }
     .requirements-note {
         margin-top: 10px;
-        padding: 8px;
-        background-color: #f8f9fa;
-        border-left: 3px solid #007bff;
+        margin-bottom: 20px;
+        padding: 12px;
+        background-color: #e9ecef;
+        border-left: 4px solid #007bff;
         color: #495057;
+        font-size: 0.9rem;
+        border-radius: 0 4px 4px 0;
     }
+    .requirements-note .fas { /* Иконка в заметке */
+        margin-right: 8px; /* Отступ */
+        /* Цвет будет унаследован */
+    }
+
 </style>
 {% endblock %}
 
 {% block body %}
 <div class="container mt-4">
-    <h1 class="mb-4">Image Classification</h1>
+    <h1 class="mb-4 page-title">
+        <i class="fas fa-images"></i>Image Classification Setup
+    </h1>
 
-    <div class="section">
-        <h2>Enter the number of classes:</h2>
+    <div class="section initial-setup-section">
+        <h2><i class="fas fa-sitemap"></i>Define Your Classes</h2>
+        <p>Start by specifying how many distinct categories (classes) you want your model to recognize. For example, if you're classifying 'Cats' and 'Dogs', that's 2 classes.</p>
         <div class="form-group">
             <input type="number" id="classCount" min="2" max="100" class="form-control"
-                   placeholder="Enter a number between 2 and 100">
+                   placeholder="Number of classes (e.g., 2)">
+            <button type="button" class="btn btn-primary" onclick="generateClassInputs()">
+                <i class="fas fa-arrow-right"></i> Continue
+            </button>
         </div>
-        <button type="button" class="btn btn-primary" onclick="generateClassInputs()">Continue</button>
+        <div id="classCountError" class="error-message" style="margin-top: 10px;"></div>
     </div>
 
-    <div id="classNames" class="section" style="display: none;"></div>
+    <div id="classNames" class="section" style="display: none;">
+        <!-- Content generated by JS -->
+    </div>
 
     <form id="uploadForm" style="display: none;" class="section">
-        <div id="classForms"></div>
-        <button type="submit" id="uploadButton" class="btn btn-primary">Upload All</button>
+        <div id="classForms">
+            <!-- Content generated by JS -->
+        </div>
+        <button type="submit" id="uploadButton" class="btn btn-primary">
+            <i class="fas fa-cloud-upload-alt"></i> Upload All & Train
+        </button>
         <span id="uploadStatus" class="alert" style="display: none;"></span>
     </form>
 
-    <div id="hyperparametersForm" class="hyperparameters" style="display: none;">
-        <h2>Model Hyperparameter Settings</h2>
-        <div id="hyperparametersStatus" class="alert alert-warning">
-            Hyperparameters are not saved! Please save before uploading images.
+    <div id="hyperparametersForm" class="section" style="display: none;"> <!-- Изменен класс -->
+        <h2><i class="fas fa-cogs"></i>Model Hyperparameter Settings</h2>
+        <div id="hyperparametersStatus" class="alert alert-warning"> <!-- Добавлена иконка -->
+            <i class="fas fa-exclamation-triangle"></i> Hyperparameters are not saved! Please save before uploading images.
         </div>
         <form id="hyperparametersFormContent">
             <div class="form-group">
                 <label for="num_epochs">
-                    Number of epochs (from 1 to 50):
+                    Number of epochs (1-50):
                     <span class="custom-tooltip">
-            <i class="fa fa-question-circle tooltip-icon"></i>
-            <span class="tooltip-text">Количество итераций обучения модели на всем наборе данных. Больше эпох может улучшить точность, но повышает риск переобучения.</span>
-        </span>
+                        <i class="fas fa-question-circle tooltip-icon"></i> <!-- Изменено на fas -->
+                        <span class="tooltip-text">The number of times the model will go through the entire training dataset. More epochs can improve accuracy but also risk overfitting.</span>
+                    </span>
                 </label>
-                <input type="number" id="num_epochs" name="num_epochs" min="1" max="50" value="10" required>
-                <div class="error-message" id="num_epochs_error">Invalid value for the number of epochs.</div>
+                <input type="number" id="num_epochs" name="num_epochs" min="1" max="50" value="10" required class="form-control">
+                <div class="error-message" id="num_epochs_error"></div>
             </div>
 
             <div class="form-group">
                 <label for="learning_rate">
-                    Learning rate (0.00001 to 0.1):
+                    Learning rate (0.00001-0.1):
                     <span class="custom-tooltip">
-            <i class="fa fa-question-circle tooltip-icon"></i>
-            <span class="tooltip-text">Скорость обучения определяет величину шага при оптимизации. Меньшие значения дают более точное, но медленное обучение. Большие значения ускоряют обучение, но могут пропустить оптимум.</span>
-        </span>
+                        <i class="fas fa-question-circle tooltip-icon"></i> <!-- Изменено на fas -->
+                        <span class="tooltip-text">Controls how much to change the model in response to the estimated error each time the model weights are updated. A smaller value means slower but potentially more precise learning.</span>
+                    </span>
                 </label>
                 <input type="number" id="learning_rate" name="learning_rate" step="0.00001" min="0.00001" max="0.1"
-                       value="0.0001" required>
-                <div class="error-message" id="learning_rate_error">Invalid value for the learning rate.</div>
+                       value="0.0001" required class="form-control">
+                <div class="error-message" id="learning_rate_error"></div>
             </div>
 
             <div class="form-group">
                 <label for="batch_size">
-                    Batch Size
+                    Batch Size:
                     <span class="custom-tooltip">
-            <i class="fa fa-question-circle tooltip-icon"></i>
-            <span class="tooltip-text">Размер пакета определяет количество изображений, обрабатываемых за один раз. Больший размер ускоряет обучение, но требует больше памяти. Меньший размер может дать лучшую точность.</span>
-        </span>
+                        <i class="fas fa-question-circle tooltip-icon"></i> <!-- Изменено на fas -->
+                        <span class="tooltip-text">The number of training examples utilized in one iteration. A larger batch size speeds up training but requires more memory and can sometimes lead to poorer generalization.</span>
+                    </span>
                 </label>
                 <select id="batch_size" name="batch_size" class="form-control" required>
                     <option value="4">4</option>
@@ -244,22 +358,24 @@ Image Upload
                     <option value="32">32</option>
                     <option value="64">64</option>
                 </select>
-                <div class="error-message" id="batch_size_error">Invalid value for the batch size.</div>
+                <div class="error-message" id="batch_size_error"></div>
             </div>
 
             <div class="form-group">
                 <label for="weight_decay">
-                    Regularization parameter (0.00001 to 0.1):
+                    Regularization (L2) parameter (0.00001-0.1):
                     <span class="custom-tooltip">
-            <i class="fa fa-question-circle tooltip-icon"></i>
-            <span class="tooltip-text">Параметр регуляризации помогает предотвратить переобучение, добавляя штраф за сложность модели. Большее значение - более простая модель, может предотвратить переобучение, но снизить точность.</span>
-        </span>
+                        <i class="fas fa-question-circle tooltip-icon"></i> <!-- Изменено на fas -->
+                        <span class="tooltip-text">A technique to prevent overfitting by adding a penalty to the loss function for large weights. A higher value encourages simpler models.</span>
+                    </span>
                 </label>
                 <input type="number" id="weight_decay" name="weight_decay" step="0.00001" min="0.00001" max="0.1"
-                       value="0.0001" required>
-                <div class="error-message" id="weight_decay_error">Invalid value for the regularization parameter.</div>
+                       value="0.0001" required class="form-control">
+                <div class="error-message" id="weight_decay_error"></div>
             </div>
-            <button type="button" class="btn btn-primary" onclick="validateAndSubmit()">Save Hyperparameters</button>
+            <button type="button" class="btn btn-primary" onclick="validateAndSubmit()">
+                <i class="fas fa-save"></i> Save Hyperparameters
+            </button>
         </form>
     </div>
 </div>
@@ -267,70 +383,96 @@ Image Upload
 <script>
     let hyperparametersSaved = false;
 
-    function generateClassInputs() {
-        const count = parseInt(document.getElementById("classCount").value);
-        const container = document.getElementById("classNames");
+    function toggleError(elementId, show, message = "") {
+        const errorElement = document.getElementById(elementId);
+        if (errorElement) {
+            errorElement.textContent = message;
+            errorElement.style.display = show ? "block" : "none";
+        }
+    }
 
-        if (isNaN(count) || count < 2 || count > 100) { // Added isNaN check
-            alert("Please enter a number between 2 and 100");
+    function generateClassInputs() {
+        const countInput = document.getElementById("classCount");
+        const count = parseInt(countInput.value);
+        const classNamesContainer = document.getElementById("classNames");
+
+        if (isNaN(count) || count < 2 || count > 100) {
+            toggleError("classCountError", true, "Please enter a valid number between 2 and 100.");
+            countInput.focus();
             return;
         }
+        toggleError("classCountError", false);
 
-        container.innerHTML = "<h2>Enter Class Names:</h2>"; // Added title for clarity
-        container.style.display = "block";
+        classNamesContainer.innerHTML = `<h2><i class="fas fa-tags"></i>Enter Class Names:</h2>
+                                     <p>Provide a unique name for each class you defined.</p>`;
+        classNamesContainer.style.display = "block";
 
         for (let i = 1; i <= count; i++) {
             const div = document.createElement("div");
             div.className = "form-group";
             div.innerHTML = `
                 <label for="className${i}">Class name ${i}:</label>
-                <input type="text" id="className${i}" class="form-control" placeholder="Enter name" required>
+                <input type="text" id="className${i}" class="form-control" placeholder="Enter name (e.g., Cat, Dog)" required>
+                <div class="error-message" id="className${i}_error"></div>
             `;
-            container.appendChild(div);
+            classNamesContainer.appendChild(div);
         }
 
         const button = document.createElement("button");
-        button.innerText = "Create Upload Forms";
+        button.innerHTML = '<i class="fas fa-images"></i> Proceed to Image Upload';
         button.className = "btn btn-primary mt-2";
         button.type = "button";
         button.onclick = generateForms;
-        container.appendChild(button);
+        classNamesContainer.appendChild(button);
+
+        document.querySelector(".initial-setup-section").style.display = "none";
     }
 
-    // Replace the existing generateForms() function with this implementation
-    function generateForms() {
-        const container = document.getElementById("classForms");
-        container.innerHTML = "<h2>Upload Images for Each Class:</h2>";
 
-        // Add a requirements note
+    function generateForms() {
+        const classFormsContainer = document.getElementById("classForms");
+        classFormsContainer.innerHTML = `<h2><i class="fas fa-upload"></i>Upload Images for Each Class:</h2>`;
+
         const requirementsNote = document.createElement("div");
         requirementsNote.className = "requirements-note";
-        requirementsNote.innerHTML = '<i class="fa fa-info-circle"></i> Each class requires at least 15 images for model training';
-        container.appendChild(requirementsNote);
+        requirementsNote.innerHTML = '<i class="fas fa-info-circle"></i> Each class requires at least 15 images for model training. Supported formats: JPG, JPEG, PNG.'; // Используем fas
+        classFormsContainer.appendChild(requirementsNote);
 
         const count = parseInt(document.getElementById("classCount").value);
         let classNames = [];
+        let allClassNamesValid = true;
 
         for (let i = 1; i <= count; i++) {
             const classNameInput = document.getElementById(`className${i}`);
-            if (!classNameInput) continue; // Safety check
+            toggleError(`className${i}_error`, false);
+            if (!classNameInput) continue;
             const className = classNameInput.value.trim();
             if (!className) {
-                alert(`Please enter a name for class ${i}`);
-                return;
+                toggleError(`className${i}_error`, true, `Please enter a name for class ${i}.`);
+                allClassNamesValid = false;
+            } else if (classNames.includes(className)) {
+                toggleError(`className${i}_error`, true, `Class name "${className}" is already used. Please use unique names.`);
+                allClassNamesValid = false;
             }
-            classNames.push(className);
+            else {
+                classNames.push(className);
+            }
         }
+
+        if (!allClassNamesValid) {
+            return;
+        }
+
 
         classNames.forEach((name, index) => {
             const div = document.createElement("div");
-            div.className = "class-container form-group";
+            div.className = "class-container"; // Убрали form-group
             div.innerHTML = `
-            <label>${name}:</label>
-            <input type="file" name="${name}" class="form-control" accept="image/*" multiple required>
-            <div id="fileCount-${name}" class="file-count invalid">0/15 images selected</div>
+            <label style="font-size: 1.1rem; margin-bottom: 10px; display:block;"><strong>Class: ${name}</strong></label>
+            <input type="file" name="${name}" class="form-control" accept=".jpg, .jpeg, .png" multiple required>
+            <div id="fileCount-${name}" class="file-count invalid"><i class="fas fa-times-circle"></i> 0/15 images selected</div> <!-- Используем fas -->
         `;
-            container.appendChild(div);
+            classFormsContainer.appendChild(div);
 
             const input = div.querySelector('input[type="file"]');
             input.addEventListener('change', function() {
@@ -351,10 +493,10 @@ Image Upload
 
         if (fileCount >= 15) {
             countDisplay.className = "file-count valid";
-            countDisplay.innerHTML = `<i class="fa fa-check-circle"></i> ${fileCount}/15 images selected`;
+            countDisplay.innerHTML = `<i class="fas fa-check-circle"></i> ${fileCount}/15+ images selected`; // Используем fas
         } else {
             countDisplay.className = "file-count invalid";
-            countDisplay.innerHTML = `<i class="fa fa-exclamation-circle"></i> ${fileCount}/15 images selected`;
+            countDisplay.innerHTML = `<i class="fas fa-exclamation-circle"></i> ${fileCount}/15 images selected (minimum 15 required)`; // Используем fas
         }
     }
 
@@ -362,24 +504,22 @@ Image Upload
         let isValid = true;
         const statusElement = document.getElementById("hyperparametersStatus");
 
-        // Clear previous errors
-        document.getElementById("num_epochs_error").style.display = "none";
-        document.getElementById("learning_rate_error").style.display = "none";
-        document.getElementById("batch_size_error").style.display = "none";
-        document.getElementById("weight_decay_error").style.display = "none";
-
+        toggleError("num_epochs_error", false);
+        toggleError("learning_rate_error", false);
+        toggleError("batch_size_error", false);
+        toggleError("weight_decay_error", false);
 
         const numEpochsInput = document.getElementById("num_epochs");
         const numEpochs = parseInt(numEpochsInput.value);
         if (isNaN(numEpochs) || numEpochs < 1 || numEpochs > 50) {
-            document.getElementById("num_epochs_error").style.display = "block";
+            toggleError("num_epochs_error", true, "Epochs must be between 1 and 50.");
             isValid = false;
         }
 
         const learningRateInput = document.getElementById("learning_rate");
         const learningRate = parseFloat(learningRateInput.value);
         if (isNaN(learningRate) || learningRate < 0.00001 || learningRate > 0.1) {
-            document.getElementById("learning_rate_error").style.display = "block";
+            toggleError("learning_rate_error", true, "Learning rate must be between 0.00001 and 0.1.");
             isValid = false;
         }
 
@@ -387,14 +527,14 @@ Image Upload
         const batchSize = parseInt(batchSizeInput.value);
         const validBatchSizes = [4, 8, 16, 32, 64];
         if (isNaN(batchSize) || !validBatchSizes.includes(batchSize)) {
-            document.getElementById("batch_size_error").style.display = "block";
+            toggleError("batch_size_error", true, "Please select a valid batch size.");
             isValid = false;
         }
 
         const weightDecayInput = document.getElementById("weight_decay");
         const weightDecay = parseFloat(weightDecayInput.value);
         if (isNaN(weightDecay) || weightDecay < 0.00001 || weightDecay > 0.1) {
-            document.getElementById("weight_decay_error").style.display = "block";
+            toggleError("weight_decay_error", true, "Regularization must be between 0.00001 and 0.1.");
             isValid = false;
         }
 
@@ -405,6 +545,10 @@ Image Upload
                 batch_size: batchSize,
                 weight_decay: weightDecay
             };
+
+            statusElement.className = "alert alert-info";
+            statusElement.innerHTML = '<i class="fas fa-spinner spinner-icon"></i> Saving...'; // Используем fas
+
 
             fetch("/save_hyperparameters", {
                 method: "POST",
@@ -418,17 +562,20 @@ Image Upload
                     if (data.success) {
                         hyperparametersSaved = true;
                         statusElement.className = "alert alert-success";
-                        statusElement.textContent = "Hyperparameters saved successfully!";
-                        document.getElementById("uploadStatus").style.display = "none"; // Hide upload status if hyperparams just saved
+                        statusElement.innerHTML = `<i class="fas fa-check-circle"></i> Hyperparameters saved successfully!`;
+                        document.getElementById("uploadStatus").style.display = "none";
                     } else {
-                        statusElement.className = "alert alert-warning";
-                        statusElement.textContent = "Error: " + (data.message || "unknown error");
+                        statusElement.className = "alert alert-danger";
+                        statusElement.innerHTML = `<i class="fas fa-times-circle"></i> Error: ` + (data.message || "Unknown error");
                     }
                 })
                 .catch(error => {
-                    statusElement.className = "alert alert-warning";
-                    statusElement.textContent = "Network Error: " + error.message;
+                    statusElement.className = "alert alert-danger";
+                    statusElement.innerHTML = `<i class="fas fa-exclamation-triangle"></i> Network Error: ` + error.message;
                 });
+        } else {
+            statusElement.className = "alert alert-danger";
+            statusElement.innerHTML = `<i class="fas fa-times-circle"></i> Please correct the errors in the form.`;
         }
     }
 
@@ -437,42 +584,49 @@ Image Upload
 
         const statusElement = document.getElementById("uploadStatus");
         statusElement.style.display = "block";
-        statusElement.className = "alert alert-warning";
+        statusElement.className = "alert";
 
         if (!hyperparametersSaved) {
-            statusElement.innerHTML = "Error: Please save hyperparameters first!";
+            statusElement.className = "alert alert-danger";
+            statusElement.innerHTML = `<i class="fas fa-exclamation-triangle"></i> Error: Please save hyperparameters first!`;
+            document.getElementById("hyperparametersForm").scrollIntoView({ behavior: 'smooth' });
             return;
         }
 
         const inputs = document.querySelectorAll("#classForms input[type='file']");
-        let filesExist = false;
+        let filesExistForAll = true;
+        let emptyClasses = [];
         let invalidClasses = [];
 
         inputs.forEach(input => {
             const className = input.name;
             const fileCount = input.files.length;
 
-            if (fileCount > 0) {
-                filesExist = true;
-                if (fileCount < 15) {
-                    invalidClasses.push(`${className} (${fileCount}/15)`);
-                }
+            if (fileCount === 0) {
+                filesExistForAll = false;
+                emptyClasses.push(className);
+            } else if (fileCount < 15) {
+                invalidClasses.push(`${className} (${fileCount}/15)`);
             }
         });
 
-        if (!filesExist) {
-            statusElement.textContent = "Error: Please upload at least one file!";
+        if (!filesExistForAll && emptyClasses.length > 0) {
+            statusElement.className = "alert alert-danger";
+            statusElement.innerHTML = `<i class="fas fa-times-circle"></i> Error: Please upload images for all classes. Missing files for:<br>
+            ${emptyClasses.join('<br>')}`;
             return;
         }
 
         if (invalidClasses.length > 0) {
-            statusElement.innerHTML = `Error: Not enough images for these classes:<br>
+            statusElement.className = "alert alert-danger";
+            statusElement.innerHTML = `<i class="fas fa-times-circle"></i> Error: Not enough images for these classes:<br>
             ${invalidClasses.join('<br>')}<br>
-            Each class requires minimum 15 images.`;
+            Each class requires a minimum of 15 images.`;
             return;
         }
 
-        statusElement.innerHTML = '<i class="fa fa-spinner spinner-icon"></i> Training model... (About 10 minutes)';
+        statusElement.className = "alert alert-info";
+        statusElement.innerHTML = '<i class="fas fa-spinner spinner-icon"></i> Training model... This might take around 10 minutes. Please do not close this page.'; // Используем fas
 
         const formData = new FormData();
         inputs.forEach(input => {
@@ -495,26 +649,34 @@ Image Upload
             } else if (response.ok) {
                 try {
                     const result = await response.json();
-                    statusElement.className = "alert alert-success";
-                    statusElement.textContent = result.message || "Success!";
+                    if (result.redirect_url) {
+                        window.location.href = result.redirect_url;
+                    } else {
+                        statusElement.className = "alert alert-success";
+                        statusElement.innerHTML = `<i class="fas fa-check-circle"></i> ${result.message || "Model training initiated successfully!"}`;
+                        setTimeout(() => {
+                            window.location.href = "{{ url_for('image_predictor.index') }}";
+                        }, 3000);
+                    }
                 } catch (e) {
                     statusElement.className = "alert alert-success";
-                    statusElement.textContent = "Operation successful, but response was not JSON.";
-                    window.location.href = "{{ url_for('image_predictor.index') }}";
+                    statusElement.innerHTML = "<i class='fas fa-check-circle'></i> Operation successful. Redirecting...";
+                    setTimeout(() => {
+                        window.location.href = "{{ url_for('image_predictor.index') }}";
+                    }, 2000);
                 }
             } else {
                 statusElement.className = "alert alert-danger";
-                let errorMsg = `Error: ${response.statusText}`;
+                let errorMsg = `Error ${response.status}: ${response.statusText}`;
                 try {
                     const errorResult = await response.json();
-                    errorMsg = errorResult.message || errorMsg;
-                } catch (e) {
-                }
-                statusElement.textContent = errorMsg;
+                    errorMsg = `<i class="fas fa-times-circle"></i> Error: ${errorResult.message || errorMsg}`;
+                } catch (e) { /* Ignore */ }
+                statusElement.innerHTML = errorMsg;
             }
         } catch (error) {
-            statusElement.className = "alert alert-warning";
-            statusElement.textContent = "Network Error: " + error.message;
+            statusElement.className = "alert alert-danger";
+            statusElement.innerHTML = `<i class="fas fa-exclamation-triangle"></i> Network Error: ` + error.message;
         }
     });
 </script>

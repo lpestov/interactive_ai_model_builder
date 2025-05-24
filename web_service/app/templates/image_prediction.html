@@ -90,11 +90,11 @@
 
 {% block body %}
 <div class="container mt-4">
-    <h1 class="mb-4">Using the Model</h1>
+    <h1 class="mb-4">📷 Image classification</h1>
 
     <!-- Section for Image Upload -->
     <div class="section">
-        <h2>Upload an Image</h2>
+        <h2>📥 Upload an Image</h2>
         <form method="POST" enctype="multipart/form-data" action="{{ url_for('image_predictor.predict') }}">
             <div class="mb-3">
                 <label for="fileInput" class="form-label">Select image file:</label>
@@ -112,7 +112,7 @@
         <div class="row">
             <div class="col-md-6 mb-3 mb-md-0">
                 <a href="{{ url_for('image_predictor.download_model') }}" class="btn btn-success w-100">
-                    <i class="bi bi-download me-2"></i>Download Trained Model (.pt)
+                    <i class="bi bi-download me-2"></i>Download Trained Model (.zip)
                 </a>
             </div>
             <div class="col-md-6">

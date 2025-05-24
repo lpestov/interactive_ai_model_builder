@@ -1,7 +1,7 @@
 {% extends 'base.html' %}
 
 {% block title %}
-Audio Upload
+Audio Classification Setup
 {% endblock %}
 
 {% block head %}
@@ -20,8 +20,9 @@ Audio Upload
     .class-container {
         margin-bottom: 20px;
         padding: 15px;
-        border: 1px solid #ddd;
+        border: 1px solid #e0e0e0; /* Lighter border */
         border-radius: 5px;
+        background-color: #fff; /* White background for individual class uploads */
     }
 
     #uploadButton {
@@ -29,34 +30,70 @@ Audio Upload
         margin-top: 20px;
     }
 
-    .hyperparameters {
-        margin-top: 20px;
-        padding: 15px;
-        border: 1px solid #ddd;
-        border-radius: 5px;
-    }
-
-    .hyperparameters h2 {
-        margin-bottom: 15px;
-        font-size: 1.5rem;
-    }
-
     .error-message {
-        color: red;
+        color: #dc3545; /* Bootstrap danger color */
         display: none;
+        font-size: 0.875em;
+        margin-top: 5px;
     }
 
+    /* General Page Title Style */
+    .page-title {
+        color: #007bff; /* Primary color */
+        display: flex;
+        align-items: center;
+        font-weight: 500;
+        padding-bottom: 10px;
+        border-bottom: 2px solid #e0e0e0;
+        margin-bottom: 2rem !important; /* More space below title */
+    }
+
+    .page-title .fas, .page-title .bi {
+        font-size: 1.2em;
+        margin-right: 10px;
+    }
+
+    /* Consistent Section Styling */
     .section {
-        margin-bottom: 20px;
-        padding: 15px;
-        border: 1px solid #ddd;
-        border-radius: 5px;
+        margin-bottom: 25px;
+        padding: 20px;
+        border: 1px solid #e0e0e0;
+        border-radius: 8px;
+        background-color: #f9f9f9;
+        box-shadow: 0 2px 5px rgba(0,0,0,0.05);
     }
 
     .section h2 {
-        margin-bottom: 15px;
-        font-size: 1.5rem;
+        margin-bottom: 20px;
+        font-size: 1.4rem;
+        color: #333;
+        display: flex;
+        align-items: center;
     }
+    .section h2 .fas, .section h2 .bi {
+        margin-right: 10px;
+        color: #007bff;
+        font-size: 1.1em;
+    }
+
+    /* Style for the first input section (number of classes) */
+    .initial-setup-section .form-group {
+        display: flex;
+        align-items: center;
+        gap: 15px;
+    }
+    .initial-setup-section .form-control {
+        flex-grow: 1;
+    }
+    .initial-setup-section .btn {
+        flex-shrink: 0;
+    }
+    .initial-setup-section p {
+        font-size: 0.95rem;
+        color: #6c757d;
+        margin-bottom: 15px;
+    }
+
 
     .form-group {
         margin-bottom: 15px;
@@ -66,14 +103,23 @@ Audio Upload
         display: block;
         margin-bottom: 5px;
         font-weight: bold;
+        color: #495057; /* Slightly darker label */
     }
 
-    .form-group input, .form-group select {
+    .form-group input[type="number"],
+    .form-group input[type="text"],
+    .form-group input[type="file"],
+    .form-group select {
         width: 100%;
-        padding: 8px;
-        border: 1px solid #ccc;
+        padding: 10px;
+        border: 1px solid #ced4da; /* Standard Bootstrap border color */
         border-radius: 4px;
+        box-sizing: border-box;
     }
+    .form-group input[type="file"] {
+        padding: 7px; /* Adjust padding for file input */
+    }
+
 
     .btn {
         padding: 10px 20px;
@@ -81,22 +127,45 @@ Audio Upload
         border-radius: 4px;
         cursor: pointer;
         margin-right: 10px;
+        font-size: 1rem;
+        transition: background-color 0.2s ease-in-out, border-color 0.2s ease-in-out;
+    }
+    .btn .fas, .btn .bi { /* Icon in button */
+        margin-right: 8px;
     }
 
     .btn-primary {
         background-color: #007bff;
         color: white;
+        border: 1px solid #007bff;
+    }
+    .btn-primary:hover {
+        background-color: #0056b3;
+        border-color: #0056b3;
     }
 
     .btn-secondary {
         background-color: #6c757d;
         color: white;
+        border: 1px solid #6c757d;
+    }
+    .btn-secondary:hover {
+        background-color: #545b62;
+        border-color: #545b62;
     }
 
+
     .alert {
-        padding: 10px;
-        margin-bottom: 15px;
+        padding: 15px;
+        margin-bottom: 20px;
         border-radius: 4px;
+        font-size: 0.95rem;
+        display: flex; /* For aligning icon with text */
+        align-items: center;
+    }
+    .alert .fas, .alert .bi, .alert .spinner-icon { /* Icons in alerts */
+        margin-right: 10px;
+        font-size: 1.2em;
     }
 
     .alert-warning {
@@ -109,6 +178,16 @@ Audio Upload
         background-color: #d4edda;
         border: 1px solid #c3e6cb;
         color: #155724;
+    }
+    .alert-danger {
+        background-color: #f8d7da;
+        border-color: #f5c6cb;
+        color: #721c24;
+    }
+    .alert-info {
+        background-color: #d1ecf1;
+        border-color: #bee5eb;
+        color: #0c5460;
     }
 
     .tooltip-icon {
@@ -125,20 +204,22 @@ Audio Upload
     .custom-tooltip .tooltip-text {
         visibility: hidden;
         width: 250px;
-        background-color: #555;
+        background-color: #343a40; /* Darker tooltip */
         color: #fff;
         text-align: left;
         border-radius: 6px;
         padding: 10px;
         position: absolute;
-        z-index: 1;
+        z-index: 1050; /* Ensure tooltip is above other elements */
         bottom: 125%;
         left: 50%;
         margin-left: -125px;
         opacity: 0;
         transition: opacity 0.3s;
         font-weight: normal;
+        font-size: 0.85rem;
         line-height: 1.4;
+        box-shadow: 0 2px 5px rgba(0,0,0,0.2);
     }
 
     .custom-tooltip .tooltip-text::after {
@@ -149,7 +230,7 @@ Audio Upload
         margin-left: -5px;
         border-width: 5px;
         border-style: solid;
-        border-color: #555 transparent transparent transparent;
+        border-color: #343a40 transparent transparent transparent;
     }
 
     .custom-tooltip:hover .tooltip-text {
@@ -157,83 +238,111 @@ Audio Upload
         opacity: 1;
     }
     .file-count {
-        margin-top: 5px;
+        margin-top: 8px; /* More space for file count */
         font-size: 0.9em;
+        padding: 5px 8px;
+        border-radius: 4px;
+        display: inline-block; /* To contain icon and text */
+    }
+    .file-count .fas, .file-count .bi {
+        margin-right: 5px;
     }
     .file-count.invalid {
-        color: #dc3545;
+        color: #721c24; /* Darker red */
+        background-color: #f8d7da; /* Light red background */
+        border: 1px solid #f5c6cb;
     }
     .file-count.valid {
-        color: #28a745;
+        color: #155724; /* Darker green */
+        background-color: #d4edda; /* Light green background */
+        border: 1px solid #c3e6cb;
     }
     .requirements-note {
         margin-top: 10px;
-        padding: 8px;
-        background-color: #f8f9fa;
-        border-left: 3px solid #007bff;
+        margin-bottom: 20px; /* Space below note */
+        padding: 12px;
+        background-color: #e9ecef;
+        border-left: 4px solid #007bff;
         color: #495057;
+        font-size: 0.9rem;
+        border-radius: 0 4px 4px 0;
+    }
+    .requirements-note .fas, .requirements-note .bi {
+        margin-right: 8px;
     }
 </style>
 {% endblock %}
 
 {% block body %}
 <div class="container mt-4">
-    <h1 class="mb-4">Audio Classification</h1>
+    <h1 class="mb-4 page-title">
+        <i class="fas fa-volume-up me-2"></i>Audio Classification Setup
+    </h1>
 
-    <div class="section">
-        <h2>Enter the number of classes:</h2>
+    <div class="section initial-setup-section">
+        <h2><i class="fas fa-sitemap"></i>Define Your Audio Classes</h2>
+        <p>Start by specifying how many distinct sound categories (classes) you want your model to recognize. For example, 'Dog Bark', 'Cat Meow', 'Siren' would be 3 classes.</p>
         <div class="form-group">
             <input type="number" id="classCount" min="2" max="100" class="form-control"
-                   placeholder="Enter a number between 2 and 100">
+                   placeholder="Number of classes (e.g., 3)">
+            <button type="button" class="btn btn-primary" onclick="generateClassInputs()">
+                <i class="fas fa-arrow-right"></i> Continue
+            </button>
         </div>
-        <button type="button" class="btn btn-primary" onclick="generateClassInputs()">Continue</button>
+        <div id="classCountError" class="error-message" style="margin-top: 10px;"></div>
     </div>
 
-    <div id="classNames" class="section" style="display: none;"></div>
+    <div id="classNames" class="section" style="display: none;">
+        <!-- Content generated by JS -->
+    </div>
 
-    <form id="uploadForm" style="display: none;" class="section" 
-      action="{{ url_for('sound_classification.upload_sounds') }}" 
-      method="POST" 
-      enctype="multipart/form-data">
-        <div id="classForms"></div>
-        <button type="submit" id="uploadButton" class="btn btn-primary">Upload All</button>
+    <form id="uploadForm" style="display: none;" class="section"
+          action="{{ url_for('sound_classification.upload_sounds') }}"
+          method="POST"
+          enctype="multipart/form-data">
+        <div id="classForms">
+            <!-- Content generated by JS -->
+        </div>
+        <button type="submit" id="uploadButton" class="btn btn-primary">
+            <i class="fas fa-cloud-upload-alt"></i> Upload All & Train
+        </button>
         <span id="uploadStatus" class="alert" style="display: none;"></span>
     </form>
 
-    <div id="hyperparametersForm" class="hyperparameters" style="display: none;">
-        <h2>Model Hyperparameter Settings</h2>
+    <div id="hyperparametersForm" class="section" style="display: none;"> <!-- Changed class to section -->
+        <h2><i class="fas fa-cogs"></i>Model Hyperparameter Settings</h2>
         <div id="hyperparametersStatus" class="alert alert-warning">
-            Hyperparameters are not saved! Please save before uploading audio.
+            <i class="fas fa-exclamation-triangle"></i> Hyperparameters are not saved! Please save before uploading audio.
         </div>
         <form id="hyperparametersFormContent">
             <div class="form-group">
                 <label for="num_epochs">
-                    Number of epochs (from 1 to 50):
+                    Number of epochs (1-50):
                     <span class="custom-tooltip">
                         <i class="fa fa-question-circle tooltip-icon"></i>
                         <span class="tooltip-text">The number of training iterations on the entire dataset. More epochs may improve accuracy but increase the risk of overfitting.</span>
                     </span>
                 </label>
-                <input type="number" id="num_epochs" name="num_epochs" min="1" max="50" value="10" required>
-                <div class="error-message" id="num_epochs_error">Invalid value for the number of epochs.</div>
+                <input type="number" id="num_epochs" name="num_epochs" min="1" max="50" value="10" required class="form-control">
+                <div class="error-message" id="num_epochs_error"></div>
             </div>
 
             <div class="form-group">
                 <label for="learning_rate">
-                    Learning rate (0.00001 to 0.1):
+                    Learning rate (0.00001-0.1):
                     <span class="custom-tooltip">
                         <i class="fa fa-question-circle tooltip-icon"></i>
                         <span class="tooltip-text">Learning rate determines the step size during optimization. Lower values provide more accurate but slower training. Higher values speed up training but may miss the optimum.</span>
                     </span>
                 </label>
                 <input type="number" id="learning_rate" name="learning_rate" step="0.00001" min="0.00001" max="0.1"
-                       value="0.0001" required>
-                <div class="error-message" id="learning_rate_error">Invalid value for the learning rate.</div>
+                       value="0.0001" required class="form-control">
+                <div class="error-message" id="learning_rate_error"></div>
             </div>
 
             <div class="form-group">
                 <label for="batch_size">
-                    Batch Size
+                    Batch Size:
                     <span class="custom-tooltip">
                         <i class="fa fa-question-circle tooltip-icon"></i>
                         <span class="tooltip-text">Batch size determines the number of audio files processed at once. Larger size speeds up training but requires more memory.</span>
@@ -245,34 +354,36 @@ Audio Upload
                     <option value="16">16</option>
                     <option value="32">32</option>
                 </select>
-                <div class="error-message" id="batch_size_error">Invalid value for the batch size.</div>
+                <div class="error-message" id="batch_size_error"></div>
             </div>
 
             <div class="form-group">
                 <label for="weight_decay">
-                    Regularization parameter (0.00001 to 0.1):
+                    Regularization (L2) parameter (0.00001-0.1):
                     <span class="custom-tooltip">
                         <i class="fa fa-question-circle tooltip-icon"></i>
                         <span class="tooltip-text">The regularization parameter helps prevent overfitting by adding a penalty for model complexity.</span>
                     </span>
                 </label>
                 <input type="number" id="weight_decay" name="weight_decay" step="0.00001" min="0.00001" max="0.1"
-                       value="0.0001" required>
-                <div class="error-message" id="weight_decay_error">Invalid value for the regularization parameter.</div>
+                       value="0.0001" required class="form-control">
+                <div class="error-message" id="weight_decay_error"></div>
             </div>
 
             <div class="form-group">
                 <label for="target_size">
-                    Dataset size after augmentation (samples, 50-250):
+                    Target samples per class after augmentation (50-250):
                     <span class="custom-tooltip">
                         <i class="fa fa-question-circle tooltip-icon"></i>
-                        <span class="tooltip-text">Determines how many synthetic images will be added to the dataset for training</span>
+                        <span class="tooltip-text">Determines the target number of audio samples per class after data augmentation is applied. Helps balance classes and increase dataset size.</span>
                     </span>
                 </label>
-                <input type="number" id="target_size" name="target_size" min="50" max="250" value="50" required>
-                <div class="error-message" id="target_size_error">Invalid value for target class's size.</div>
+                <input type="number" id="target_size" name="target_size" min="50" max="250" value="50" required class="form-control">
+                <div class="error-message" id="target_size_error"></div>
             </div>
-            <button type="button" class="btn btn-primary" onclick="validateAndSubmit()">Save Hyperparameters</button>
+            <button type="button" class="btn btn-primary" onclick="validateAndSubmit()">
+                <i class="fas fa-save"></i> Save Hyperparameters
+            </button>
         </form>
     </div>
 </div>
@@ -280,68 +391,94 @@ Audio Upload
 <script>
     let hyperparametersSaved = false;
 
+    // Helper function to show/hide error messages
+    function toggleError(elementId, show, message = "") {
+        const errorElement = document.getElementById(elementId);
+        if (errorElement) {
+            errorElement.textContent = message;
+            errorElement.style.display = show ? "block" : "none";
+        }
+    }
+
+
     function generateClassInputs() {
-        const count = parseInt(document.getElementById("classCount").value);
-        const container = document.getElementById("classNames");
+        const countInput = document.getElementById("classCount");
+        const count = parseInt(countInput.value);
+        const classNamesContainer = document.getElementById("classNames");
 
         if (isNaN(count) || count < 2 || count > 100) {
-            alert("Please enter a number between 2 and 100");
+            toggleError("classCountError", true, "Please enter a valid number between 2 and 100.");
+            countInput.focus();
             return;
         }
+        toggleError("classCountError", false);
 
-        container.innerHTML = "<h2>Enter Class Names:</h2>";
-        container.style.display = "block";
+        classNamesContainer.innerHTML = `<h2><i class="fas fa-tags"></i>Enter Class Names:</h2>
+                                     <p>Provide a unique name for each sound class you defined.</p>`;
+        classNamesContainer.style.display = "block";
 
         for (let i = 1; i <= count; i++) {
             const div = document.createElement("div");
             div.className = "form-group";
             div.innerHTML = `
                 <label for="className${i}">Class name ${i}:</label>
-                <input type="text" id="className${i}" class="form-control" placeholder="Enter name" required>
+                <input type="text" id="className${i}" class="form-control" placeholder="Enter name (e.g., Dog Bark)" required>
+                <div class="error-message" id="className${i}_error"></div>
             `;
-            container.appendChild(div);
+            classNamesContainer.appendChild(div);
         }
 
         const button = document.createElement("button");
-        button.innerText = "Create Upload Forms";
+        button.innerHTML = '<i class="fas fa-file-audio"></i> Proceed to Audio Upload';
         button.className = "btn btn-primary mt-2";
         button.type = "button";
         button.onclick = generateForms;
-        container.appendChild(button);
+        classNamesContainer.appendChild(button);
+
+        document.querySelector(".initial-setup-section").style.display = "none";
     }
 
     function generateForms() {
-        const container = document.getElementById("classForms");
-        container.innerHTML = "<h2>Upload Audio for Each Class:</h2>";
+        const classFormsContainer = document.getElementById("classForms");
+        classFormsContainer.innerHTML = `<h2><i class="fas fa-upload"></i>Upload Audio for Each Class:</h2>`;
 
         const requirementsNote = document.createElement("div");
         requirementsNote.className = "requirements-note";
-        requirementsNote.innerHTML = '<i class="fa fa-info-circle"></i> Each class requires at least 15 audio samples (WAV, FLAC, MP3 format)';
-        container.appendChild(requirementsNote);
+        requirementsNote.innerHTML = '<i class="fa fa-info-circle"></i> Each class requires at least 15 audio samples. Supported formats: WAV, FLAC, MP3.';
+        classFormsContainer.appendChild(requirementsNote);
 
         const count = parseInt(document.getElementById("classCount").value);
         let classNames = [];
+        let allClassNamesValid = true;
 
         for (let i = 1; i <= count; i++) {
             const classNameInput = document.getElementById(`className${i}`);
+            toggleError(`className${i}_error`, false); // Clear previous error
             if (!classNameInput) continue;
             const className = classNameInput.value.trim();
             if (!className) {
-                alert(`Please enter a name for class ${i}`);
-                return;
+                toggleError(`className${i}_error`, true, `Please enter a name for class ${i}.`);
+                allClassNamesValid = false;
+            } else if (classNames.includes(className)) {
+                toggleError(`className${i}_error`, true, `Class name "${className}" is already used. Please use unique names.`);
+                allClassNamesValid = false;
             }
-            classNames.push(className);
+            else {
+                classNames.push(className);
+            }
         }
+        if (!allClassNamesValid) return;
+
 
         classNames.forEach((name, index) => {
             const div = document.createElement("div");
-            div.className = "class-container form-group";
+            div.className = "class-container"; // Removed form-group, class-container handles padding
             div.innerHTML = `
-                <label>${name}:</label>
-                <input type="file" name="${name}" class="form-control" accept="audio/*" multiple required>
-                <div id="fileCount-${name}" class="file-count invalid">0/15 files selected</div>
+                <label style="font-size: 1.1rem; margin-bottom: 10px; display:block;"><strong>Class: ${name}</strong></label>
+                <input type="file" name="${name}" class="form-control" accept=".wav, .flac, .mp3, audio/*" multiple required>
+                <div id="fileCount-${name}" class="file-count invalid"><i class="fas fa-times-circle"></i> 0/15 files selected</div>
             `;
-            container.appendChild(div);
+            classFormsContainer.appendChild(div);
 
             const input = div.querySelector('input[type="file"]');
             input.addEventListener('change', function() {
@@ -362,10 +499,10 @@ Audio Upload
 
         if (fileCount >= 15) {
             countDisplay.className = "file-count valid";
-            countDisplay.innerHTML = `<i class="fa fa-check-circle"></i> ${fileCount}/15 files selected`;
+            countDisplay.innerHTML = `<i class="fas fa-check-circle"></i> ${fileCount}/15+ files selected`;
         } else {
             countDisplay.className = "file-count invalid";
-            countDisplay.innerHTML = `<i class="fa fa-exclamation-circle"></i> ${fileCount}/15 files selected`;
+            countDisplay.innerHTML = `<i class="fas fa-exclamation-circle"></i> ${fileCount}/15 files selected (minimum 15 required)`;
         }
     }
 
@@ -373,51 +510,84 @@ Audio Upload
         let isValid = true;
         const statusElement = document.getElementById("hyperparametersStatus");
 
-        document.querySelectorAll('.error-message').forEach(el => el.style.display = 'none');
+        // Clear previous errors
+        toggleError("num_epochs_error", false);
+        toggleError("learning_rate_error", false);
+        toggleError("batch_size_error", false);
+        toggleError("weight_decay_error", false);
+        toggleError("target_size_error", false);
 
-        const validateRange = (value, min, max, errorId) => {
-            if (isNaN(value) || value < min || value > max) {
-                document.getElementById(errorId).style.display = "block";
-                isValid = false;
-            }
-        };
 
-        validateRange(parseInt(document.getElementById("num_epochs").value), 1, 50, 'num_epochs_error');
-        validateRange(parseFloat(document.getElementById("learning_rate").value), 0.00001, 0.1, 'learning_rate_error');
-        validateRange(parseFloat(document.getElementById("weight_decay").value), 0.00001, 0.1, 'weight_decay_error');
-        validateRange(parseInt(document.getElementById("target_size").value), 50, 250, 'target_size_error');
+        const numEpochs = parseInt(document.getElementById("num_epochs").value);
+        if (isNaN(numEpochs) || numEpochs < 1 || numEpochs > 50) {
+            toggleError("num_epochs_error", true, "Epochs must be between 1 and 50.");
+            isValid = false;
+        }
+
+        const learningRate = parseFloat(document.getElementById("learning_rate").value);
+        if (isNaN(learningRate) || learningRate < 0.00001 || learningRate > 0.1) {
+            toggleError("learning_rate_error", true, "Learning rate must be between 0.00001 and 0.1.");
+            isValid = false;
+        }
+
+        const batchSize = parseInt(document.getElementById("batch_size").value);
+        const validBatchSizes = [4, 8, 16, 32];
+        if (isNaN(batchSize) || !validBatchSizes.includes(batchSize)) {
+            toggleError("batch_size_error", true, "Please select a valid batch size.");
+            isValid = false;
+        }
+
+        const weightDecay = parseFloat(document.getElementById("weight_decay").value);
+        if (isNaN(weightDecay) || weightDecay < 0.00001 || weightDecay > 0.1) {
+            toggleError("weight_decay_error", true, "Regularization must be between 0.00001 and 0.1.");
+            isValid = false;
+        }
+
+        const targetSize = parseInt(document.getElementById("target_size").value);
+        if (isNaN(targetSize) || targetSize < 50 || targetSize > 250) {
+            toggleError("target_size_error", true, "Target samples must be between 50 and 250.");
+            isValid = false;
+        }
+
 
         if (isValid) {
             const hyperparameters = {
-                num_epochs: parseInt(document.getElementById("num_epochs").value),
-                learning_rate: parseFloat(document.getElementById("learning_rate").value),
-                batch_size: parseInt(document.getElementById("batch_size").value),
-                weight_decay: parseFloat(document.getElementById("weight_decay").value),
-                target_size: parseInt(document.getElementById("target_size").value)
+                num_epochs: numEpochs,
+                learning_rate: learningRate,
+                batch_size: batchSize,
+                weight_decay: weightDecay,
+                target_size: targetSize
             };
 
-            fetch("/save_sound_hyperparameters", {
+            statusElement.className = "alert alert-info";
+            statusElement.innerHTML = '<i class="fa fa-spinner spinner-icon"></i> Saving...';
+
+            fetch("/save_sound_hyperparameters", { // Ensure this endpoint is correct
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json",
                 },
                 body: JSON.stringify(hyperparameters),
             })
-            .then(response => response.json())
-            .then(data => {
-                if (data.success) {
-                    hyperparametersSaved = true;
-                    statusElement.className = "alert alert-success";
-                    statusElement.textContent = "Hyperparameters saved successfully!";
-                } else {
-                    statusElement.className = "alert alert-warning";
-                    statusElement.textContent = "Error: " + (data.message || "unknown error");
-                }
-            })
-            .catch(error => {
-                statusElement.className = "alert alert-warning";
-                statusElement.textContent = "Network Error: " + error.message;
-            });
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        hyperparametersSaved = true;
+                        statusElement.className = "alert alert-success";
+                        statusElement.innerHTML = `<i class="fas fa-check-circle"></i> Hyperparameters saved successfully!`;
+                        document.getElementById("uploadStatus").style.display = "none";
+                    } else {
+                        statusElement.className = "alert alert-danger";
+                        statusElement.innerHTML = `<i class="fas fa-times-circle"></i> Error: ` + (data.message || "Unknown error");
+                    }
+                })
+                .catch(error => {
+                    statusElement.className = "alert alert-danger";
+                    statusElement.innerHTML = `<i class="fas fa-exclamation-triangle"></i> Network Error: ` + error.message;
+                });
+        } else {
+            statusElement.className = "alert alert-danger";
+            statusElement.innerHTML = `<i class="fas fa-times-circle"></i> Please correct the errors in the form.`;
         }
     }
 
@@ -426,44 +596,51 @@ Audio Upload
 
         const statusElement = document.getElementById("uploadStatus");
         statusElement.style.display = "block";
-        statusElement.className = "alert alert-warning";
+        statusElement.className = "alert"; // Reset
 
         if (!hyperparametersSaved) {
-            statusElement.innerHTML = "Error: Please save hyperparameters first!";
+            statusElement.className = "alert alert-danger";
+            statusElement.innerHTML = `<i class="fas fa-exclamation-triangle"></i> Error: Please save hyperparameters first!`;
+            document.getElementById("hyperparametersForm").scrollIntoView({ behavior: 'smooth' });
             return;
         }
 
         const inputs = document.querySelectorAll("#classForms input[type='file']");
-        let filesExist = false;
+        let filesExistForAll = true;
+        let emptyClasses = [];
         let invalidClasses = [];
 
         inputs.forEach(input => {
             const className = input.name;
             const fileCount = input.files.length;
 
-            if (fileCount > 0) {
-                filesExist = true;
-                if (fileCount < 15) {
-                    invalidClasses.push(`${className} (${fileCount}/15)`);
-                }
+            if (fileCount === 0) {
+                filesExistForAll = false;
+                emptyClasses.push(className);
+            } else if (fileCount < 15) {
+                invalidClasses.push(`${className} (${fileCount}/15)`);
             }
         });
 
-        if (!filesExist) {
-            statusElement.textContent = "Error: Please upload at least one file!";
+        if (!filesExistForAll && emptyClasses.length > 0) {
+            statusElement.className = "alert alert-danger";
+            statusElement.innerHTML = `<i class="fas fa-times-circle"></i> Error: Please upload audio for all classes. Missing files for:<br>
+            ${emptyClasses.join('<br>')}`;
             return;
         }
 
         if (invalidClasses.length > 0) {
-            statusElement.innerHTML = `Error: Not enough files for these classes:<br>
+            statusElement.className = "alert alert-danger";
+            statusElement.innerHTML = `<i class="fas fa-times-circle"></i> Error: Not enough audio files for these classes:<br>
             ${invalidClasses.join('<br>')}<br>
-            Each class requires minimum 15 files.`;
+            Each class requires a minimum of 15 audio files.`;
             return;
         }
 
-        statusElement.innerHTML = '<i class="fa fa-spinner spinner-icon"></i> Training model... (About 15-20 minutes)';
+        statusElement.className = "alert alert-info";
+        statusElement.innerHTML = '<i class="fa fa-spinner spinner-icon"></i> Training model... This might take around 15-20 minutes. Please do not close this page.';
 
-        const formData = new FormData(this);
+        const formData = new FormData(this); // 'this' refers to the form
 
         try {
             const response = await fetch("{{ url_for('sound_classification.upload_sounds') }}", {
@@ -474,16 +651,36 @@ Audio Upload
             if (response.redirected) {
                 window.location.href = response.url;
             } else if (response.ok) {
-                statusElement.className = "alert alerаt-success";
-                statusElement.textContent = "Training started successfully!";
-                window.location.href = "{{ url_for('sound_predictor.index') }}";
+                try {
+                    const result = await response.json();
+                    if (result.redirect_url) {
+                        window.location.href = result.redirect_url;
+                    } else {
+                        statusElement.className = "alert alert-success";
+                        statusElement.innerHTML = `<i class="fas fa-check-circle"></i> ${result.message || "Model training initiated successfully!"}`;
+                        setTimeout(() => { // Fallback redirect
+                            window.location.href = "{{ url_for('sound_predictor.index') }}";
+                        }, 3000);
+                    }
+                } catch (e) {
+                    statusElement.className = "alert alert-success";
+                    statusElement.innerHTML = "<i class='fas fa-check-circle'></i> Operation successful. Redirecting...";
+                    setTimeout(() => {
+                        window.location.href = "{{ url_for('sound_predictor.index') }}";
+                    }, 2000);
+                }
             } else {
                 statusElement.className = "alert alert-danger";
-                statusElement.textContent = `Error: ${response.statusText}`;
+                let errorMsg = `Error ${response.status}: ${response.statusText}`;
+                try {
+                    const errorResult = await response.json();
+                    errorMsg = `<i class="fas fa-times-circle"></i> Error: ${errorResult.message || errorMsg}`;
+                } catch (e) { /* Ignore */ }
+                statusElement.innerHTML = errorMsg;
             }
         } catch (error) {
-            statusElement.className = "alert alert-warning";
-            statusElement.textContent = "Network Error: " + error.message;
+            statusElement.className = "alert alert-danger";
+            statusElement.innerHTML = `<i class="fas fa-exclamation-triangle"></i> Network Error: ` + error.message;
         }
     });
 </script>
