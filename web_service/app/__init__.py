@@ -10,6 +10,7 @@ from .routes.tracking import tracking_bp
 from .routes.image_predictor import image_predictor_bp
 from .routes.auto_ml import auto_ml_bp
 from .routes.sound_classification import sound_classification_bp
+from .routes.sound_predictor import sound_predictor_bp
 
 def create_app():
     # Инициализация приложения
@@ -32,6 +33,7 @@ def create_app():
     app.register_blueprint(image_predictor_bp)
     app.register_blueprint(auto_ml_bp)
     app.register_blueprint(sound_classification_bp)
+    app.register_blueprint(sound_predictor_bp)
 
     import pandas as pd
     @app.template_filter('datetime')

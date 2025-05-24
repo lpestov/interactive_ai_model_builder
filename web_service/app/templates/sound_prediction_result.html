@@ -1,0 +1,62 @@
+{% extends 'base.html' %}
+
+{% block title %}sound Prediction Result{% endblock %}
+
+{% block head %}
+<style>
+    .section {
+        margin-bottom: 20px;
+        padding: 15px;
+        border: 1px solid #ddd;
+        border-radius: 5px;
+    }
+    .section h2 {
+        margin-bottom: 15px;
+        font-size: 1.5rem;
+    }
+    .result-container {
+        text-align: center;
+        margin-top: 20px;
+    }
+    .spectrogram-image {
+        max-width: 100%;
+        height: auto;
+        border-radius: 5px;
+        margin-bottom: 20px;
+    }
+    .prediction-text {
+        background-color: #f8f9fa;
+        padding: 20px;
+        border-radius: 5px;
+        margin: 20px 0;
+        font-size: 1.2rem;
+    }
+    .prediction-label {
+        color: #28a745;
+        font-weight: bold;
+    }
+</style>
+{% endblock %}
+
+{% block body %}
+<div class="container mt-4">
+    <h1 class="mb-4">Sound Analysis Result</h1>
+
+    <div class="section">
+        <h2>sound Analysis</h2>
+        <div class="result-container">
+            {% if spectrogram_url %}
+            <img src="{{ url_for('static', filename=spectrogram_url) }}" 
+                 alt="sound spectrogram" 
+                 class="spectrogram-image">
+            {% endif %}
+        </div>
+    </div>
+
+    <div class="section">
+        <a href="{{ url_for('sound_predictor.index') }}" class="btn btn-secondary">
+            <i class="bi bi-arrow-left me-2"></i>Back to sound Analysis
+        </a>
+    </div>
+</div>
+{% endblock %}

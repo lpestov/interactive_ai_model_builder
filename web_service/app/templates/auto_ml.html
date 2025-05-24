@@ -22,7 +22,6 @@
             <option value="regression" {% if not regression_available %}disabled{% endif %}>Regression</option>
           </select>
         </div>
-        <!-- Остальные элементы выбора датасета, целевой колонки, split_ratio и метрики -->
         <div class="mb-3">
           <label for="dataset_select" class="form-label text-primary fw-medium">Dataset</label>
           <select id="dataset_select" name="dataset" class="form-select border-primary"></select>
@@ -42,7 +41,6 @@
         </div>
       </div>
     </div>
-    <!-- Блок конфигурации модели и HPO остаются без изменений -->
     <div class="card border-0 shadow-lg mb-4">
       <div class="card-header bg-primary text-white">
         <h5 class="mb-0"><i class="bi bi-diagram-3 me-2"></i>Model Configuration</h5>

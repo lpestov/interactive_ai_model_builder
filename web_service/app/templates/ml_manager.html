@@ -44,7 +44,6 @@
             return d.problem_type === taskType;
         });
 
-        // Если для выбранного типа датасета нет, можно показать сообщение или оставить select пустым
         if (filteredDatasets.length === 0) {
             var option = document.createElement("option");
             option.value = "";

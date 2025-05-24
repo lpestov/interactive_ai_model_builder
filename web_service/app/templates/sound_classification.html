@@ -1,15 +1,748 @@
 {% extends 'base.html' %}
 
 {% block title %}
-Sound Classification
+Audio Classification Setup
 {% endblock %}
-
 
 {% block head %}
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+<style>
+    @keyframes spin {
+        0% { transform: rotate(0deg); }
+        100% { transform: rotate(360deg); }
+    }
 
+    .spinner-icon {
+        animation: spin 1s linear infinite;
+        display: inline-block;
+        margin-right: 8px;
+    }
+    .class-container {
+        margin-bottom: 20px;
+        padding: 15px;
+        border: 1px solid #e0e0e0;
+        border-radius: 5px;
+        background-color: #fff;
+    }
+
+    #uploadButton {
+        display: none;
+        margin-top: 20px;
+    }
+
+    .error-message {
+        color: #dc3545;
+        display: none;
+        font-size: 0.875em;
+        margin-top: 5px;
+    }
+
+    .page-title {
+        color: #007bff;
+        display: flex;
+        align-items: center;
+        font-weight: 500;
+        padding-bottom: 10px;
+        border-bottom: 2px solid #e0e0e0;
+        margin-bottom: 2rem !important;
+    }
+
+    .page-title .fas, .page-title .bi {
+        font-size: 1.2em;
+        margin-right: 10px;
+    }
+
+    .section {
+        margin-bottom: 25px;
+        padding: 20px;
+        border: 1px solid #e0e0e0;
+        border-radius: 8px;
+        background-color: #f9f9f9;
+        box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+    }
+
+    .section h2 {
+        margin-bottom: 20px;
+        font-size: 1.4rem;
+        color: #333;
+        display: flex;
+        align-items: center;
+    }
+    .section h2 .fas, .section h2 .bi {
+        margin-right: 10px;
+        color: #007bff;
+        font-size: 1.1em;
+    }
+
+    .initial-setup-section .form-group {
+        display: flex;
+        align-items: center;
+        gap: 15px;
+    }
+    .initial-setup-section .form-control {
+        flex-grow: 1;
+    }
+    .initial-setup-section .btn {
+        flex-shrink: 0;
+    }
+    .initial-setup-section p {
+        font-size: 0.95rem;
+        color: #6c757d;
+        margin-bottom: 15px;
+    }
+
+
+    .form-group {
+        margin-bottom: 15px;
+    }
+
+    .form-group label {
+        display: block;
+        margin-bottom: 5px;
+        font-weight: bold;
+        color: #495057;
+    }
+
+    .form-group input[type="number"],
+    .form-group input[type="text"],
+    .form-group input[type="file"],
+    .form-group select {
+        width: 100%;
+        padding: 10px;
+        border: 1px solid #ced4da;
+        border-radius: 4px;
+        box-sizing: border-box;
+    }
+    .form-group input[type="file"] {
+        padding: 7px;
+    }
+
+
+    .btn {
+        padding: 10px 20px;
+        border: none;
+        border-radius: 4px;
+        cursor: pointer;
+        margin-right: 10px;
+        font-size: 1rem;
+        transition: background-color 0.2s ease-in-out, border-color 0.2s ease-in-out;
+    }
+    .btn .fas, .btn .bi {
+        margin-right: 8px;
+    }
+
+    .btn-primary {
+        background-color: #007bff;
+        color: white;
+        border: 1px solid #007bff;
+    }
+    .btn-primary:hover {
+        background-color: #0056b3;
+        border-color: #0056b3;
+    }
+
+    .btn-secondary {
+        background-color: #6c757d;
+        color: white;
+        border: 1px solid #6c757d;
+    }
+    .btn-secondary:hover {
+        background-color: #545b62;
+        border-color: #545b62;
+    }
+
+
+    .alert {
+        padding: 15px;
+        margin-bottom: 20px;
+        border-radius: 4px;
+        font-size: 0.95rem;
+        display: flex;
+        align-items: center;
+    }
+    .alert .fas, .alert .bi, .alert .spinner-icon {
+        margin-right: 10px;
+        font-size: 1.2em;
+    }
+
+    .alert-warning {
+        background-color: #fff3cd;
+        border: 1px solid #ffeeba;
+        color: #856404;
+    }
+
+    .alert-success {
+        background-color: #d4edda;
+        border: 1px solid #c3e6cb;
+        color: #155724;
+    }
+    .alert-danger {
+        background-color: #f8d7da;
+        border-color: #f5c6cb;
+        color: #721c24;
+    }
+    .alert-info {
+        background-color: #d1ecf1;
+        border-color: #bee5eb;
+        color: #0c5460;
+    }
+
+    .tooltip-icon {
+        margin-left: 5px;
+        color: #007bff;
+        cursor: pointer;
+    }
+
+    .custom-tooltip {
+        position: relative;
+        display: inline-block;
+    }
+
+    .custom-tooltip .tooltip-text {
+        visibility: hidden;
+        width: 250px;
+        background-color: #343a40;
+        color: #fff;
+        text-align: left;
+        border-radius: 6px;
+        padding: 10px;
+        position: absolute;
+        z-index: 1050;
+        bottom: 125%;
+        left: 50%;
+        margin-left: -125px;
+        opacity: 0;
+        transition: opacity 0.3s;
+        font-weight: normal;
+        font-size: 0.85rem;
+        line-height: 1.4;
+        box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+    }
+
+    .custom-tooltip .tooltip-text::after {
+        content: "";
+        position: absolute;
+        top: 100%;
+        left: 50%;
+        margin-left: -5px;
+        border-width: 5px;
+        border-style: solid;
+        border-color: #343a40 transparent transparent transparent;
+    }
+
+    .custom-tooltip:hover .tooltip-text {
+        visibility: visible;
+        opacity: 1;
+    }
+    .file-count {
+        margin-top: 8px;
+        font-size: 0.9em;
+        padding: 5px 8px;
+        border-radius: 4px;
+        display: inline-block;
+    }
+    .file-count .fas, .file-count .bi {
+        margin-right: 5px;
+    }
+    .file-count.invalid {
+        color: #721c24;
+        background-color: #f8d7da;
+        border: 1px solid #f5c6cb;
+    }
+    .file-count.valid {
+        color: #155724;
+        background-color: #d4edda;
+        border: 1px solid #c3e6cb;
+    }
+    .requirements-note {
+        margin-top: 10px;
+        margin-bottom: 20px;
+        padding: 12px;
+        background-color: #e9ecef;
+        border-left: 4px solid #007bff;
+        color: #495057;
+        font-size: 0.9rem;
+        border-radius: 0 4px 4px 0;
+    }
+    .requirements-note .fas, .requirements-note .bi {
+        margin-right: 8px;
+    }
+</style>
 {% endblock %}
 
-
 {% block body %}
+<div class="container mt-4">
+    <h1 class="mb-4 page-title">
+        <i class="fas fa-volume-up me-2"></i>Audio Classification Setup
+    </h1>
 
+    <div class="section initial-setup-section">
+        <h2><i class="fas fa-sitemap"></i>Define Your Audio Classes</h2>
+        <p>Start by specifying how many distinct sound categories (classes) you want your model to recognize. For example, 'Dog Bark', 'Cat Meow', 'Siren' would be 3 classes.</p>
+        <div class="form-group">
+            <input type="number" id="classCount" min="2" max="100" class="form-control"
+                   placeholder="Number of classes (e.g., 3)">
+            <button type="button" class="btn btn-primary" onclick="generateClassInputs()">
+                <i class="fas fa-arrow-right"></i> Continue
+            </button>
+        </div>
+        <div id="classCountError" class="error-message" style="margin-top: 10px;"></div>
+    </div>
+
+    <div id="classNames" class="section" style="display: none;">
+    </div>
+
+    <form id="uploadForm" style="display: none;" class="section">
+        <div id="classForms">
+        </div>
+        <button type="submit" id="uploadButton" class="btn btn-primary">
+            <i class="fas fa-cloud-upload-alt"></i> Upload All & Train
+        </button>
+        <span id="uploadStatus" class="alert" style="display: none;"></span>
+    </form>
+
+    <div id="hyperparametersForm" class="section" style="display: none;">
+        <h2><i class="fas fa-cogs"></i>Model Hyperparameter Settings</h2>
+        <div id="hyperparametersStatus" class="alert alert-warning">
+            <i class="fas fa-exclamation-triangle"></i> Hyperparameters are not saved! Please save before uploading audio.
+        </div>
+        <form id="hyperparametersFormContent">
+            <div class="form-group">
+                <label for="num_epochs">
+                    Number of epochs (1-50):
+                    <span class="custom-tooltip">
+                        <i class="fa fa-question-circle tooltip-icon"></i>
+                        <span class="tooltip-text">The number of training iterations on the entire dataset. More epochs may improve accuracy but increase the risk of overfitting.</span>
+                    </span>
+                </label>
+                <input type="number" id="num_epochs" name="num_epochs" min="1" max="50" value="10" required class="form-control">
+                <div class="error-message" id="num_epochs_error"></div>
+            </div>
+
+            <div class="form-group">
+                <label for="learning_rate">
+                    Learning rate (0.00001-0.1):
+                    <span class="custom-tooltip">
+                        <i class="fa fa-question-circle tooltip-icon"></i>
+                        <span class="tooltip-text">Learning rate determines the step size during optimization. Lower values provide more accurate but slower training. Higher values speed up training but may miss the optimum.</span>
+                    </span>
+                </label>
+                <input type="number" id="learning_rate" name="learning_rate" step="0.00001" min="0.00001" max="0.1"
+                       value="0.0001" required class="form-control">
+                <div class="error-message" id="learning_rate_error"></div>
+            </div>
+
+            <div class="form-group">
+                <label for="batch_size">
+                    Batch Size:
+                    <span class="custom-tooltip">
+                        <i class="fa fa-question-circle tooltip-icon"></i>
+                        <span class="tooltip-text">Batch size determines the number of audio files processed at once. Larger size speeds up training but requires more memory.</span>
+                    </span>
+                </label>
+                <select id="batch_size" name="batch_size" class="form-control" required>
+                    <option value="4">4</option>
+                    <option value="8" selected>8</option>
+                    <option value="16">16</option>
+                    <option value="32">32</option>
+                </select>
+                <div class="error-message" id="batch_size_error"></div>
+            </div>
+
+            <div class="form-group">
+                <label for="weight_decay">
+                    Regularization (L2) parameter (0.00001-0.1):
+                    <span class="custom-tooltip">
+                        <i class="fa fa-question-circle tooltip-icon"></i>
+                        <span class="tooltip-text">The regularization parameter helps prevent overfitting by adding a penalty for model complexity.</span>
+                    </span>
+                </label>
+                <input type="number" id="weight_decay" name="weight_decay" step="0.00001" min="0.00001" max="0.1"
+                       value="0.0001" required class="form-control">
+                <div class="error-message" id="weight_decay_error"></div>
+            </div>
+
+            <div class="form-group">
+                <label for="target_size">
+                    Target samples per class after augmentation (50-250):
+                    <span class="custom-tooltip">
+                        <i class="fa fa-question-circle tooltip-icon"></i>
+                        <span class="tooltip-text">Determines the target number of audio samples per class after data augmentation is applied. Helps balance classes and increase dataset size.</span>
+                    </span>
+                </label>
+                <input type="number" id="target_size" name="target_size" min="50" max="250" value="50" required class="form-control">
+                <div class="error-message" id="target_size_error"></div>
+            </div>
+            <button type="button" class="btn btn-primary" onclick="validateAndSubmit()">
+                <i class="fas fa-save"></i> Save Hyperparameters
+            </button>
+        </form>
+    </div>
+
+    <div class="modal fade" id="trainingLogModal" tabindex="-1" aria-labelledby="trainingLogModalLabel" aria-hidden="true" data-bs-backdrop="static" data-bs-keyboard="false">
+        <div class="modal-dialog modal-lg modal-dialog-scrollable">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="trainingLogModalLabel"><i class="fas fa-cogs"></i> Model Training Log</h5>
+                </div>
+                <div class="modal-body">
+                    <p id="trainingStatusModalMessage">Starting training process...</p>
+                    <pre id="logOutput" style="white-space: pre-wrap; word-wrap: break-word; max-height: 400px; overflow-y: auto; background-color: #282c34; color: #abb2bf; border: 1px solid #ccc; padding: 10px; border-radius: 4px;"></pre>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" id="closeLogModalBtn" data-bs-dismiss="modal" style="display:none;">Close</button>
+                    <a href="#" id="redirectToPredictorBtn" class="btn btn-primary" style="display:none;">Go to Prediction Page</a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+</div>
+
+<script>
+    let hyperparametersSaved = false;
+
+    function toggleError(elementId, show, message = "") {
+        const errorElement = document.getElementById(elementId);
+        if (errorElement) {
+            errorElement.textContent = message;
+            errorElement.style.display = show ? "block" : "none";
+        }
+    }
+
+
+    function generateClassInputs() {
+        const countInput = document.getElementById("classCount");
+        const count = parseInt(countInput.value);
+        const classNamesContainer = document.getElementById("classNames");
+
+        if (isNaN(count) || count < 2 || count > 100) {
+            toggleError("classCountError", true, "Please enter a valid number between 2 and 100.");
+            countInput.focus();
+            return;
+        }
+        toggleError("classCountError", false);
+
+        classNamesContainer.innerHTML = `<h2><i class="fas fa-tags"></i>Enter Class Names:</h2>
+                                     <p>Provide a unique name for each sound class you defined.</p>`;
+        classNamesContainer.style.display = "block";
+
+        for (let i = 1; i <= count; i++) {
+            const div = document.createElement("div");
+            div.className = "form-group";
+            div.innerHTML = `
+                <label for="className${i}">Class name ${i}:</label>
+                <input type="text" id="className${i}" class="form-control" placeholder="Enter name (e.g., Dog Bark)" required>
+                <div class="error-message" id="className${i}_error"></div>
+            `;
+            classNamesContainer.appendChild(div);
+        }
+
+        const button = document.createElement("button");
+        button.innerHTML = '<i class="fas fa-file-audio"></i> Proceed to Audio Upload';
+        button.className = "btn btn-primary mt-2";
+        button.type = "button";
+        button.onclick = generateForms;
+        classNamesContainer.appendChild(button);
+
+        document.querySelector(".initial-setup-section").style.display = "none";
+    }
+
+    function generateForms() {
+        const classFormsContainer = document.getElementById("classForms");
+        classFormsContainer.innerHTML = `<h2><i class="fas fa-upload"></i>Upload Audio for Each Class:</h2>`;
+
+        const requirementsNote = document.createElement("div");
+        requirementsNote.className = "requirements-note";
+        requirementsNote.innerHTML = '<i class="fa fa-info-circle"></i> Each class requires at least 15 audio samples. Supported formats: WAV, FLAC, MP3.';
+        classFormsContainer.appendChild(requirementsNote);
+
+        const count = parseInt(document.getElementById("classCount").value);
+        let classNames = [];
+        let allClassNamesValid = true;
+
+        for (let i = 1; i <= count; i++) {
+            const classNameInput = document.getElementById(`className${i}`);
+            toggleError(`className${i}_error`, false);
+            if (!classNameInput) continue;
+            const className = classNameInput.value.trim();
+            if (!className) {
+                toggleError(`className${i}_error`, true, `Please enter a name for class ${i}.`);
+                allClassNamesValid = false;
+            } else if (classNames.includes(className)) {
+                toggleError(`className${i}_error`, true, `Class name "${className}" is already used. Please use unique names.`);
+                allClassNamesValid = false;
+            }
+            else {
+                classNames.push(className);
+            }
+        }
+        if (!allClassNamesValid) return;
+
+
+        classNames.forEach((name, index) => {
+            const div = document.createElement("div");
+            div.className = "class-container";
+            div.innerHTML = `
+                <label style="font-size: 1.1rem; margin-bottom: 10px; display:block;"><strong>Class: ${name}</strong></label>
+                <input type="file" name="${name}" class="form-control" accept=".wav, .flac, .mp3, audio/*" multiple required>
+                <div id="fileCount-${name}" class="file-count invalid"><i class="fas fa-times-circle"></i> 0/15 files selected</div>
+            `;
+            classFormsContainer.appendChild(div);
+
+            const input = div.querySelector('input[type="file"]');
+            input.addEventListener('change', function() {
+                updateFileCounter(this);
+            });
+        });
+
+        document.getElementById("uploadForm").style.display = "block";
+        document.getElementById("uploadButton").style.display = "block";
+        document.getElementById("hyperparametersForm").style.display = "block";
+        document.getElementById("classNames").style.display = "none";
+    }
+
+    function updateFileCounter(input) {
+        const fileCount = input.files.length;
+        const className = input.name;
+        const countDisplay = document.getElementById(`fileCount-${className}`);
+
+        if (fileCount >= 15) {
+            countDisplay.className = "file-count valid";
+            countDisplay.innerHTML = `<i class="fas fa-check-circle"></i> ${fileCount}/15+ files selected`;
+        } else {
+            countDisplay.className = "file-count invalid";
+            countDisplay.innerHTML = `<i class="fas fa-exclamation-circle"></i> ${fileCount}/15 files selected (minimum 15 required)`;
+        }
+    }
+
+    function validateAndSubmit() {
+        let isValid = true;
+        const statusElement = document.getElementById("hyperparametersStatus");
+
+        // Clear previous errors
+        toggleError("num_epochs_error", false);
+        toggleError("learning_rate_error", false);
+        toggleError("batch_size_error", false);
+        toggleError("weight_decay_error", false);
+        toggleError("target_size_error", false);
+
+
+        const numEpochs = parseInt(document.getElementById("num_epochs").value);
+        if (isNaN(numEpochs) || numEpochs < 1 || numEpochs > 50) {
+            toggleError("num_epochs_error", true, "Epochs must be between 1 and 50.");
+            isValid = false;
+        }
+
+        const learningRate = parseFloat(document.getElementById("learning_rate").value);
+        if (isNaN(learningRate) || learningRate < 0.00001 || learningRate > 0.1) {
+            toggleError("learning_rate_error", true, "Learning rate must be between 0.00001 and 0.1.");
+            isValid = false;
+        }
+
+        const batchSize = parseInt(document.getElementById("batch_size").value);
+        const validBatchSizes = [4, 8, 16, 32];
+        if (isNaN(batchSize) || !validBatchSizes.includes(batchSize)) {
+            toggleError("batch_size_error", true, "Please select a valid batch size.");
+            isValid = false;
+        }
+
+        const weightDecay = parseFloat(document.getElementById("weight_decay").value);
+        if (isNaN(weightDecay) || weightDecay < 0.00001 || weightDecay > 0.1) {
+            toggleError("weight_decay_error", true, "Regularization must be between 0.00001 and 0.1.");
+            isValid = false;
+        }
+
+        const targetSize = parseInt(document.getElementById("target_size").value);
+        if (isNaN(targetSize) || targetSize < 50 || targetSize > 250) {
+            toggleError("target_size_error", true, "Target samples must be between 50 and 250.");
+            isValid = false;
+        }
+
+
+        if (isValid) {
+            const hyperparameters = {
+                num_epochs: numEpochs,
+                learning_rate: learningRate,
+                batch_size: batchSize,
+                weight_decay: weightDecay,
+                target_size: targetSize
+            };
+
+            statusElement.className = "alert alert-info";
+            statusElement.innerHTML = '<i class="fa fa-spinner spinner-icon"></i> Saving...';
+
+            fetch("{{ url_for('sound_classification.save_hyperparameters') }}", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                },
+                body: JSON.stringify(hyperparameters),
+            })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        hyperparametersSaved = true;
+                        statusElement.className = "alert alert-success";
+                        statusElement.innerHTML = `<i class="fas fa-check-circle"></i> Hyperparameters saved successfully!`;
+                        document.getElementById("uploadStatus").style.display = "none";
+                    } else {
+                        statusElement.className = "alert alert-danger";
+                        statusElement.innerHTML = `<i class="fas fa-times-circle"></i> Error: ` + (data.message || "Unknown error");
+                    }
+                })
+                .catch(error => {
+                    statusElement.className = "alert alert-danger";
+                    statusElement.innerHTML = `<i class="fas fa-exclamation-triangle"></i> Network Error: ` + error.message;
+                });
+        } else {
+            statusElement.className = "alert alert-danger";
+            statusElement.innerHTML = `<i class="fas fa-times-circle"></i> Please correct the errors in the form.`;
+        }
+    }
+
+    document.getElementById("uploadForm").addEventListener("submit", async function (event) {
+        event.preventDefault();
+
+        const statusElement = document.getElementById("uploadStatus");
+        const logModalElement = document.getElementById('trainingLogModal');
+        const logModal = new bootstrap.Modal(logModalElement);
+        const logOutput = document.getElementById('logOutput');
+        const trainingStatusModalMessage = document.getElementById('trainingStatusModalMessage');
+        const closeLogModalBtn = document.getElementById('closeLogModalBtn');
+        const redirectToPredictorBtn = document.getElementById('redirectToPredictorBtn');
+
+        logOutput.textContent = '';
+        trainingStatusModalMessage.textContent = 'Preparing to submit training data...';
+        closeLogModalBtn.style.display = 'none';
+        redirectToPredictorBtn.style.display = 'none';
+
+
+        statusElement.style.display = "block";
+        statusElement.className = "alert";
+
+        if (!hyperparametersSaved) {
+            statusElement.className = "alert alert-danger";
+            statusElement.innerHTML = `<i class="fas fa-exclamation-triangle"></i> Error: Please save hyperparameters first!`;
+            document.getElementById("hyperparametersForm").scrollIntoView({ behavior: 'smooth' });
+            return;
+        }
+
+        const inputs = document.querySelectorAll("#classForms input[type='file']");
+        let filesExistForAll = true;
+        let emptyClasses = [];
+        let invalidClasses = [];
+
+        inputs.forEach(input => {
+            const className = input.name;
+            const fileCount = input.files.length;
+
+            if (fileCount === 0) {
+                filesExistForAll = false;
+                emptyClasses.push(className);
+            } else if (fileCount < 15) {
+                invalidClasses.push(`${className} (${fileCount}/15)`);
+            }
+        });
+
+        if (!filesExistForAll && emptyClasses.length > 0) {
+            statusElement.className = "alert alert-danger";
+            statusElement.innerHTML = `<i class="fas fa-times-circle"></i> Error: Please upload audio for all classes. Missing files for:<br>
+            ${emptyClasses.join('<br>')}`;
+            return;
+        }
+
+        if (invalidClasses.length > 0) {
+            statusElement.className = "alert alert-danger";
+            statusElement.innerHTML = `<i class="fas fa-times-circle"></i> Error: Not enough audio files for these classes:<br>
+            ${invalidClasses.join('<br>')}<br>
+            Each class requires a minimum of 15 audio files.`;
+            return;
+        }
+
+        logModal.show();
+
+        statusElement.className = "alert alert-info";
+        statusElement.innerHTML = '<i class="fa fa-spinner spinner-icon"></i> Submitting data and initializing training...';
+        trainingStatusModalMessage.textContent = 'Submitting data and initializing training...';
+
+        const formData = new FormData(event.target);
+
+        try {
+            const response = await fetch("{{ url_for('sound_classification.upload_sounds') }}", {
+                method: "POST",
+                body: formData
+            });
+            const data = await response.json();
+
+            if (data.success && data.job_id) {
+                trainingStatusModalMessage.textContent = 'Training started. Streaming logs...';
+                statusElement.className = "alert alert-info";
+                statusElement.innerHTML = `<i class="fa fa-spinner spinner-icon"></i> Training model (Job ID: ${data.job_id}). This might take around 15-20 minutes. Please do not close this page.`;
+
+                const eventSource = new EventSource(`/stream_sound_logs/${data.job_id}`);
+                logOutput.textContent += "Connecting to log stream...\n";
+
+                eventSource.onmessage = function(event) {
+                    const message = event.data;
+                    if (message.startsWith("EVENT:TRAINING_SUCCESS")) {
+                        logOutput.textContent += "\n--- TRAINING COMPLETED SUCCESSFULLY ---\n";
+                        trainingStatusModalMessage.textContent = 'Training completed successfully!';
+                        statusElement.className = "alert alert-success";
+                        statusElement.innerHTML = `<i class="fas fa-check-circle"></i> Training successful!`;
+                    } else if (message.startsWith("EVENT:TRAINING_FAILED")) {
+                        logOutput.textContent += "\n--- TRAINING FAILED ---\n";
+                        trainingStatusModalMessage.textContent = 'Training failed. Check logs for details.';
+                        statusElement.className = "alert alert-danger";
+                        statusElement.innerHTML = `<i class="fas fa-times-circle"></i> Training failed!`;
+                        closeLogModalBtn.style.display = 'inline-block';
+                    } else if (message.startsWith("EVENT:TRAINING_ERROR")) {
+                        logOutput.textContent += "\n--- ERROR DURING LOG STREAMING ---\n";
+                        trainingStatusModalMessage.textContent = 'An error occurred during training or log streaming.';
+                        statusElement.className = "alert alert-danger";
+                        statusElement.innerHTML = `<i class="fas fa-times-circle"></i> Error during training!`;
+                        closeLogModalBtn.style.display = 'inline-block';
+                    } else if (message.startsWith("REDIRECT:")) {
+                        const redirectUrl = message.split(":")[1];
+                        logOutput.textContent += `You will be redirected to ${redirectUrl} shortly...\n`;
+                        redirectToPredictorBtn.href = redirectUrl;
+                        redirectToPredictorBtn.style.display = 'inline-block';
+                        closeLogModalBtn.style.display = 'inline-block';
+                    } else if (message.startsWith("EVENT:STREAM_ENDED")) {
+                        logOutput.textContent += "\n--- LOG STREAM ENDED ---\n";
+                        eventSource.close();
+                        if (trainingStatusModalMessage.textContent.includes("Streaming logs")) {
+                            trainingStatusModalMessage.textContent = 'Log stream ended.';
+                        }
+                        if (redirectToPredictorBtn.style.display === 'none' && closeLogModalBtn.style.display === 'none') {
+                            closeLogModalBtn.style.display = 'inline-block';
+                        }
+                    } else {
+                        logOutput.textContent += message + "\n";
+                    }
+                    logOutput.scrollTop = logOutput.scrollHeight;
+                };
+
+                eventSource.onerror = function(err) {
+                    logOutput.textContent += "\n--- ERROR CONNECTING TO LOG STREAM ---\n";
+                    console.error("EventSource failed:", err);
+                    trainingStatusModalMessage.textContent = 'Error connecting to log stream. Training may still be in progress on the server.';
+                    statusElement.className = "alert alert-danger";
+                    statusElement.innerHTML = `<i class="fas fa-exclamation-triangle"></i> Error connecting to log stream.`;
+                    eventSource.close();
+                    closeLogModalBtn.style.display = 'inline-block';
+                };
+            } else {
+                logModal.hide();
+                statusElement.className = "alert alert-danger";
+                statusElement.innerHTML = `<i class="fas fa-times-circle"></i> Error starting training: ${data.message || 'Unknown error'}`;
+            }
+        } catch (error) {
+            logModal.hide();
+            statusElement.className = "alert alert-danger";
+            statusElement.innerHTML = `<i class="fas fa-exclamation-triangle"></i> Network Error or server issue: ${error.message}`;
+            console.error("Fetch error:", error);
+        }
+    });
+</script>
 {% endblock %}

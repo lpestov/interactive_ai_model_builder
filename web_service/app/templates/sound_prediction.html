@@ -1,0 +1,551 @@
+{% extends 'base.html' %}
+
+{% block title %}sound Classification{% endblock %}
+
+{% block head %}
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/github-markdown-css/5.1.0/github-markdown.min.css">
+
+<style>
+    .section {
+        margin-bottom: 20px;
+        padding: 15px;
+        border: 1px solid #ddd;
+        border-radius: 5px;
+        background-color: #f9f9f9;
+    }
+    .section h2 {
+        margin-top: 0;
+        margin-bottom: 15px;
+        font-size: 1.5rem;
+        border-bottom: 1px solid #eee;
+        padding-bottom: 10px;
+    }
+
+    .modal-body .markdown-body {
+        box-sizing: border-box;
+        min-width: 200px;
+        max-width: 980px;
+        margin: 0 auto;
+        padding: 25px;
+    }
+
+    .modal-body .markdown-body pre {
+        background-color: #f6f8fa;
+        padding: 16px;
+        overflow: auto;
+        font-size: 85%;
+        line-height: 1.45;
+        border-radius: 6px;
+        border: 1px solid #ddd;
+    }
+
+    .bi-file-earmark-music {
+        margin-right: 8px;
+        color: #28a745;
+    }
+</style>
+{% endblock %}
+
+{% block body %}
+<div class="container mt-4">
+    <h1 class="mb-4">🎵 Sound Classification</h1>
+
+    <div class="section">
+        <h2>📥 Upload sound File</h2>
+        <form method="POST" enctype="multipart/form-data" action="{{ url_for('sound_predictor.predict') }}">
+            <div class="mb-3">
+                <label for="soundInput" class="form-label">Select sound file:</label>
+                <input type="file" id="soundInput" name="sound" class="form-control"
+                       accept="sound/*" required>
+            </div>
+            <button type="submit" class="btn btn-primary">
+                <i class="bi bi-cpu me-2"></i>Analyze sound
+            </button>
+        </form>
+    </div>
+
+    <div class="section">
+        <h2>Model and Documentation</h2>
+        <div class="row">
+            <div class="col-md-6 mb-3 mb-md-0">
+                <a href="{{ url_for('sound_predictor.download_model') }}"
+                   class="btn btn-success w-100">
+                    <i class="bi bi-download me-2"></i>Download sound Model (.zip)
+                </a>
+            </div>
+            <div class="col-md-6">
+                <button type="button" class="btn btn-info w-100 text-white"
+                        data-bs-toggle="modal" data-bs-target="#instructionsModal">
+                    <i class="bi bi-book me-2"></i>Usage Guide
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <div class="section">
+        <a href="{{ url_for('sound_classification.index') }}" class="btn btn-secondary">
+           <i class="bi bi-arrow-left me-2"></i>Back to Training
+        </a>
+    </div>
+</div>
+
+<div class="modal fade" id="instructionsModal" tabindex="-1"
+     aria-labelledby="instructionsModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-xl modal-dialog-scrollable">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="instructionsModalLabel">
+                    <i class="bi bi-file-earmark-music"></i>sound Model Guide
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"
+                        aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <article class="markdown-body">
+
+                    <h2>How to Use the Trained Sound Classification Model</h2>
+
+                    <p>This guide explains how to use the trained PyTorch MLP model (<code>trained_model_sound_classification.pt</code>) along with PANNs for feature extraction to classify your audio files locally.</p>
+                    <p>When you download the "Trained Sound Model" from the web interface, you will typically receive a <code>.zip</code> archive. This archive should contain:</p>
+                    <ul>
+                        <li><code>trained_model_sound_classification.pt</code>: The weights of the trained MLP classifier. This file contains the learned parameters of your custom sound classifier.</li>
+                        <li><code>class_to_idx.json</code>: A JSON file mapping your specific class names (e.g., "dog_bark", "siren") to numerical indices (e.g., 0, 1) that were used during the model training process.</li>
+                        <li><code>hyperparams.json</code>: The hyperparameters (like learning rate, number of epochs, etc.) that were used for training this particular model. This is mostly for your reference.</li>
+                    </ul>
+
+
+                    <h4><span aria-hidden="true">❗</span> What You Need:</h4>
+                    <ul>
+                        <li><strong>Python 3:</strong> Installed on your computer. Version 3.8 or newer is recommended. You can download it from <a href="https://www.python.org/downloads/" rel="nofollow">python.org</a>.</li>
+                        <li>
+                            <strong>Python Libraries:</strong> You'll need to install several Python libraries. Open your terminal or command prompt and run the following command:
+                            <pre><code class="language-bash">pip install torch torchaudio numpy matplotlib panns_inference</code></pre>
+                            <p><small><strong>Note:</strong>
+                                <ul>
+                                    <li><code>torch</code> is the PyTorch deep learning framework.</li>
+                                    <li><code>torchaudio</code> provides audio loading and processing utilities for PyTorch.</li>
+                                    <li><code>numpy</code> is used for numerical operations.</li>
+                                    <li><code>matplotlib</code> is used for plotting the results (spectrogram and probabilities).</li>
+                                    <li><code>panns_inference</code> is a library that provides pre-trained PANNs (Pre-trained Audio Neural Networks) for general-purpose audio feature extraction. On its first run, <code>panns_inference</code> will automatically download a pre-trained PANNs model checkpoint (<code>Cnn14_mAP=0.431.pth</code>, approx. 300MB) from Zenodo if it's not already cached in your local <code>panns_data</code> directory (usually in your home folder). This base PANNs model is essential for converting your audio into meaningful features (embeddings) that your custom MLP model can understand.</li>
+                                    <li>Depending on your system, <code>panns_inference</code> might also require libraries like <code>librosa</code>, <code>scipy</code>, and <code>soundfile</code>, which are usually installed as dependencies.</li>
+                                </ul>
+                            </small></p>
+                        </li>
+                        <li>
+                            <strong>Downloaded Model Files:</strong>
+                            <ul>
+                                <li>After training your model through the web interface, download the resulting <code>.zip</code> archive.</li>
+                                <li>Extract the contents of this archive. You will primarily need:
+                                    <ul>
+                                        <li><code>trained_model_sound_classification.pt</code></li>
+                                        <li><code>class_to_idx.json</code></li>
+                                    </ul>
+                                </li>
+                            </ul>
+                        </li>
+                        <li><strong>Audio File for Classification:</strong> An audio file in a common format (e.g., <code>.wav</code>, <code>.mp3</code>, <code>.flac</code>) that you want to classify. For best results, use audio clips that are around 5 seconds long, as this matches the duration the model was likely trained on.</li>
+                    </ul>
+
+                    <h3><span aria-hidden="true">⚙️</span> Implementation Steps:</h3>
+                    <ol>
+                        <li>
+                            <strong>Prepare Your Project Folder:</strong>
+                            <ul>
+                                <li>Create a new, empty folder on your computer where you will run the classification script. Let's call it <code>my_sound_classifier</code>.</li>
+                                <li>Copy the extracted <code>trained_model_sound_classification.pt</code> file into this <code>my_sound_classifier</code> folder.</li>
+                                <li>Copy the extracted <code>class_to_idx.json</code> file into the same <code>my_sound_classifier</code> folder.</li>
+                            </ul>
+                        </li>
+                        <li>
+                            <strong>Create the Prediction Script:</strong>
+                            <ul>
+                                <li>Inside your <code>my_sound_classifier</code> folder, create a new Python file. You can name it <code>classify_sound.py</code>.</li>
+                                <li>Open this <code>classify_sound.py</code> file with a text editor or an IDE (like VS Code, PyCharm, etc.).</li>
+                                <li>Copy the entire Python code provided in the "Sample classification script" section below and paste it into your <code>classify_sound.py</code> file.</li>
+                            </ul>
+                        </li>
+                        <li>
+                            <strong>Configure the Script (Update Paths):</strong>
+                            <ul>
+                                <li>In your <code>classify_sound.py</code> file, find the line that looks like this:
+                                    <pre><code class="language-python">AUDIO_TO_CLASSIFY = "path/to/your/audio.wav"</code></pre>
+                                </li>
+                                <li><strong>Crucially</strong>, replace <code>"path/to/your/audio.wav"</code> with the actual, correct path to the audio file you wish to classify.
+                                    <ul>
+                                        <li>If your audio file is in the same <code>my_sound_classifier</code> folder, you can just use its name, e.g., <code>"my_sound_sample.wav"</code>.</li>
+                                        <li>Otherwise, provide the full (absolute) path or a correct relative path from where you will run the script.</li>
+                                    </ul>
+                                </li>
+                                <li><em>(Optional)</em> You can also change the <code>OUTPUT_DIR</code> variable if you want the prediction results (the plot image and JSON file) to be saved in a different directory. By default, they will be saved in a subfolder named <code>sound_predictions_output</code> created within your <code>my_sound_classifier</code> folder.</li>
+                            </ul>
+                        </li>
+                        <li>
+                            <strong>Run the Script:</strong>
+                            <ul>
+                                <li>Open your system's terminal (Command Prompt on Windows, Terminal on macOS/Linux).</li>
+                                <li>Navigate into your project folder using the <code>cd</code> command. For example:
+                                    <pre><code class="language-bash">cd path/to/your/my_sound_classifier</code></pre>
+                                </li>
+                                <li>Once you are in the correct directory (the one containing <code>classify_sound.py</code>, <code>trained_model_sound_classification.pt</code>, and <code>class_to_idx.json</code>), execute the script using Python:
+                                    <pre><code class="language-bash">python classify_sound.py</code></pre>
+                                </li>
+                                <li><strong>First Run Note:</strong> The very first time you run this script (or any script using <code>panns_inference</code> without a cached PANNs model), it will attempt to download the base PANNs model checkpoint. This is a one-time download and might take a few minutes depending on your internet speed. Subsequent runs will be faster as the model will be loaded from the local cache.</li>
+                            </ul>
+                        </li>
+                        <li>
+                            <strong>Check the Output:</strong>
+                            <ul>
+                                <li>The script will print the predicted probabilities for each class to your console.</li>
+                                <li>If <code>SAVE_OUTPUT_FILES</code> is <code>True</code> (which it is by default in the provided script), it will also save:
+                                    <ul>
+                                        <li>A <code>.png</code> image file showing the Mel spectrogram of your input audio and a bar chart of the class probabilities.</li>
+                                        <li>A <code>.json</code> file containing detailed prediction results and metadata.</li>
+                                    </ul>
+                                    These files will be in the directory specified by <code>OUTPUT_DIR</code>.
+                                </li>
+                            </ul>
+                        </li>
+                    </ol>
+
+                    <h3><span aria-hidden="true">📜</span> Sample classification script (<code>classify_sound.py</code>):</h3>
+                    <pre><code class="language-python">
+import json
+import os
+import sys
+from datetime import datetime
+import warnings
+
+import torch
+import torch.nn as nn
+import torch.nn.functional as F
+import torchaudio
+from torchaudio.transforms import Resample
+import numpy as np
+import matplotlib.pyplot as plt
+
+from panns_inference import AudioTagging
+
+# Suppress FutureWarning from torch.load in panns_inference and our load
+warnings.simplefilter(action="ignore", category=FutureWarning)
+
+# --- Configuration (USER SHOULD UPDATE AUDIO_TO_CLASSIFY) ---
+MLP_MODEL_PATH = "trained_model_sound_classification.pt"  # Assumes it's in the same folder
+CLASS_MAPPING_PATH = "class_to_idx.json"          # Assumes it's in the same folder
+# IMPORTANT: Update this path to your audio file
+AUDIO_TO_CLASSIFY = "path/to/your/audio.wav" # <--- CHANGE THIS
+# Directory where output files (plot, json) will be saved
+OUTPUT_DIR = "sound_predictions_output"
+# Set to False if you don't want to save output files
+SAVE_OUTPUT_FILES = True
+
+
+# --- Constants (should generally match the training script values) ---
+SR = 16000  # Target Sample Rate
+DURATION = 5  # Duration in seconds
+SAMPLES = SR * DURATION  # Number of samples
+PANNS_EMBEDDING_DIM = 2048 # Embedding dimension for PANNs Cnn14 (default)
+
+# --- Helper Functions ---
+
+def prepare_audio_for_inference(wav, sr, target_sr=SR, target_samples=SAMPLES):
+    """Prepares a single audio waveform for PANNs inference."""
+    if wav.ndim > 1 and wav.shape[0] > 1:
+        wav = wav.mean(dim=0, keepdim=True)
+    elif wav.ndim == 1:
+        wav = wav.unsqueeze(0)
+
+    if sr != target_sr:
+        wav = Resample(sr, target_sr)(wav)
+
+    current_samples = wav.size(1)
+    if current_samples > target_samples:
+        wav = wav[:, :target_samples]
+    elif current_samples < target_samples:
+        pad_size = target_samples - current_samples
+        wav = nn.functional.pad(wav, (0, pad_size))
+    return wav
+
+def load_models_and_class_map(mlp_model_file, class_map_file, device_str):
+    """Loads PANNs, the trained MLP, and class mapping."""
+    print(f"[*] Initializing PANNs AudioTagger on device: {device_str.upper()}")
+    audio_tagger = AudioTagging(checkpoint_path=None, device=device_str)
+    print("[*] PANNs AudioTagger initialized.")
+
+    print(f"[*] Loading class mapping from: {class_map_file}")
+    if not os.path.exists(class_map_file):
+        print(f"[!] Error: Class mapping file not found at '{class_map_file}'")
+        sys.exit(1)
+    try:
+        with open(class_map_file, "r", encoding="utf-8") as f:
+            class_to_idx = json.load(f)
+        idx_to_class_map = {int(v): k for k, v in class_to_idx.items()}
+        num_classes = len(idx_to_class_map)
+        print(f"[*] Class mapping loaded for {num_classes} classes: {list(idx_to_class_map.values())}")
+    except Exception as e:
+        print(f"[!] Error loading or parsing class mapping file '{class_map_file}': {e}")
+        sys.exit(1)
+
+    print(f"[*] Defining MLP model architecture for {num_classes} classes.")
+    # This MLP architecture MUST match the one used during training.
+    mlp_classifier = nn.Sequential(
+        nn.Linear(PANNS_EMBEDDING_DIM, 512),
+        nn.ReLU(),
+        nn.Dropout(0.3),
+        nn.Linear(512, 256),
+        nn.ReLU(),
+        nn.Dropout(0.2),
+        nn.Linear(256, num_classes)
+    ).to(torch.device(device_str))
+
+    print(f"[*] Loading trained MLP weights from: {mlp_model_file}")
+    if not os.path.exists(mlp_model_file):
+        print(f"[!] Error: MLP model file not found at '{mlp_model_file}'")
+        sys.exit(1)
+    try:
+        # Assuming the .pt file from your DataSphere script saves the entire model object
+        loaded_object = torch.load(mlp_model_file, map_location=torch.device(device_str))
+
+        if isinstance(loaded_object, nn.Module): # If the entire model was saved
+            mlp_classifier = loaded_object
+        elif isinstance(loaded_object, dict): # If only state_dict was saved (less likely from your DS script)
+            mlp_classifier.load_state_dict(loaded_object)
+        else:
+            # This case should ideally not happen if your DS script saved the model correctly
+            raise TypeError("The loaded .pt file is neither a recognizable model object nor a state_dict.")
+
+        mlp_classifier.eval()
+        print("[*] MLP classifier loaded and ready.")
+    except Exception as e:
+        print(f"[!] Error loading MLP model from '{mlp_model_file}': {e}")
+        print(f"[!] Please ensure the model was saved correctly (e.g., using torch.save(model, path) or torch.save(model.state_dict(), path) and loaded appropriately).")
+        sys.exit(1)
+
+    return mlp_classifier, audio_tagger, idx_to_class_map
+
+def get_audio_embedding_and_waveform(audio_file, panns_model, target_device):
+    """Loads audio, prepares it, and extracts PANNs embedding."""
+    print(f"[*] Processing audio file: {audio_file}")
+    if not os.path.exists(audio_file):
+        print(f"[!] Error: Audio file not found at '{audio_file}'")
+        sys.exit(1)
+    try:
+        waveform, sample_rate = torchaudio.load(audio_file)
+        prepared_waveform = prepare_audio_for_inference(waveform, sample_rate)
+
+        waveform_numpy = prepared_waveform.squeeze(0).cpu().numpy()
+
+        print("[*] Extracting audio embedding using PANNs...")
+        with torch.no_grad():
+            _, embedding_numpy = panns_model.inference(waveform_numpy[None, :])
+
+        embedding_tensor = torch.from_numpy(embedding_numpy).to(target_device)
+        print("[*] Audio embedding extracted.")
+        return embedding_tensor, prepared_waveform.cpu()
+    except Exception as e:
+        print(f"[!] Error processing audio file '{audio_file}' or extracting embedding: {e}")
+        sys.exit(1)
+
+def predict_with_mlp(mlp, embedding, target_device):
+    """Gets class probabilities from the MLP using the audio embedding."""
+    print("[*] Classifying embedding with MLP...")
+    try:
+        with torch.no_grad():
+            output_logits = mlp(embedding.to(target_device))
+            probabilities = F.softmax(output_logits, dim=1)
+        return probabilities[0].cpu().numpy()
+    except Exception as e:
+        print(f"[!] Error during MLP prediction: {e}")
+        sys.exit(1)
+
+def visualize_and_save_results(original_waveform, probs_array, class_idx_map, input_audio_path, output_plot_dir):
+    """Visualizes spectrogram and probabilities, then saves the plot."""
+    os.makedirs(output_plot_dir, exist_ok=True)
+    fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(16, 6))
+
+    try:
+        print("[*] Generating Mel spectrogram...")
+        mel_spectrogram_transform = torchaudio.transforms.MelSpectrogram(
+            sample_rate=SR, n_fft=1024, hop_length=512, n_mels=128
+        )
+        # Ensure waveform is 1D or 2D [channel, time] and on CPU for transform
+        mel_spec = mel_spectrogram_transform(original_waveform.squeeze(0).cpu())
+        db_mel_spec = torchaudio.transforms.AmplitudeToDB()(mel_spec)
+
+        img = ax1.imshow(db_mel_spec.numpy(), aspect='auto', origin='lower', cmap='viridis')
+        ax1.set_title("Audio Mel Spectrogram")
+        ax1.set_xlabel("Time (Frames)")
+        ax1.set_ylabel("Frequency (Mel Bins)")
+        fig.colorbar(img, ax=ax1, format='%+2.0f dB')
+        print("[*] Mel spectrogram generated.")
+    except Exception as e:
+        print(f"[!] Error generating spectrogram: {e}")
+        ax1.text(0.5, 0.5, "Error generating spectrogram.", ha='center', va='center')
+
+    print("[*] Generating probabilities chart...")
+    class_names = [class_idx_map.get(i, f"Unknown Class {i}") for i in range(len(probs_array))]
+    y_positions = np.arange(len(class_names))
+
+    bars = ax2.barh(y_positions, probs_array * 100, align='center', color='dodgerblue', edgecolor='black')
+    ax2.set_yticks(y_positions)
+    ax2.set_yticklabels(class_names)
+    ax2.invert_yaxis()
+    ax2.set_xlabel("Probability (%)")
+    ax2.set_title("Predicted Sound Class Probabilities")
+    ax2.set_xlim(0, 110)
+
+    for i, bar_item in enumerate(bars):
+        width = bar_item.get_width()
+        ax2.text(width + 1, bar_item.get_y() + bar_item.get_height()/2., f'{width:.1f}%',
+                 ha='left', va='center', color='black', fontweight='medium')
+    print("[*] Probabilities chart generated.")
+
+    plt.tight_layout(pad=2.0)
+    current_timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+    audio_file_basename = os.path.splitext(os.path.basename(input_audio_path))[0]
+    plot_filename = f"prediction_{audio_file_basename}_{current_timestamp}_sound_plot.png"
+    full_plot_path = os.path.join(output_plot_dir, plot_filename)
+
+    try:
+        plt.savefig(full_plot_path, bbox_inches='tight', dpi=150)
+        print(f"[*] Prediction plot saved to: {full_plot_path}")
+        plt.close(fig)
+        return full_plot_path
+    except Exception as e:
+        print(f"[!] Error saving prediction plot: {e}")
+        plt.close(fig)
+        return None
+
+def save_results_to_json(input_audio_path, probs_array, class_idx_map, output_json_dir):
+    """Saves prediction metadata and probabilities to a JSON file."""
+    os.makedirs(output_json_dir, exist_ok=True)
+
+    predictions_dict = {
+        class_idx_map.get(idx, f"Unknown Class {idx}"): float(prob * 100)
+        for idx, prob in enumerate(probs_array)
+    }
+    sorted_predictions = dict(sorted(predictions_dict.items(), key=lambda item: item[1], reverse=True))
+
+    output_data = {
+        "metadata": {
+            "timestamp_utc": datetime.utcnow().isoformat() + "Z",
+            "processed_audio_file": os.path.abspath(input_audio_path),
+            "mlp_model_file_used": os.path.basename(MLP_MODEL_PATH),
+            "class_mapping_file_used": os.path.basename(CLASS_MAPPING_PATH),
+        },
+        "predicted_probabilities_pct": sorted_predictions,
+    }
+
+    current_timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+    audio_file_basename = os.path.splitext(os.path.basename(input_audio_path))[0]
+    json_filename = f"prediction_{audio_file_basename}_{current_timestamp}_sound_results.json"
+    full_json_path = os.path.join(output_json_dir, json_filename)
+
+    try:
+        with open(full_json_path, "w", encoding="utf-8") as f:
+            json.dump(output_data, f, indent=4, ensure_ascii=False)
+        print(f"[*] Prediction JSON results saved to: {full_json_path}")
+        return full_json_path
+    except Exception as e:
+        print(f"[!] Error saving prediction JSON: {e}")
+        return None
+
+# --- Main Execution Block ---
+if __name__ == "__main__":
+    print("--- Sound Classification Inference Script ---")
+
+    selected_device_str = "cuda" if torch.cuda.is_available() else "cpu"
+    selected_device_obj = torch.device(selected_device_str)
+    print(f"[*] Using device: {selected_device_str.upper()}")
+
+    if not os.path.exists(AUDIO_TO_CLASSIFY):
+        print(f"[!] Error: Input audio file not found at: '{AUDIO_TO_CLASSIFY}'")
+        print("[-] Please update the AUDIO_TO_CLASSIFY variable in the script.")
+        sys.exit(1)
+
+    mlp_model, panns_tagger_model, idx_to_class_names = load_models_and_class_map(
+        MLP_MODEL_PATH, CLASS_MAPPING_PATH, selected_device_str
+    )
+
+    sound_embedding, prepared_audio_waveform = get_audio_embedding_and_waveform(
+        AUDIO_TO_CLASSIFY, panns_tagger_model, selected_device_obj
+    )
+
+    class_probabilities = predict_with_mlp(
+        mlp_model, sound_embedding, selected_device_obj
+    )
+
+    print("\n--- Prediction Results (Probabilities) ---")
+    for i, probability in enumerate(class_probabilities):
+        class_label = idx_to_class_names.get(i, f"Unknown Class Index {i}")
+        print(f"- Class '{class_label}': {probability * 100:.2f}%")
+
+    most_likely_class_index = class_probabilities.argmax()
+    most_likely_class_name = idx_to_class_names.get(most_likely_class_index, "Unknown")
+    highest_probability_pct = class_probabilities[most_likely_class_index] * 100
+
+    print("-" * 40)
+    print(f"[*] Most Likely Sound Class: {most_likely_class_name} ({highest_probability_pct:.2f}%)")
+    print("-" * 40)
+
+    if SAVE_OUTPUT_FILES:
+        print("\n[*] Saving output files (plot and JSON)...")
+        save_results_to_json(
+            AUDIO_TO_CLASSIFY, class_probabilities, idx_to_class_names, OUTPUT_DIR
+        )
+        visualize_and_save_results(
+            prepared_audio_waveform, class_probabilities, idx_to_class_names, AUDIO_TO_CLASSIFY, OUTPUT_DIR
+        )
+    else:
+        print("\n[*] Skipping saving of output files (SAVE_OUTPUT_FILES is set to False).")
+
+    print("\n--- Sound Classification Script Finished ---")
+
+                    </code></pre>
+
+                    <h3><span aria-hidden="true">ℹ️</span> What the Script Does:</h3>
+                    <ul>
+                        <li><strong>Initializes PANNs:</strong> It loads the pre-trained PANNs model (which might be downloaded on the first run if not cached) to be used as a powerful audio feature extractor.</li>
+                        <li><strong>Loads Your Custom MLP Model:</strong> It reads your downloaded <code>trained_model_sound_classification.pt</code> file (which contains the weights for your small, custom-trained classifier) and the <code>class_to_idx.json</code> file to understand your specific sound class names.</li>
+                        <li><strong>Prepares the Input Audio:</strong> The script opens the audio file you specified. It then standardizes the audio by:
+                            <ul>
+                                <li>Converting to mono (if it's stereo).</li>
+                                <li>Resampling to 16kHz (if it's not already at that sample rate).</li>
+                                <li>Padding with silence or truncating the audio to a fixed length (e.g., 5 seconds, to match the duration used during model training).</li>
+                            </ul>
+                        </li>
+                        <li><strong>Extracts Audio Embedding:</strong> The prepared audio waveform is fed into the PANNs model. PANNs processes the audio and outputs a fixed-size numerical vector called an "embedding." This embedding is a compact representation that captures the important acoustic characteristics of the sound.</li>
+                        <li><strong>Performs Classification:</strong> This audio embedding is then passed as input to your trained MLP (Multi-Layer Perceptron) model. The MLP, having learned from your training data, outputs a set of scores (logits) for each of your defined sound classes. These scores are then converted into probabilities (summing to 100%) using a Softmax function.</li>
+                        <li><strong>Outputs Results:</strong>
+                            <ul>
+                                <li>The script prints the predicted probability (in percent) for each of your sound classes to your console.</li>
+                                <li>It clearly indicates which class has the highest probability, considering it the most likely classification.</li>
+                            </ul>
+                        </li>
+                        <li>
+                            <strong>Saves Detailed Results (Optional):</strong> If the <code>SAVE_OUTPUT_FILES</code> variable in the script is set to <code>True</code> (which is the default):
+                            <ul>
+                                <li>It saves a <strong>JSON file</strong> (e.g., <code>prediction_<audio_name>_<timestamp>_sound_results.json</code>) that contains detailed prediction probabilities for all classes, along with metadata like the timestamp and paths to the files used.</li>
+                                <li>It saves a <strong>PNG image file</strong> (e.g., <code>prediction_<audio_name>_<timestamp>_sound_plot.png</code>). This image visually presents:
+                                    <ul>
+                                        <li>The <strong>Mel spectrogram</strong> of the input audio, providing a visual representation of its frequency content over time.</li>
+                                        <li>A <strong>bar chart</strong> illustrating the predicted probabilities for each sound class.</li>
+                                    </ul>
+                                </li>
+                            </ul>
+                            These files are saved in the directory specified by <code>OUTPUT_DIR</code> (default is <code>sound_predictions_output</code>).
+                        </li>
+                    </ul>
+                    <p>This setup allows you to leverage powerful pre-trained audio features (from PANNs) with a lightweight, custom-trained classifier (your MLP) for your specific sound categories.</p>
+
+                </article>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary"
+                        data-bs-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endblock %}

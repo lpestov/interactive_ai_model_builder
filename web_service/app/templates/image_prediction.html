@@ -3,36 +3,468 @@
 {% block title %}Using the model{% endblock %}
 
 {% block head %}
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/github-markdown-css/5.1.0/github-markdown.min.css">
+
 <style>
     .section {
         margin-bottom: 20px;
         padding: 15px;
         border: 1px solid #ddd;
         border-radius: 5px;
+        background-color: #f9f9f9;
     }
     .section h2 {
+        margin-top: 0;
         margin-bottom: 15px;
         font-size: 1.5rem;
+        border-bottom: 1px solid #eee;
+        padding-bottom: 10px;
     }
+
+    .modal-body .markdown-body {
+        box-sizing: border-box;
+        min-width: 200px;
+        max-width: 980px;
+        margin: 0 auto;
+        padding: 25px;
+    }
+
+    .modal-body .markdown-body pre {
+        background-color: #f6f8fa;
+        padding: 16px;
+        overflow: auto;
+        font-size: 85%;
+        line-height: 1.45;
+        border-radius: 6px;
+        border: 1px solid #ddd;
+    }
+    .modal-body .markdown-body pre code {
+        background-color: transparent;
+        padding: 0;
+        margin: 0;
+        border: none;
+        font-size: inherit;
+    }
+
+    .modal-body .markdown-body code:not(pre code) {
+        background-color: rgba(27, 31, 35, 0.05);
+        border-radius: 3px;
+        padding: 0.2em 0.4em;
+        margin: 0;
+        font-size: 85%;
+    }
+
+    .modal-body {
+        padding: 0;
+    }
+
+    .modal-body .markdown-body ul,
+    .modal-body .markdown-body ol {
+        padding-left: 2em;
+    }
+    .modal-body .markdown-body li > p {
+        margin-top: 0.25em;
+    }
+    .modal-body .markdown-body h4 {
+        margin-top: 1.5em;
+        margin-bottom: 0.8em;
+    }
+    .modal-body .markdown-body h3 {
+        margin-top: 1.8em;
+        margin-bottom: 1em;
+        border-bottom: 1px solid #eaecef;
+        padding-bottom: 0.3em;
+    }
+
 </style>
 {% endblock %}
 
 {% block body %}
 <div class="container mt-4">
-    <h1 class="mb-4">Using the model</h1>
+    <h1 class="mb-4">📷 Image classification</h1>
 
     <div class="section">
-        <h2>Upload an image:</h2>
+        <h2>📥 Upload an Image</h2>
         <form method="POST" enctype="multipart/form-data" action="{{ url_for('image_predictor.predict') }}">
             <div class="mb-3">
-                <input type="file" id="fileInput" name="image" class="form-control" accept="image/*">
+                <label for="fileInput" class="form-label">Select image file:</label>
+                <input type="file" id="fileInput" name="image" class="form-control" accept="image/*" required>
             </div>
-            <button type="submit" class="btn btn-primary">Run the model for prediction</button>
+            <button type="submit" class="btn btn-primary">
+                <i class="bi bi-cpu me-2"></i>Run Prediction
+            </button>
         </form>
     </div>
 
     <div class="section">
-        <a href="{{ url_for('image.index') }}" class="btn btn-secondary">Back</a>
+        <h2>Model and Usage Instructions</h2>
+        <div class="row">
+            <div class="col-md-6 mb-3 mb-md-0">
+                <a href="{{ url_for('image_predictor.download_model') }}" class="btn btn-success w-100">
+                    <i class="bi bi-download me-2"></i>Download Trained Model (.zip)
+                </a>
+            </div>
+            <div class="col-md-6">
+                <button type="button" class="btn btn-info w-100 text-white" data-bs-toggle="modal" data-bs-target="#instructionsModal">
+                    <i class="bi bi-book me-2"></i>View Usage Instructions
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <div class="section">
+        <a href="{{ url_for('image.index') }}" class="btn btn-secondary">
+           <i class="bi bi-arrow-left me-2"></i>Back
+        </a>
     </div>
 </div>
+
+<div class="modal fade" id="instructionsModal" tabindex="-1" aria-labelledby="instructionsModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-xl modal-dialog-scrollable">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="instructionsModalLabel">
+                    <i class="bi bi-info-circle me-2"></i>Model Usage Instructions
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <article class="markdown-body" id="markdown-content">
+
+                    <h2>How to Use the Trained Model for Image Classification</h2>
+
+                    <p>This guide will help you use the trained PyTorch model (<code>trained_model_classification.pt</code>) to determine the class of your own images.</p>
+
+                    <h4><span aria-hidden="true">❗</span> What You Need:</h4>
+                    <ul>
+                        <li><strong>Python 3:</strong> Installed on your computer (version 3.10 or newer recommended).</li>
+                        <li>
+                            <strong>Python Libraries:</strong> Install the necessary libraries using pip:
+                            <pre><code class="language-bash">pip install torch torchvision Pillow matplotlib</code></pre>
+                        </li>
+                        <li>
+                            <strong>Model Files:</strong>
+                            <ul>
+                                <li><code>trained_model_classification.pt</code>: The file containing the trained neural network weights and architecture.</li>
+                                <li><code>class_to_idx.json</code>: A JSON file mapping class names (strings) to their corresponding index (integers) used during training.</li>
+                                <li>
+                                    Example Format:
+                                    <pre><code class="language-json">{
+  "dog": 0,
+  "cat": 1,
+  "chinchilla": 2
+}</code></pre>
+                                </li>
+                            </ul>
+                        </li>
+                        <li><strong>Image:</strong> An image file (e.g., <code>.jpg</code>, <code>.png</code>) you want to classify.</li>
+                    </ul>
+
+                    <h3>Instructions:</h3>
+                    <ol>
+                        <li>
+                            <strong>Prepare Your Project Folder:</strong>
+                            <ul>
+                                <li>Create a new folder for your project.</li>
+                                <li>Place the downloaded <code>trained_model_classification.pt</code> file inside this folder.</li>
+                                <li>Place the <code>class_to_idx.json</code> file inside the same folder.</li>
+                            </ul>
+                        </li>
+                        <li>
+                            <strong>Create the Prediction Script:</strong>
+                            <ul>
+                                <li>In the same project folder, create a Python file named <code>classify_image.py</code>.</li>
+                                <li>Copy the Python code provided below into this <code>classify_image.py</code> file.</li>
+                            </ul>
+                        </li>
+                        <li>
+                            <strong>Configure the Script:</strong>
+                            <ul>
+                                <li>Open <code>classify_image.py</code> in a text editor.</li>
+                                <li>Locate the line: <code>IMAGE_TO_CLASSIFY = "path/to/your/image.jpg"</code></li>
+                                <li>Replace <code>"path/to/your/image.jpg"</code> with the actual path to the image file you want to classify. Make sure the path is correct relative to where you run the script, or use an absolute path.</li>
+                                <li><em>(Optional)</em> Locate the line: <code>OUTPUT_DIR = "predictions_output"</code></li>
+                                <li>If you want prediction results (image with probabilities, JSON data) saved to a different directory, change <code>"predictions_output"</code> to your desired path.</li>
+                            </ul>
+                        </li>
+                        <li>
+                            <strong>Run the Script:</strong>
+                            <ul>
+                                <li>Open your terminal or command prompt.</li>
+                                <li>Navigate (<code>cd</code>) into your project folder (the one containing the script, model, and JSON file).</li>
+                                <li>Execute the script using Python:
+                                    <pre><code class="language-bash">python classify_image.py</code></pre>
+                                </li>
+                            </ul>
+                        </li>
+                    </ol>
+
+                    <h3>Script Code (<code>classify_image.py</code>):</h3>
+                    <pre><code class="language-python">import json
+import os
+import sys
+import torch
+import torch.nn.functional as F
+from PIL import Image
+from torchvision import transforms
+import matplotlib.pyplot as plt
+from datetime import datetime
+
+# --- Configuration ---
+MODEL_PATH = "trained_model_classification.pt"
+CLASS_MAPPING_PATH = "class_to_idx.json"
+# IMPORTANT: Update this path to your image
+IMAGE_TO_CLASSIFY = "path/to/your/image.jpg"
+# Directory where output files (plot, json) will be saved
+OUTPUT_DIR = "predictions_output"
+# Set to False if you don't want to save output files
+SAVE_OUTPUT = True
+
+# --- Helper Functions ---
+
+def load_model_and_classes(model_path: str, class_mapping_path: str):
+    """Loads the PyTorch model and the class mapping dictionary."""
+    print(f"[*] Loading model from: {model_path}")
+    if not os.path.exists(model_path):
+        print(f"[!] Error: Model file not found: {model_path}")
+        sys.exit(1)
+
+    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+    try:
+        # Load the entire model (architecture + weights)
+        # Ensure 'weights_only=False' if the .pt file contains the whole model object
+        # If it ONLY contains state_dict, you'd need to define the model architecture first
+        # and then load state_dict. Assuming .pt contains the full model here.
+        model = torch.load(model_path, map_location=device)
+        model.eval()  # Set the model to evaluation mode
+        print(f"[*] Model loaded successfully onto device: {device}")
+    except Exception as e:
+        print(f"[!] Error loading the model: {e}")
+        print("[!] Ensure the .pt file contains a valid PyTorch model object or state_dict.")
+        print("[!] If it's a state_dict, you need to instantiate your model class first.")
+        sys.exit(1)
+
+    print(f"[*] Loading class mapping from: {class_mapping_path}")
+    if not os.path.exists(class_mapping_path):
+        print(f"[!] Error: Class mapping file not found: {class_mapping_path}")
+        sys.exit(1)
+
+    try:
+        with open(class_mapping_path, "r", encoding="utf-8") as f:
+            class_to_idx = json.load(f)
+        # Create reverse mapping (index to class name)
+        idx_to_class = {int(v): k for k, v in class_to_idx.items()}
+        print(f"[*] Class mapping loaded: {list(idx_to_class.values())}")
+    except Exception as e:
+        print(f"[!] Error loading or parsing class mapping file: {e}")
+        sys.exit(1)
+
+    return model, idx_to_class, device
+
+def prepare_image(image_path: str, image_size: int = 224):
+    """Loads and preprocesses an image for the model."""
+    print(f"[*] Preparing image: {image_path}")
+    if not os.path.exists(image_path):
+        print(f"[!] Error: Image file not found: {image_path}")
+        sys.exit(1)
+
+    try:
+        # Standard transformations for ImageNet-based models
+        transform = transforms.Compose([
+            transforms.Resize((image_size, image_size)),
+            transforms.ToTensor(),
+            transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]),
+        ])
+        # Open image and ensure it's RGB
+        image = Image.open(image_path).convert("RGB")
+        # Apply transformations and add batch dimension (unsqueeze)
+        image_tensor = transform(image).unsqueeze(0)
+        return image_tensor, image # Return tensor and original PIL image
+    except Exception as e:
+        print(f"[!] Error processing image: {e}")
+        sys.exit(1)
+
+def predict(model, image_tensor: torch.Tensor, device: torch.device):
+    """Performs inference on the image tensor."""
+    print("[*] Performing prediction...")
+    try:
+        with torch.no_grad(): # Disable gradient calculation for inference
+            image_tensor = image_tensor.to(device)
+            outputs = model(image_tensor)
+            # Apply Softmax to get probabilities
+            probabilities = F.softmax(outputs, dim=1)
+            # Return probabilities for the first (and only) image in the batch
+            # Move tensor to CPU and convert to numpy array
+            return probabilities[0].cpu().numpy()
+    except Exception as e:
+        print(f"[!] Error during prediction: {e}")
+        sys.exit(1)
+
+def visualize_predictions(image, probs, idx_to_class, image_path, output_dir):
+    """Creates and saves a plot showing the image and prediction probabilities."""
+    os.makedirs(output_dir, exist_ok=True)
+
+    fig, (ax1, ax2) = plt.subplots(figsize=(12, 5), ncols=2) # Adjusted layout
+
+    # Display the original image
+    ax1.imshow(image)
+    ax1.axis("off")
+    ax1.set_title("Input Image")
+
+    # Display the probability bars
+    classes = [idx_to_class.get(i, f"Unknown_{i}") for i in range(len(probs))]
+    y_pos = range(len(probs))
+    ax2.barh(y_pos, probs * 100, align='center') # Horizontal bars are often clearer
+    ax2.set_yticks(y_pos)
+    ax2.set_yticklabels(classes)
+    ax2.invert_yaxis() # labels read top-to-bottom
+    ax2.set_xlabel("Probability (%)")
+    ax2.set_title("Class Probabilities")
+    ax2.set_xlim(0, 110) # Set limit slightly > 100 for text
+
+    # Add probability values on bars
+    for index, value in enumerate(probs):
+        ax2.text(value * 100 + 1, index, f"{value * 100:.1f}%", va='center')
+
+    plt.tight_layout() # Adjust layout to prevent overlap
+
+    # Generate unique filename
+    timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+    base_image_name = os.path.splitext(os.path.basename(image_path))[0]
+    plot_filename = f"prediction_{base_image_name}_{timestamp}_plot.png"
+    plot_path = os.path.join(output_dir, plot_filename)
+
+    try:
+        plt.savefig(plot_path, bbox_inches="tight", dpi=150) # Save the plot
+        print(f"[*] Prediction plot saved to: {plot_path}")
+        plt.close(fig) # Close the figure to free memory
+        return plot_path
+    except Exception as e:
+        print(f"[!] Error saving prediction plot: {e}")
+        plt.close(fig)
+        return None
+
+
+def save_predictions_to_json(image_path, probabilities, idx_to_class, output_dir):
+    """Saves prediction results to a JSON file."""
+    os.makedirs(output_dir, exist_ok=True)
+
+    # Create dictionary of predictions {class_name: probability_percent}
+    predictions = {
+        idx_to_class.get(idx, f"Unknown_{idx}"): float(prob * 100)
+        for idx, prob in enumerate(probabilities)
+    }
+    # Sort predictions by probability (descending)
+    sorted_predictions = dict(sorted(predictions.items(), key=lambda item: item[1], reverse=True))
+
+
+    result_data = {
+        "metadata": {
+            "timestamp": datetime.now().isoformat(),
+            "image_path_processed": os.path.abspath(image_path),
+            "model_used": os.path.basename(MODEL_PATH),
+            "class_mapping_used": os.path.basename(CLASS_MAPPING_PATH),
+        },
+        "predictions_Pct": sorted_predictions, # Use sorted dictionary
+    }
+
+    # Generate unique filename
+    timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+    base_image_name = os.path.splitext(os.path.basename(image_path))[0]
+    json_filename = f"prediction_{base_image_name}_{timestamp}_results.json"
+    json_path = os.path.join(output_dir, json_filename)
+
+    try:
+        with open(json_path, "w", encoding="utf-8") as f:
+            # Use indent for readability, ensure_ascii=False for non-Latin characters
+            json.dump(result_data, f, indent=4, ensure_ascii=False)
+        print(f"[*] Prediction JSON saved to: {json_path}")
+        return json_path
+    except Exception as e:
+        print(f"[!] Error saving prediction JSON: {e}")
+        return None
+
+# --- Main Execution Block ---
+if __name__ == "__main__":
+
+    print("--- Image Classification Script ---")
+
+    # Basic check for image existence before loading model
+    if not os.path.exists(IMAGE_TO_CLASSIFY):
+        print(f"[!] Error: Input image not found at the specified path: {IMAGE_TO_CLASSIFY}")
+        print("[-] Please update the IMAGE_TO_CLASSIFY variable in the script.")
+        sys.exit(1)
+
+    # 1. Load Model and Class Mapping
+    model, idx_to_class, device = load_model_and_classes(MODEL_PATH, CLASS_MAPPING_PATH)
+
+    # 2. Prepare the Image
+    # Assuming model was trained on 224x224 images, common for ImageNet pre-trained models
+    image_tensor, original_image = prepare_image(IMAGE_TO_CLASSIFY, image_size=224)
+
+    # 3. Perform Prediction
+    probabilities = predict(model, image_tensor, device)
+
+    # 4. Display Results
+    print("\n--- Prediction Results ---")
+    results_dict = {}
+    for idx, prob in enumerate(probabilities):
+        class_name = idx_to_class.get(idx, f"Unknown Class {idx}")
+        probability_percent = prob * 100
+        results_dict[class_name] = probability_percent
+        print(f"- Class '{class_name}': {probability_percent:.2f}%")
+
+    # Find the class with the highest probability
+    predicted_idx = probabilities.argmax()
+    predicted_class_name = idx_to_class.get(predicted_idx, "Unknown")
+    predicted_prob = probabilities[predicted_idx] * 100
+
+    print("-" * 30)
+    print(f"[*] Most Likely Class: {predicted_class_name} ({predicted_prob:.2f}%)")
+    print("-" * 30)
+
+    # 5. Save Outputs (Optional)
+    if SAVE_OUTPUT:
+        print("\n[*] Saving output files...")
+        saved_json_path = save_predictions_to_json(IMAGE_TO_CLASSIFY, probabilities, idx_to_class, OUTPUT_DIR)
+        saved_plot_path = visualize_predictions(original_image, probabilities, idx_to_class, IMAGE_TO_CLASSIFY, OUTPUT_DIR)
+
+        if not saved_json_path:
+             print("[!] Failed to save JSON output.")
+        if not saved_plot_path:
+             print("[!] Failed to save Plot output.")
+    else:
+        print("\n[*] Skipping saving of output files (SAVE_OUTPUT is False).")
+
+
+    print("\n--- Script Finished ---")
+</code></pre>
+
+                    <h3><span aria-hidden="true">❓</span> What the Script Does:</h3>
+                    <ul>
+                        <li><strong>Loads the Model:</strong> Reads the <code>trained_model_classification.pt</code> file (which should contain the model architecture and weights) and the <code>class_to_idx.json</code> file for class names.</li>
+                        <li><strong>Prepares the Image:</strong> Opens the image you specified, resizes it (typically to 224x224 pixels for models like EfficientNet, ResNet etc.), converts it to a PyTorch tensor, and normalizes its pixel values using standard ImageNet means and standard deviations.</li>
+                        <li><strong>Performs Prediction:</strong> Feeds the prepared image tensor into the loaded neural network model. It gets the raw output (logits) and converts them into probabilities using the Softmax function.</li>
+                        <li><strong>Outputs Results:</strong> Prints the predicted probability (in percent) for each class to your console. It clearly indicates the class with the highest probability.</li>
+                        <li>
+                            <strong>Saves Results (Optional):</strong> If <code>SAVE_OUTPUT</code> is <code>True</code>, the script saves:
+                            <ul>
+                                <li>A JSON file (<code>prediction_*.json</code>) containing detailed prediction results and metadata.</li>
+                                <li>An image file (<code>prediction_*.png</code>) showing the input image alongside a bar chart of the predicted probabilities.</li>
+                            </ul>
+                            These files are saved in the directory specified by <code>OUTPUT_DIR</code>.
+                        </li>
+                    </ul>
+
+                </article>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+
 {% endblock %}
