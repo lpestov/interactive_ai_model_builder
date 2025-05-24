@@ -18,7 +18,6 @@ class Dataset(db.Model):
 
 
     def check_dataset(self):
-        #Код для проверки датасета на готовность к обучению
         script = True
         if script:
             self.process_status = True

@@ -3,13 +3,10 @@
 {% block title %}Using the model{% endblock %}
 
 {% block head %}
-    <!-- Bootstrap Icons -->
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
-    <!-- GitHub Markdown CSS - We still use this for styling the standard HTML tags -->
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/github-markdown-css/5.1.0/github-markdown.min.css">
 
 <style>
-    /* Styling for sections on the main page */
     .section {
         margin-bottom: 20px;
         padding: 15px;
@@ -25,16 +22,14 @@
         padding-bottom: 10px;
     }
 
-    /* Styling for the content within the modal - using the github-markdown styles */
     .modal-body .markdown-body {
         box-sizing: border-box;
         min-width: 200px;
         max-width: 980px;
         margin: 0 auto;
-        padding: 25px; /* Slightly more padding */
+        padding: 25px;
     }
 
-    /* Ensure code blocks inside the modal are styled nicely */
     .modal-body .markdown-body pre {
         background-color: #f6f8fa;
         padding: 16px;
@@ -45,14 +40,13 @@
         border: 1px solid #ddd;
     }
     .modal-body .markdown-body pre code {
-        background-color: transparent; /* Reset background for code inside pre */
+        background-color: transparent;
         padding: 0;
         margin: 0;
         border: none;
-        font-size: inherit; /* Inherit font size from pre */
+        font-size: inherit;
     }
 
-    /* Inline code styling */
     .modal-body .markdown-body code:not(pre code) {
         background-color: rgba(27, 31, 35, 0.05);
         border-radius: 3px;
@@ -61,18 +55,16 @@
         font-size: 85%;
     }
 
-    /* Adjust modal body padding */
     .modal-body {
-        padding: 0; /* Remove default padding, let .markdown-body handle it */
+        padding: 0;
     }
 
-    /* Minor style adjustments for lists */
     .modal-body .markdown-body ul,
     .modal-body .markdown-body ol {
-        padding-left: 2em; /* Standard indentation */
+        padding-left: 2em;
     }
     .modal-body .markdown-body li > p {
-        margin-top: 0.25em; /* Spacing paragraph inside list item */
+        margin-top: 0.25em;
     }
     .modal-body .markdown-body h4 {
         margin-top: 1.5em;
@@ -92,7 +84,6 @@
 <div class="container mt-4">
     <h1 class="mb-4">📷 Image classification</h1>
 
-    <!-- Section for Image Upload -->
     <div class="section">
         <h2>📥 Upload an Image</h2>
         <form method="POST" enctype="multipart/form-data" action="{{ url_for('image_predictor.predict') }}">
@@ -106,7 +97,6 @@
         </form>
     </div>
 
-    <!-- Section for Model Download and Instructions -->
     <div class="section">
         <h2>Model and Usage Instructions</h2>
         <div class="row">
@@ -123,7 +113,6 @@
         </div>
     </div>
 
-    <!-- Section for Navigation -->
     <div class="section">
         <a href="{{ url_for('image.index') }}" class="btn btn-secondary">
            <i class="bi bi-arrow-left me-2"></i>Back
@@ -131,7 +120,6 @@
     </div>
 </div>
 
-    <!-- Modal for Instructions -->
 <div class="modal fade" id="instructionsModal" tabindex="-1" aria-labelledby="instructionsModalLabel" aria-hidden="true">
     <div class="modal-dialog modal-xl modal-dialog-scrollable">
         <div class="modal-content">
@@ -142,8 +130,6 @@
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <div class="modal-body">
-                <!-- The pre-converted HTML content is placed here -->
-                <!-- The 'markdown-body' class applies the GitHub styles -->
                 <article class="markdown-body" id="markdown-content">
 
                     <h2>How to Use the Trained Model for Image Classification</h2>
@@ -471,8 +457,8 @@ if __name__ == "__main__":
                         </li>
                     </ul>
 
-                </article> <!-- End of markdown-body -->
-            </div> <!-- End of modal-body -->
+                </article>
+            </div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
             </div>

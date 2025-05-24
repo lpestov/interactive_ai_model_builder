@@ -11,7 +11,7 @@ from app.routes.image import file_extension_validation
 
 INFERENCE_SCRIPT_PATH = 'utils/image_classification/inference.py'
 UPLOAD_FOLDER_PATH = 'images'
-STATIC_FOLDER = 'app/static'  # папка для статических файлов
+STATIC_FOLDER = 'app/static'
 MODEL_PATH = 'utils/image_classification/trained_model_classification.pt'
 СLASS_TO_IDX_PATH = 'utils/image_classification/class_to_idx.json'
 HYPERPARAMS_PATH = 'utils/image_classification/hyperparams.json'

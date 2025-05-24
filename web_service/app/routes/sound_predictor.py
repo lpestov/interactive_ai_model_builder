@@ -6,8 +6,8 @@ import shutil
 
 INFERENCE_SCRIPT_PATH = 'utils/sound_classification/inference.py'
 UPLOAD_FOLDER_PATH = 'sounds'
-STATIC_FOLDER = 'app/static'  # папка для статических файлов
-MODEL_PATH = 'utils/sound_classification/trained_model_sound_classification.pt'  # путь к обученной модели
+STATIC_FOLDER = 'app/static'
+MODEL_PATH = 'utils/sound_classification/trained_model_sound_classification.pt'
 
 sound_predictor_bp = Blueprint('sound_predictor', __name__)
 

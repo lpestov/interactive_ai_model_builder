@@ -5,6 +5,9 @@ import os
 import sys
 import zipfile
 import random
+import logging
+import contextlib
+import io
 
 import torch
 import torch.nn as nn
@@ -14,13 +17,11 @@ import torchaudio
 from torchaudio.transforms import Resample
 from panns_inference import AudioTagging
 
-
-
-
 if __name__ == "__main__":
     SR = 16000  # Целевая частота дискретизации
     DURATION = 5  # Длительность в секундах
     SAMPLES = SR * DURATION  # Количество сэмплов
+
 
     # --- Классы аугментации волновой формы ---
     class GaussianNoise(nn.Module):
@@ -36,10 +37,11 @@ if __name__ == "__main__":
                 noise_power = noise.norm(p=2)
                 if noise_power == 0:
                     return waveform
-                snr = 10**(self.snr_db / 10)
+                snr = 10 ** (self.snr_db / 10)
                 scale = (signal_power / (noise_power * snr)).sqrt()
                 return waveform + scale * noise
             return waveform
+
 
     class RandomVolume(nn.Module):
         def __init__(self, min_gain_db=-6, max_gain_db=6, p=0.5):
@@ -55,6 +57,7 @@ if __name__ == "__main__":
                 gain_factor = max(gain_factor, 1e-5)
                 return waveform * gain_factor
             return waveform
+
 
     # --- Вспомогательная функция для подготовки аудио ---
     def prepare_audio(wav, sr, target_sr=SR, target_samples=SAMPLES):
@@ -72,6 +75,7 @@ if __name__ == "__main__":
             pad_size = target_samples - wav.size(1)
             wav = nn.functional.pad(wav, (0, pad_size))
         return wav
+
 
     # --- Класс Dataset для эмбеддингов PANNs ---
     class PANNsEmbedDatasetDS(Dataset):
@@ -141,6 +145,21 @@ if __name__ == "__main__":
 
             return embedding, label
 
+    class suppress_stdout_stderr(object):
+        def __init__(self):
+            self.null_fds = [os.open(os.devnull, os.O_RDWR) for x in range(2)]
+            self.save_fds = [os.dup(1), os.dup(2)]
+
+        def __enter__(self):
+            os.dup2(self.null_fds[0], 1)
+            os.dup2(self.null_fds[1], 2)
+
+        def __exit__(self, *_):
+            os.dup2(self.save_fds[0], 1)
+            os.dup2(self.save_fds[1], 2)
+            for fd in self.null_fds + self.save_fds:
+                os.close(fd)
+
     print("Starting sound classification training for DataSphere")
     DEVICE = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     print(f"Using device: {DEVICE}")
@@ -157,13 +176,13 @@ if __name__ == "__main__":
     print(f"Number of classes: {num_classes}")
     print(f"Class mapping: {class_to_idx}")
 
-
     dataset_zip_name = "sound_dataset.zip"
     dataset_extract_folder = "sound_dataset_extracted"
     train_folder_path = os.path.join(dataset_extract_folder, "sound_dataset/train")
 
     if os.path.exists(dataset_extract_folder):
         import shutil
+
         shutil.rmtree(dataset_extract_folder)
         print(f"Removed existing directory: {dataset_extract_folder}")
 
@@ -180,14 +199,18 @@ if __name__ == "__main__":
         if os.path.isdir(potential_base) and "train" in os.listdir(potential_base):
             train_folder_path = os.path.join(potential_base, "train")
         else:
-            raise FileNotFoundError(f"Train folder not found at path {train_folder_path} or in expected subdirectories.")
+            raise FileNotFoundError(
+                f"Train folder not found at path {train_folder_path} or in expected subdirectories.")
     print(f"Using training data from: {train_folder_path}")
 
-
+    logging.getLogger("torch").setLevel(logging.ERROR)
+    logging.getLogger("torchaudio").setLevel(logging.ERROR)
 
     print("Initializing PANNs AudioTagger...")
-    audio_tagger = AudioTagging(checkpoint_path=None, device=str(DEVICE))
-    print("PANNs AudioTagger initialized.")
+    ## Delete PANNs logs
+    with suppress_stdout_stderr():
+        audio_tagger = AudioTagging(checkpoint_path=None, device=str(DEVICE))
+        print("PANNs AudioTagger initialized.")
     panns_embedding_dim = 2048
 
     # Определение аугментаций волновой формы
@@ -203,7 +226,7 @@ if __name__ == "__main__":
         class_to_idx_map=class_to_idx,
         audio_tagger_model=audio_tagger,
         waveform_augment_transform=waveform_augment_transform,
-        target_size_per_class=hyperparams.get("target_size", 50) # из hyperparams или по умолчанию
+        target_size_per_class=hyperparams.get("target_size", 50)  # из hyperparams или по умолчанию
     )
     print(f"Dataset created with {len(train_dataset)} samples.")
 
@@ -267,7 +290,7 @@ if __name__ == "__main__":
         correct = 0
         total = 0
         with torch.no_grad():
-            for embeddings, labels in train_loader: # Повторная итерация по train_loader для "валидации"
+            for embeddings, labels in train_loader:
                 if embeddings.nelement() == 0 or -1 in labels: continue
                 embeddings, labels = embeddings.to(DEVICE), labels.to(DEVICE)
                 outputs = mlp_model(embeddings)
@@ -277,7 +300,7 @@ if __name__ == "__main__":
 
         accuracy = correct / total if total > 0 else 0
 
-        print(f"Epoch {epoch+1}/{hyperparams['num_epochs']} - "
+        print(f"Epoch {epoch + 1}/{hyperparams['num_epochs']} - "
               f"Loss: {avg_epoch_train_loss:.4f}, "
               f"Accuracy (On TRAIN Dataset): {accuracy:.4f}")
 
