@@ -196,3 +196,4 @@ models/image_classification/utils/predictions
 /web_service/utils/hyperparams.json
 /web_service/utils/classification_dataset.zip
 /web_service/utils/class_to_idx.json
+!/README.MD
