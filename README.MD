@@ -7,17 +7,17 @@ Interactive AI Model Builder is a user-friendly web application that empowers yo
 ## Key Features
 
 *   🌐 **Intuitive Web Interface:** Easily define classes, upload your datasets, and configure training parameters.
-*   ⚡ **On-the-Fly Model Training:** Train models for image and sound classification tasks.
+*   ⚡ **On-the-Fly Model Training:** Train models for image and sound classification and classic ml tasks.
 *   📊 **Real-time Training Logs:** Monitor the training progress directly in the application.
 *   📥 **Downloadable Models:** Export your trained models and usage instructions for local inference.
 *   💻 **GPU not required:** The application is designed to run efficiently on CPU, making it accessible for users without high-end hardware.
-*   🚀 **Powered by PyTorch & Yandex DataSphere:** Leverages robust deep learning frameworks and cloud computing for efficient training.
+*   🚀 **Powered by PyTorch & Scikit-learn & Yandex DataSphere:** Leverages robust ML & DL frameworks and cloud computing for efficient training.
 
 ## 🖼️ Image Classification
 
 Train your own image classifiers by providing example images for different categories. The application handles the complexities of model training, allowing you to focus on your data.
 
-**(Here you can insert a GIF showcasing the image classification setup: defining classes, uploading images, training logs, or prediction)**
+![image_ai](assets/image_ai.gif)
 
 ### How It Works:
 
@@ -31,7 +31,7 @@ Train your own image classifiers by providing example images for different categ
 
 Classify various sound events by training a model on your audio samples. From environmental sounds to specific audio cues, build a classifier tailored to your needs.
 
-**(Here you can insert a GIF showcasing the sound classification setup: defining classes, uploading audio, training logs, or prediction)**
+![sound_ai](assets/sound_ai.gif)
 
 ### How It Works:
 
@@ -43,15 +43,23 @@ Classify various sound events by training a model on your audio samples. From en
 
 ## 📊 Classic ML & AutoML (Tabular Data)
 
-**(This section is under development. Stay tuned for features allowing you to train models on structured/tabular data using classic machine learning algorithms and AutoML capabilities!)**
+Easily create and deploy predictive models for structured data. This section enables users to solve classification and regression problems through intuitive workflows that balance manual customization with automated algorithms.
 
 **(Placeholder for a GIF related to tabular data or AutoML, once implemented)**
 
-*   **Define Task:** (e.g., classification, regression) - *Coming Soon*
-*   **Upload Dataset:** (e.g., CSV) - *Coming Soon*
-*   **Feature Engineering:** - *Coming Soon*
-*   **Model Selection & Training:** - *Coming Soon*
-*   **Evaluation & Prediction:** - *Coming Soon*
+### How It Works:
+
+*   **Upload dataset in CSV format and specify the task type** (supported types: classification, regression)
+    ![Dataset](assets/datasets.gif)
+
+*   **Feature Engineering:** - Perform dataset processing steps or apply automated data processing  (*Coming Soon*)
+*   **Model Selection & Training:** - Choose desired model and configure hyperparameters, or select an AutoML algorithm to handle it automatically!
+**AutoML:**
+![autoML](assets/autoML.gif)
+**Or classic ML:**
+![classicML](assets/classicML.gif)
+*  **Model Tracking & Export:** - Track model performance and view detailed metrics on the tracking page. Download trained models (.pt format) with usage code.
+
 
 ## 🚀 Getting Started
 
