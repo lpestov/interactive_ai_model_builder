@@ -45,7 +45,6 @@ Classify various sound events by training a model on your audio samples. From en
 
 Easily create and deploy predictive models for structured data. This section enables users to solve classification and regression problems through intuitive workflows that balance manual customization with automated algorithms.
 
-**(Placeholder for a GIF related to tabular data or AutoML, once implemented)**
 
 ### How It Works:
 
