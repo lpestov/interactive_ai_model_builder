@@ -67,6 +67,7 @@ Easily create and deploy predictive models for structured data. This section ena
 *   **Configuration:** `.env` file setup (Yandex Cloud credentials, etc.)
 > ⚠️ **IMPORTANT:** You need to get access to Yandex DataSphere for the application to work. Without this access, model training will not be possible!
 *   **Running the App:** `flask run`
+*   **Docker:** `docker build -t interactive-ai-builder .` then `docker run -p 5001:5001 interactive-ai-builder`
 
 ## 📬 Contacts
 
